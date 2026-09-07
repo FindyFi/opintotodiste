@@ -1,0 +1,65 @@
+{
+  "Opintotodiste": {
+    "en": "Study credential"
+  },
+  "Syötä Koski-opintotietojesi linkki nähdäksesi, mitkä osaamismerkit tiedoista voidaan myöntää.": {
+    "en": "Enter the link to your Koski study records to see which badges can be issued from them."
+  },
+  "Hae opinnot": {
+    "en": "Fetch credentials"
+  },
+  "Sulje": {
+    "en": "Close"
+  },
+  "Lähde:": {
+    "en": "Source:"
+  },
+  "Nimi": {
+    "en": "Name"
+  },
+  "Tyyppi": {
+    "en": "Type"
+  },
+  "Myöntäjä": {
+    "en": "Issuer"
+  },
+  "Myönnetty": {
+    "en": "Awarded"
+  },
+  "Toiminto": {
+    "en": "Action"
+  },
+  "Koski-tiedoista ei löytynyt osaamismerkkikelpoisia suorituksia.": {
+    "en": "No badge-worthy records were found in this Koski export."
+  },
+  "Hae todiste": {
+    "en": "Get credential"
+  },
+  "Allekirjoitettu": {
+    "en": "Signed"
+  },
+  "Lataa": {
+    "en": "Download"
+  },
+  "Koulutusala": {
+    "en": "Field of study"
+  },
+  "Koodi": {
+    "en": "Code"
+  },
+  "Lisää lompakkoon": {
+    "en": "Add to wallet"
+  },
+  "Skannaa QR-koodi lompakkosovelluksella.": {
+    "en": "Scan the QR code with your wallet app."
+  },
+  "Avaa lompakkosovelluksessa": {
+    "en": "Open in wallet app"
+  },
+  "Vahvistuskoodi:": {
+    "en": "Confirmation code:"
+  },
+  "Voimassa:": {
+    "en": "Valid for:"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "opintotodiste",
+  "version": "0.0.1",
+  "description": "A service for issuing Open Badges from various sources",
+  "homepage": "https://github.com/FindyFi/opintotodiste#readme",
+  "bugs": {
+    "url": "https://github.com/FindyFi/opintotodiste/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FindyFi/opintotodiste.git"
+  },
+  "license": "Apache-2.0",
+  "author": "Samuel Rinnetmäki <samuel@iki.fi>",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-session": "^1.19.0",
+    "koski2openbadge": "file:../koski2openbadge",
+    "qrcode": "^1.5.4",
+    "translate-element": "^3.0.1"
+  }
+}
