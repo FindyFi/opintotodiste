@@ -1,0 +1,61 @@
+name: Build and push image
+
+# Builds and pushes to the "dev" account's ECR repo only - that repo then
+# fans out to staging/prod via ECR replication (see
+# aws-environment/tf/infrastructure/ecr/development-values.tfvars). Deploying
+# a newly-pushed tag still needs the opintotodiste_image value in the
+# relevant aws-environment */*-values.tfvars updated and applied - this
+# workflow does not do that itself.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  AWS_REGION: eu-north-1
+  ECR_REPOSITORY: opintotodiste
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout opintotodiste
+        uses: actions/checkout@v4
+        with:
+          path: opintotodiste
+
+      # koski2openbadge is a local, unpublished sibling package (see
+      # opintotodiste's package.json "file:../koski2openbadge" dependency,
+      # and the Dockerfile's "koski2openbadge" build context) - check it out
+      # as a sibling directory here too so the build context layout matches.
+      - name: Checkout koski2openbadge
+        uses: actions/checkout@v4
+        with:
+          repository: FindyFi/koski2openbadge
+          path: koski2openbadge
+
+      - uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: arn:aws:iam::982081077491:role/GitHubECRPush_opintotodiste
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr-login
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./opintotodiste
+          build-contexts: |
+            koski2openbadge=./koski2openbadge
+          push: true
+          tags: |
+            ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:${{ github.sha }}
+            ${{ steps.ecr-login.outputs.registry }}/${{ env.ECR_REPOSITORY }}:latest

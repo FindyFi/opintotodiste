@@ -26,14 +26,14 @@
   "Myönnetty": {
     "en": "Awarded"
   },
-  "Toiminto": {
-    "en": "Action"
+  "Tila": {
+    "en": "Status"
   },
   "Koski-tiedoista ei löytynyt osaamismerkkikelpoisia suorituksia.": {
     "en": "No badge-worthy records were found in this Koski export."
   },
-  "Hae todiste": {
-    "en": "Get credential"
+  "Lisää kokoelmaan": {
+    "en": "Add to collection"
   },
   "Allekirjoitettu": {
     "en": "Signed"
@@ -61,5 +61,68 @@
   },
   "Voimassa:": {
     "en": "Valid for:"
+  },
+  "Kirjaudu sisään": {
+    "en": "Sign in"
+  },
+  "Kirjaudu ulos": {
+    "en": "Sign out"
+  },
+  "Rekisteröi kulkuavain": {
+    "en": "Register a passkey"
+  },
+  "Kokoelmani": {
+    "en": "My collections"
+  },
+  "Näyttönimi:": {
+    "en": "Display name:"
+  },
+  "Onko sinulla jo kulkuavain? Kirjaudu sisään.": {
+    "en": "Already have a passkey? Sign in."
+  },
+  "Ei vielä kulkuavainta? Rekisteröidy.": {
+    "en": "Don't have a passkey yet? Register."
+  },
+  "Peruuta": {
+    "en": "Cancel"
+  },
+  "Kirjaudu sisään kulkuavaimella hallitaksesi kokoelmia.": {
+    "en": "Sign in with a passkey to manage collections."
+  },
+  "Luo kokoelma": {
+    "en": "Create collection"
+  },
+  "Ei kokoelmia vielä.": {
+    "en": "No collections yet."
+  },
+  "kohdetta": {
+    "en": "items"
+  },
+  "Nimeä uudelleen": {
+    "en": "Rename"
+  },
+  "Poista": {
+    "en": "Delete"
+  },
+  "Uusi jakolinkki": {
+    "en": "New share link"
+  },
+  "Kopioi linkki": {
+    "en": "Copy link"
+  },
+  "Valitse kokoelma": {
+    "en": "Choose a collection"
+  },
+  "Lisää": {
+    "en": "Add"
+  },
+  "Lisätty kokoelmaan": {
+    "en": "Added to collection"
+  },
+  "Jaettu kokoelma": {
+    "en": "Shared collection"
+  },
+  "Kokoelmassa ei ole vielä kohteita.": {
+    "en": "This collection has no items yet."
   }
 }

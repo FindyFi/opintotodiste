@@ -1,11 +1,15 @@
 import 'dotenv/config'
 import express from 'express'
 import session from 'express-session'
+import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
 import { toVerifiableCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
+import { pool, runSchema } from './src/db.js'
+import * as auth from './src/auth.js'
+import * as collections from './src/collections.js'
 import * as views from './src/views.js'
 
 const app = express()
@@ -15,13 +19,22 @@ const SUPPORTED_LANGS = ['fi', 'en']
 app.use(express.json())
 app.use(express.static('public'))
 app.use('/vendor/translate-element', express.static('node_modules/translate-element'))
+app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewebauthn/browser/dist/bundle'))
 app.use(
   session({
+    store: new (connectPgSimple(session))({ pool, createTableIfMissing: true }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
   })
 )
+
+function requireAuth(req, res, next) {
+  if (!req.session.userId) return res.status(401).json({ error: 'Please sign in with a passkey first.' })
+  next()
+}
+
+app.get('/healthz', (req, res) => res.sendStatus(200))
 
 app.get('/', (req, res) => {
   const initialData = req.session.credentials
@@ -135,6 +148,151 @@ app.get('/credentials/:index/download', (req, res) => {
   res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.index}.json"`)
   res.json(record.signed)
 })
+
+// --- Passkey auth ---------------------------------------------------------
+
+app.get('/auth/me', async (req, res) => {
+  if (!req.session.userId) return res.json({ loggedIn: false })
+  const passkeys = await auth.listPasskeys(req.session.userId)
+  res.json({ loggedIn: true, displayName: req.session.displayName, passkeys })
+})
+
+app.post('/auth/register/options', async (req, res) => {
+  try {
+    res.json(await auth.beginRegistration(req, req.body?.displayName))
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.post('/auth/register/verify', async (req, res) => {
+  try {
+    const user = await auth.completeRegistration(req, req.body)
+    res.json({ displayName: user.displayName })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.post('/auth/login/options', async (req, res) => {
+  try {
+    res.json(await auth.beginLogin(req))
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.post('/auth/login/verify', async (req, res) => {
+  try {
+    const user = await auth.completeLogin(req, req.body)
+    res.json({ displayName: user.displayName })
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.post('/auth/logout', (req, res) => {
+  req.session.destroy(() => res.json({ ok: true }))
+})
+
+// --- Collections -----------------------------------------------------------
+
+app.get('/collections', requireAuth, async (req, res) => {
+  res.json({ collections: await collections.listCollections(req.session.userId) })
+})
+
+app.post('/collections', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.createCollection(req.session.userId, req.body?.name))
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.patch('/collections/:id', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.renameCollection(req.session.userId, req.params.id, req.body?.name))
+  } catch (err) {
+    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+})
+
+app.delete('/collections/:id', requireAuth, async (req, res) => {
+  try {
+    await collections.deleteCollection(req.session.userId, req.params.id)
+    res.status(204).end()
+  } catch (err) {
+    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+})
+
+app.post('/collections/:id/share-token/regenerate', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.regenerateShareToken(req.session.userId, req.params.id))
+  } catch (err) {
+    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+})
+
+// Auto-signs any unsigned selected credentials first (same as the "Add to
+// wallet" bulk action), then snapshots each signed VC into the collection.
+app.post('/collections/:id/items', requireAuth, async (req, res) => {
+  try {
+    await collections.assertOwnedCollection(req.session.userId, req.params.id)
+  } catch (err) {
+    return res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+
+  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
+  const results = []
+  for (const index of indices) {
+    const record = req.session.credentials?.[index]
+    if (!record) {
+      results.push({ index, error: 'Credential not found. Please load your Koski data again.' })
+      continue
+    }
+    const name = record.credentialSubject?.achievement?.name ?? ''
+    try {
+      if (!record.signed) {
+        const vc = toVerifiableCredential(record, {
+          issuerId: process.env.ISSUER_ID,
+          issuerName: process.env.ISSUER_NAME,
+        })
+        record.signed = await signCredential(vc, {
+          baseUrl: process.env.SIGNING_SERVICE_URL,
+          instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
+          suite: process.env.SIGNING_SERVICE_SUITE,
+        })
+      }
+      const item = await collections.addItem(req.session.userId, req.params.id, record.signed)
+      results.push({ index, name, itemId: item.id, signed: record.signed })
+    } catch (err) {
+      results.push({ index, name, error: err.message })
+    }
+  }
+  res.json({ results })
+})
+
+// --- Public share links -----------------------------------------------------
+
+app.get('/c/:token', async (req, res) => {
+  const found = await collections.findByShareToken(req.params.token)
+  if (!found) return res.status(404).send('Collection not found.')
+  res.send(views.sharedCollectionPage({ token: req.params.token, ...found }))
+})
+
+app.get('/c/:token/items/:itemId/download', async (req, res) => {
+  const credential = await collections.findItemByShareToken(req.params.token, req.params.itemId)
+  if (!credential) return res.status(404).send('Credential not found.')
+  res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.itemId}.json"`)
+  res.json(credential)
+})
+
+app.get('/my/collections', (req, res) => {
+  res.send(views.collectionsPage())
+})
+
+await runSchema()
 
 app.listen(PORT, () => {
   console.log(`opintotodiste listening on http://localhost:${PORT}`)

@@ -1,0 +1,93 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: opintotodiste
+      POSTGRES_PASSWORD: opintotodiste
+      POSTGRES_DB: opintotodiste
+    ports:
+      - '5432:5432'
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U opintotodiste']
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # https://github.com/digitalcredentials/signing-service - built straight
+  # from its own repo (which already ships its own Dockerfile) rather than
+  # vendoring a second, easily-outdated copy of it here.
+  signing-service:
+    build:
+      context: https://github.com/digitalcredentials/signing-service.git
+    ports:
+      - '4006:4006'
+    environment:
+      PORT: 4006
+      # One seed per "tenant"/instance; TENANT_SEED_TEST is what makes the
+      # "test" instance both opintotodiste (SIGNING_SERVICE_INSTANCE_ID) and
+      # oid4vci-issuer (SIGNING_SERVICE_INSTANCE) already point at exist.
+      # "generate" mints a fresh dev key on every start - fine for local
+      # dev/testing, not for anything you want stable credential keys for.
+      TENANT_SEED_TEST: generate
+
+  # Your own sibling project (../oid4vci-issuer).
+  oid4vci-issuer:
+    build:
+      context: ../oid4vci-issuer
+    ports:
+      - '4007:4007'
+    environment:
+      PORT: 4007
+      # Placeholder for local dev only - real wallet interop needs a real
+      # HTTPS hostname here (see oid4vci-issuer's own README).
+      CREDENTIAL_ISSUER: http://localhost:4007
+      CREDENTIAL_CONFIGURATIONS_SUPPORTED: '{"OpenBadgeCredential":{"format":"ldp_vc","credential_definition":{"@context":["https://www.w3.org/2018/credentials/v1","https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"],"type":["VerifiableCredential","OpenBadgeCredential"]},"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}}}'
+      SIGNING_SERVICE_URL: http://signing-service:4006
+      SIGNING_SERVICE_INSTANCE: test
+      SIGNING_SERVICE_SUITE: ed25519
+      # Must match the app's OID4VCI_ISSUER_TOKEN below.
+      COORDINATOR_TOKEN: dev-coordinator-token-change-me
+    depends_on:
+      - signing-service
+
+  app:
+    build:
+      context: .
+      additional_contexts:
+        # See Dockerfile's comment: pulls in the local, unpublished sibling
+        # package.json declares as "file:../koski2openbadge", without
+        # widening this build's own context out to the whole parent folder.
+        koski2openbadge: ../koski2openbadge
+    ports:
+      - '3000:3000'
+    environment:
+      PORT: 3000
+      SESSION_SECRET: change-me
+      DATABASE_URL: postgres://opintotodiste:opintotodiste@db:5432/opintotodiste
+      # RP_ID/ORIGIN describe what the *browser* sees, not container
+      # networking - stay as localhost since the app is still published to
+      # the host at localhost:3000.
+      RP_ID: localhost
+      RP_NAME: Opintotodiste
+      ORIGIN: http://localhost:3000
+      ISSUER_ID: did:web:example.org
+      ISSUER_NAME: Example Issuer
+      SIGNING_SERVICE_URL: http://signing-service:4006
+      SIGNING_SERVICE_INSTANCE_ID: test
+      SIGNING_SERVICE_SUITE: ed25519
+      OID4VCI_ISSUER_URL: http://oid4vci-issuer:4007
+      OID4VCI_ISSUER_INSTANCE: test
+      # Must match oid4vci-issuer's COORDINATOR_TOKEN above.
+      OID4VCI_ISSUER_TOKEN: dev-coordinator-token-change-me
+    depends_on:
+      db:
+        condition: service_healthy
+      signing-service:
+        condition: service_started
+      oid4vci-issuer:
+        condition: service_started
+
+volumes:
+  db-data:
