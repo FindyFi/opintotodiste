@@ -16,7 +16,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node --test test/*.test.js"
   },
   "dependencies": {
     "@simplewebauthn/browser": "^14.0.0",
@@ -25,9 +25,12 @@
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
     "express-session": "^1.19.0",
-    "koski2openbadge": "file:../koski2openbadge",
+    "koski2openbadge": "github:FindyFi/koski2openbadge",
     "pg": "^8.23.0",
     "qrcode": "^1.5.4",
     "translate-element": "^3.0.1"
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
