@@ -34,6 +34,13 @@ required.
 - Add or update tests alongside behaviour changes. The app-level tests boot `index.js` in a child
   process and drive it over HTTP rather than importing handlers, so a change to the env-var wiring
   is covered too.
+- Passkey flows are testable: `test/helpers/authenticator.js` is a virtual WebAuthn authenticator
+  that answers both ceremonies, and `createClient` in `test/helpers/app.js` keeps cookies so a
+  sequence of requests shares one session.
+- Koski is served from `test/fixtures/koski-sample.json` through an `--import` hook, enabled with
+  `startApp({ koskiFixture })`. Please keep that interception in the harness: `src/koski.js` is
+  hard-restricted to opintopolku.fi on purpose, and a configurable base URL would put a hole in the
+  app's SSRF boundary for the sake of tests.
 - Keep credential *conversion* in [`koski2openbadge`](https://github.com/FindyFi/koski2openbadge) and
   credential *signing* and *delivery* in the two companion services. This repository owns the import,
   the UI and its own persistence; logic that belongs to one of the others is worth moving rather

@@ -94,11 +94,16 @@ async function waitForHealth(baseUrl, child, timeoutMs = 20_000) {
  * also covers schema bootstrapping and the env wiring the container depends
  * on.
  */
-export async function startApp({ env = {} } = {}) {
+export async function startApp({ env = {}, koskiFixture } = {}) {
   const port = await freePort()
   const baseUrl = `http://127.0.0.1:${port}`
 
-  const child = spawn(process.execPath, ['index.js'], {
+  // Passing the Koski stub as `--import` keeps the interception outside the
+  // app: src/koski.js stays hard-restricted to opintopolku.fi, with no
+  // test-only escape hatch in production code.
+  const preload = koskiFixture ? ['--import', new URL('./koski-stub.mjs', import.meta.url).pathname] : []
+
+  const child = spawn(process.execPath, [...preload, 'index.js'], {
     cwd: ROOT,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: {
@@ -111,6 +116,7 @@ export async function startApp({ env = {} } = {}) {
       ORIGIN: baseUrl,
       ISSUER_ID: 'did:web:example.org',
       ISSUER_NAME: 'Example Issuer',
+      ...(koskiFixture ? { KOSKI_STUB_FIXTURE: koskiFixture } : {}),
       ...env,
     },
   })
@@ -134,6 +140,62 @@ export async function startApp({ env = {} } = {}) {
     async stop() {
       child.kill('SIGTERM')
       await once(child, 'exit')
+    },
+  }
+}
+
+/**
+ * A fetch wrapper that keeps cookies, so a sequence of requests shares one
+ * session the way a browser would. Node's fetch has no cookie jar, and every
+ * authenticated route here depends on the session cookie.
+ */
+export function createClient(baseUrl) {
+  const cookies = new Map()
+
+  function header() {
+    return [...cookies].map(([name, value]) => `${name}=${value}`).join('; ')
+  }
+
+  function remember(res) {
+    for (const raw of res.headers.getSetCookie?.() ?? []) {
+      const [pair] = raw.split(';')
+      const index = pair.indexOf('=')
+      if (index > 0) cookies.set(pair.slice(0, index).trim(), pair.slice(index + 1).trim())
+    }
+  }
+
+  async function request(path, { method = 'GET', body, headers = {} } = {}) {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: {
+        ...(body === undefined ? {} : { 'content-type': 'application/json' }),
+        ...(cookies.size ? { cookie: header() } : {}),
+        ...headers,
+      },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+      redirect: 'manual',
+    })
+    remember(res)
+    return res
+  }
+
+  return {
+    request,
+    /** Requests and parses JSON, keeping the status for assertions. */
+    async json(path, options) {
+      const res = await request(path, options)
+      const text = await res.text()
+      let parsed
+      try {
+        parsed = text ? JSON.parse(text) : undefined
+      } catch {
+        parsed = text
+      }
+      return { status: res.status, body: parsed }
+    },
+    /** Drops the cookies, as closing the browser would. */
+    forget() {
+      cookies.clear()
     },
   }
 }
