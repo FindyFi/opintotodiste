@@ -1,3 +1,5 @@
+# Full local stack for opintotodiste. Nothing here depends on a sibling
+# checkout - `git clone && docker compose up --build` is enough.
 services:
   db:
     image: postgres:16-alpine
@@ -15,27 +17,28 @@ services:
       timeout: 3s
       retries: 20
 
-  # https://github.com/digitalcredentials/signing-service - built straight
-  # from its own repo (which already ships its own Dockerfile) rather than
-  # vendoring a second, easily-outdated copy of it here.
+  # https://github.com/digitalcredentials/signing-service, pinned to the same
+  # published image the deployed environments run rather than built from its
+  # git HEAD, so local behaviour matches and startup stays fast.
   signing-service:
-    build:
-      context: https://github.com/digitalcredentials/signing-service.git
+    image: digitalcredentials/signing-service:1.1.0
     ports:
       - '4006:4006'
     environment:
       PORT: 4006
       # One seed per "tenant"/instance; TENANT_SEED_TEST is what makes the
-      # "test" instance both opintotodiste (SIGNING_SERVICE_INSTANCE_ID) and
-      # oid4vci-issuer (SIGNING_SERVICE_INSTANCE) already point at exist.
-      # "generate" mints a fresh dev key on every start - fine for local
-      # dev/testing, not for anything you want stable credential keys for.
+      # "test" instance both this app (SIGNING_SERVICE_INSTANCE_ID) and
+      # oid4vci-issuer (SIGNING_SERVICE_INSTANCE) point at exist. "generate"
+      # mints a fresh dev key on every start - fine for local dev, not for
+      # anything that needs stable credential keys.
       TENANT_SEED_TEST: generate
 
-  # Your own sibling project (../oid4vci-issuer).
+  # Built straight from its own repo, which ships its own Dockerfile, rather
+  # than requiring a sibling checkout of ../oid4vci-issuer. Pin #main to a
+  # tag or commit if you need a reproducible local stack.
   oid4vci-issuer:
     build:
-      context: ../oid4vci-issuer
+      context: https://github.com/FindyFi/oid4vci-issuer.git#main
     ports:
       - '4007:4007'
     environment:
@@ -55,11 +58,6 @@ services:
   app:
     build:
       context: .
-      additional_contexts:
-        # See Dockerfile's comment: pulls in the local, unpublished sibling
-        # package.json declares as "file:../koski2openbadge", without
-        # widening this build's own context out to the whole parent folder.
-        koski2openbadge: ../koski2openbadge
     ports:
       - '3000:3000'
     environment:

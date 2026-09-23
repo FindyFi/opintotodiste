@@ -22,7 +22,7 @@ app.use('/vendor/translate-element', express.static('node_modules/translate-elem
 app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewebauthn/browser/dist/bundle'))
 app.use(
   session({
-    store: new (connectPgSimple(session))({ pool, createTableIfMissing: true }),
+    store: new (connectPgSimple(session))({ pool }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
@@ -113,6 +113,10 @@ app.post('/credentials/:index/sign', async (req, res) => {
     })
     res.json({ signed: record.signed })
   } catch (err) {
+    // A 502 here means a dependency refused the request, not that the user
+    // did anything wrong - log it, or the only trace is a message in the
+    // browser that nobody operating the service ever sees.
+    console.error('Signing failed:', err.message)
     res.status(502).json({ error: err.message })
   }
 })
@@ -138,6 +142,7 @@ app.post('/credentials/:index/offer', async (req, res) => {
     const qrDataUrl = await QRCode.toDataURL(offerUri)
     res.json({ offerUri, qrDataUrl, txCode, expiresIn })
   } catch (err) {
+    console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
   }
 })
