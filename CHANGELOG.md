@@ -12,8 +12,19 @@ version to pin.
 ### Added
 
 - Test suite (`node --test`) covering the Koski import and its URL restrictions, credential
-  building, the signing-service and oid4vci-issuer clients, and the running app driven over HTTP:
-  passkey registration and login, collection CRUD, and share-link access.
+  building, the signing-service and oid4vci-issuer clients, and the running app driven over HTTP.
+- End-to-end coverage of the primary journey — Koski link to draft badges, signing, download, wallet
+  offer, language switching, and saving into a shared collection — against the real entrypoint, with
+  the two companion services stubbed.
+- End-to-end coverage of the authenticated half: passkey registration and sign-in, collection CRUD,
+  ownership isolation between accounts, and share-token rotation. These ran against nothing before:
+  the only authenticated assertions were that the guards reject an anonymous caller, which passes
+  equally well when the routes behind them are broken.
+- A virtual WebAuthn authenticator (`test/helpers/authenticator.js`) that answers the registration
+  and login ceremonies, so passkey flows are testable without a browser or any new dependency.
+- A Koski fixture served through an `--import` hook (`test/helpers/koski-stub.mjs`). The
+  interception lives in the test harness rather than in `src/koski.js`, so the opintopolku.fi
+  restriction — the app's SSRF boundary — keeps no test-only escape hatch.
 - `REQUIRE_POSTGRES=1`, which turns an unreachable database into a failure instead of silently
   skipping the database-backed tests. CI sets it, because node:test reports a skipped `describe` as
   zero tests rather than as a skip — without it a Postgres service that failed to start would leave
@@ -27,6 +38,16 @@ version to pin.
 - `package-lock.json`, which `npm ci` in the `Dockerfile` requires, and which pins the exact
   `koski2openbadge` commit built into the image.
 - `CONTRIBUTING.md`, `SECURITY.md`, `.nvmrc`, `.editorconfig` and a Dependabot configuration.
+
+### Fixed
+
+- The credential detail dialog reads the achievement's result descriptions under both the
+  `resultDescription` name Open Badges 3.0 defines and the `resultDescriptions` spelling
+  `koski2openbadge` emitted before 0.1.0. Reading only the old name would have left every grade and
+  credit row with a blank label, silently, once the dependency was updated.
+- A failing signing or credential-offer call is now logged. Both paths returned 502 with the reason
+  in the response body and wrote nothing to stdout, so an operator checking the container logs after
+  a user reported a failure found only the startup line.
 
 ### Changed
 
