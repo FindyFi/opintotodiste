@@ -22,7 +22,7 @@ app.use('/vendor/translate-element', express.static('node_modules/translate-elem
 app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewebauthn/browser/dist/bundle'))
 app.use(
   session({
-    store: new (connectPgSimple(session))({ pool, createTableIfMissing: true }),
+    store: new (connectPgSimple(session))({ pool }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
     resave: false,
     saveUninitialized: false,
