@@ -388,8 +388,13 @@ function openDetail(index) {
   addRow('Koodi', achievement.humanCode)
 
   const results = record.credentialSubject.result || []
+  // Open Badges 3.0 names this `resultDescription`; koski2openbadge emitted the
+  // plural before 0.1.0. Accept both so the page keeps its grade and credit
+  // labels whichever version is installed - drop the fallback once the
+  // dependency is on >= 0.1.0 everywhere.
+  const descriptions = achievement.resultDescription || achievement.resultDescriptions || []
   const resultRows = results.map((r) => {
-    const desc = (achievement.resultDescriptions || []).find((d) => d.id === r.resultDescription)
+    const desc = descriptions.find((d) => d.id === r.resultDescription)
     return el('tr', {}, [el('td', {}, bilingualText(desc?.name)), el('td', {}, bilingualText(r.value ?? r.status))])
   })
 

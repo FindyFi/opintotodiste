@@ -38,3 +38,16 @@ CREATE TABLE IF NOT EXISTS collection_items (
   added_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_collection_items_collection_id ON collection_items(collection_id);
+
+-- The express-session store. connect-pg-simple can create this itself, but it
+-- checks with to_regclass and then creates without IF NOT EXISTS, so several
+-- instances starting at once collide on pg_type exactly as the tables above
+-- would. Created here instead, under runSchema's advisory lock, with
+-- createTableIfMissing left off in index.js. Shape matches the library's own
+-- table.sql; an inline PRIMARY KEY yields the same session_pkey constraint.
+CREATE TABLE IF NOT EXISTS session (
+  sid VARCHAR NOT NULL COLLATE "default" PRIMARY KEY,
+  sess JSON NOT NULL,
+  expire TIMESTAMP(6) NOT NULL
+);
+CREATE INDEX IF NOT EXISTS "IDX_session_expire" ON session (expire);

@@ -1,0 +1,70 @@
+name: Test
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# The workflow only reads the repository. Publishing images happens outside
+# it, so nothing here needs id-token or registry credentials.
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # The full range package.json's "engines" claims to support.
+        node-version: [20, 22, 24]
+
+    name: Node ${{ matrix.node-version }}
+
+    # The tests that exercise the running app need a real Postgres. Without
+    # one they skip themselves, and a skipped `describe` is reported as zero
+    # tests rather than as a skip - so REQUIRE_POSTGRES below turns an
+    # unreachable database into a failure instead of a quietly empty job.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: opintotodiste
+          POSTGRES_PASSWORD: opintotodiste
+          POSTGRES_DB: opintotodiste
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U opintotodiste"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
+
+    steps:
+      # Actions are pinned to a commit SHA rather than a moving tag;
+      # Dependabot (see .github/dependabot.yml) proposes the bumps.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: npm
+
+      - run: npm ci
+      - run: npm test
+        env:
+          TEST_DATABASE_URL: postgres://opintotodiste:opintotodiste@localhost:5432/opintotodiste
+          REQUIRE_POSTGRES: '1'
+
+  # What gets deployed is built from this repository's Dockerfile, so a
+  # Dockerfile that cannot build is a broken release even when the test suite
+  # is green. This also catches the koski2openbadge GitHub dependency failing
+  # to resolve during `npm ci`.
+  image:
+    runs-on: ubuntu-latest
+    name: Docker build
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: docker build -t opintotodiste:ci .
