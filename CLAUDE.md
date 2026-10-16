@@ -19,13 +19,37 @@ If there is no PLAN.md, work normally.
 1. Make sure the tests pass (`npm test`; the database-backed tests need
    Postgres, see `CONTRIBUTING.md`), the work is committed on its branch, and
    PLAN.md is updated if there is one.
-2. Ask the user one **yes/no** question: "Approve this work? (merge to main
+2. **If the work changed code and the tests pass, leave it running** and give
+   the user a link to try it (skip this for doc-only or config-only changes
+   that the app can't show). Several chats may run at once, so don't use
+   fixed ports or stop other chats' processes:
+   - Shared services (once; skip if already up, check with `docker compose ps`):
+     `docker compose up -d db signing-service oid4vci-issuer` from the main
+     checkout. They stay up between chats. If the task changed
+     oid4vci-issuer, rebuild it from the local checkout/worktree first (see
+     README, "Running a local oid4vci-issuer checkout").
+   - The app, from your own worktree: pick a free port (`lsof -iTCP:<port>
+     -sTCP:LISTEN` to check; start from 3001, leave 3000 to the compose
+     `app` service), then run `npm start` in the background with `PORT=<port>`
+     and `ORIGIN=http://localhost:<port>` (WebAuthn checks the origin) plus the
+     rest of the env from `docker-compose.yml`'s `app` service, pointing
+     `DATABASE_URL`, `SIGNING_SERVICE_URL` and `OID4VCI_ISSUER_URL` at
+     `localhost`. Use `run_in_background`, and confirm it answers
+     (`curl -sf http://localhost:<port>/`) before reporting.
+   - Give the user `http://localhost:<port>` and a line on what to look at.
+     Record the port and process in PLAN.md's Log if there is one.
+   - If a service can't be started (no Docker, port in use, build fails), say
+     so and why; don't claim it is running.
+   - When the work is approved and merged, or abandoned, stop **your own** app
+     process. Leave the shared compose services running.
+3. Ask the user one **yes/no** question: "Approve this work? (merge to main
    and clean up the branch and worktree)".
    - **Yes**: merge and clean up exactly as PLAN.md's Working agreement
      describes (local `--no-ff` merge, re-run the tests on main, remove the
      worktree, delete the branch). Don't push unless asked.
-   - **No**: leave everything in place and ask what should change.
-3. Suggest the next steps: which tasks are now unblocked and which of them can
+   - **No**: leave everything in place (including the running app) and ask
+     what should change.
+4. Suggest the next steps: which tasks are now unblocked and which of them can
    run in parallel. For each, give:
    - **Model:** Opus 5.5 for spec- or crypto-heavy work, interop debugging and
      design decisions; Sonnet 5.5 for well-specified implementation; Haiku 5.5
