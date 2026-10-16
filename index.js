@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import './src/env-check.js'
 import express from 'express'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'

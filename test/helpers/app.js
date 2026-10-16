@@ -9,7 +9,7 @@ export const DEFAULT_DATABASE_URL = 'postgres://opintotodiste:opintotodiste@loca
 
 // The app's own configuration, stripped from the inherited environment so a
 // developer's exported vars can't quietly change what is under test.
-const APP_ENV_KEYS = [
+export const APP_ENV_KEYS = [
   'PORT',
   'SESSION_SECRET',
   'DATABASE_URL',
@@ -27,9 +27,10 @@ const APP_ENV_KEYS = [
   'OID4VCI_CREDENTIAL_CONFIGURATION_ID',
   'OID4VCI_CREDENTIAL_ISSUER_ID',
   'OID4VCI_CREDENTIAL_VCT',
+  'PGPASSWORD',
 ]
 
-function cleanEnv() {
+export function cleanEnv() {
   const env = { ...process.env }
   for (const key of APP_ENV_KEYS) delete env[key]
   return { ...env, DOTENV_CONFIG_PATH: '/dev/null' }

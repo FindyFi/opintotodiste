@@ -69,4 +69,6 @@ spawned them, and that chat does steps 2–3.
 - Signing is delegated: `ldp_vc` via digitalcredentials/signing-service, and
   wallet delivery via FindyFi/oid4vci-issuer (sibling checkout at
   `~/github/oid4vci-issuer`).
-- New app env vars must also go into `APP_ENV_KEYS` in `test/helpers/app.js`.
+- New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
+  enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
+  (FindyFi/aws-environment, the image builder's integration compose) must follow.
