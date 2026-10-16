@@ -292,7 +292,6 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
         OID4VCI_ISSUER_INSTANCE: 'test',
         OID4VCI_CREDENTIAL_CONFIGURATION_ID: 'OpenBadgeCredentialSdJwtVc',
         OID4VCI_CREDENTIAL_VCT: VCT,
-        OID4VCI_CREDENTIAL_VCT_INTEGRITY: 'sha256-abc',
       },
     })
   })
@@ -314,8 +313,7 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
     assert.equal(credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
     assert.equal(claims.vct, VCT)
     assert.ok(claims.achievement?.name)
-    assert.equal(claims['vct#integrity'], 'sha256-abc')
     assert.ok(!Number.isNaN(Date.parse(claims.awardedDate)))
-    for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf']) assert.equal(key in claims, false, key)
+    for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf', 'vct#integrity']) assert.equal(key in claims, false, key)
   })
 })
