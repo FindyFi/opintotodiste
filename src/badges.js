@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 const VC_CONTEXT = 'https://www.w3.org/2018/credentials/v1'
+const VC2_CONTEXT = 'https://www.w3.org/ns/credentials/v2'
 const OB3_CONTEXT = 'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
 
 // Wraps a koski2openbadge `credentialSubject` in the envelope a signing
@@ -21,6 +22,33 @@ export function toVerifiableCredential({ credentialSubject, awardedOn }, { issue
     issuanceDate: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
     credentialSubject,
   }
+}
+
+// Like toVerifiableCredential, but a VCDM 2.0 credential (`validFrom`, v2
+// context) for oid4vci-issuer to secure as an SD-JWT. Still unsigned, and
+// `issuerId` must be the issuer's HTTPS URL, which the issuer checks.
+export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, issuerName }) {
+  if (!issuerId) {
+    throw new Error('The wallet issuer is not configured (set OID4VCI_CREDENTIAL_ISSUER_ID).')
+  }
+  return {
+    '@context': [VC2_CONTEXT, OB3_CONTEXT],
+    id: `urn:uuid:${randomUUID()}`,
+    type: ['VerifiableCredential', 'OpenBadgeCredential'],
+    issuer: {
+      id: issuerId,
+      type: ['Profile'],
+      name: issuerName,
+    },
+    validFrom: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
+    credentialSubject,
+  }
+}
+
+// Inverse of toVerifiableCredential for a stored (signed) ldp_vc, so it can be
+// rebuilt as another kind of credential.
+export function recordFromCredential(vc) {
+  return { credentialSubject: vc.credentialSubject, awardedOn: vc.issuanceDate ?? vc.validFrom }
 }
 
 // Calls a https://github.com/digitalcredentials/signing-service instance to

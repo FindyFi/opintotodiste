@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { signCredential, toVerifiableCredential } from '../src/badges.js'
+import { recordFromCredential, signCredential, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -10,6 +10,50 @@ const RECORD = {
 }
 
 const ISSUER = { issuerId: 'did:web:example.org', issuerName: 'Example Issuer' }
+
+describe('toVcdm2Credential', () => {
+  const ISSUER2 = { issuerId: 'https://issuer.example', issuerName: 'Example Issuer' }
+
+  test('builds an unsigned VCDM 2.0 Open Badges credential', () => {
+    const vc = toVcdm2Credential(RECORD, ISSUER2)
+
+    assert.deepEqual(vc['@context'], [
+      'https://www.w3.org/ns/credentials/v2',
+      'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json',
+    ])
+    assert.deepEqual(vc.type, ['VerifiableCredential', 'OpenBadgeCredential'])
+    assert.match(vc.id, /^urn:uuid:/)
+    assert.deepEqual(vc.issuer, { id: 'https://issuer.example', type: ['Profile'], name: 'Example Issuer' })
+    assert.deepEqual(vc.credentialSubject, RECORD.credentialSubject)
+    assert.equal(vc.validFrom, new Date('2021-06-01').toISOString())
+    assert.ok(!('issuanceDate' in vc) && !('proof' in vc))
+  })
+
+  test('falls back to now when there is no award date', () => {
+    const before = Date.now()
+    const vc = toVcdm2Credential({ credentialSubject: {} }, ISSUER2)
+    const from = new Date(vc.validFrom).getTime()
+    assert.ok(from >= before && from <= Date.now())
+  })
+
+  test('refuses to build a credential with no configured issuer', () => {
+    assert.throws(() => toVcdm2Credential(RECORD, {}), /OID4VCI_CREDENTIAL_ISSUER_ID/)
+  })
+})
+
+describe('recordFromCredential', () => {
+  test('recovers the record from a stored credential', () => {
+    const vc = toVerifiableCredential(RECORD, ISSUER)
+    assert.deepEqual(recordFromCredential(vc), {
+      credentialSubject: RECORD.credentialSubject,
+      awardedOn: new Date('2021-06-01').toISOString(),
+    })
+  })
+
+  test('falls back to validFrom', () => {
+    assert.equal(recordFromCredential({ credentialSubject: {}, validFrom: '2022-01-01T00:00:00.000Z' }).awardedOn, '2022-01-01T00:00:00.000Z')
+  })
+})
 
 describe('toVerifiableCredential', () => {
   test('wraps the subject in an unsigned Open Badges 3.0 credential', () => {

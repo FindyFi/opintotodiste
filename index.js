@@ -5,7 +5,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
-import { toVerifiableCredential, signCredential } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
@@ -131,14 +131,15 @@ app.post('/credentials/:index/offer', async (req, res) => {
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   try {
-    const vc = toVerifiableCredential(record, {
-      issuerId: process.env.ISSUER_ID,
+    const vc = toVcdm2Credential(record, {
+      issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
       issuerName: process.env.ISSUER_NAME,
     })
     const { offerUri, txCode, expiresIn } = await createOffer(vc, {
       baseUrl: process.env.OID4VCI_ISSUER_URL,
       tenant: process.env.OID4VCI_ISSUER_INSTANCE,
       token: process.env.OID4VCI_ISSUER_TOKEN,
+      credentialConfigurationId: process.env.OID4VCI_CREDENTIAL_CONFIGURATION_ID || undefined,
     })
     const qrDataUrl = await QRCode.toDataURL(offerUri)
     res.json({ offerUri, qrDataUrl, txCode, expiresIn })

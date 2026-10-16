@@ -40,6 +40,7 @@ describe('the Koski journey', needsPostgres, () => {
         OID4VCI_ISSUER_URL: issuer.url,
         OID4VCI_ISSUER_INSTANCE: 'test',
         OID4VCI_ISSUER_TOKEN: 'stub-token',
+        OID4VCI_CREDENTIAL_ISSUER_ID: 'https://issuer.example',
       },
     })
   })
@@ -126,9 +127,14 @@ describe('the Koski journey', needsPostgres, () => {
 
     const sent = issuer.requests.at(-1)
     assert.equal(sent.headers.authorization, 'Bearer stub-token')
-    assert.equal(sent.body.credentialConfigurationId, 'OpenBadgeCredential')
-    // The issuer signs on redemption, so it must be handed an unsigned VC.
-    assert.equal(sent.body.unsignedCredential.proof, undefined)
+    assert.equal(sent.body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
+    // The issuer signs on redemption, so it must be handed an unsigned VCDM 2.0 VC.
+    const vc = sent.body.unsignedCredential
+    assert.equal(vc.proof, undefined)
+    assert.equal(vc['@context'][0], 'https://www.w3.org/ns/credentials/v2')
+    assert.equal(vc.issuer.id, 'https://issuer.example')
+    assert.ok(vc.validFrom)
+    assert.equal(vc.issuanceDate, undefined)
   })
 
   test('re-translates already-loaded records without calling Koski again', async () => {

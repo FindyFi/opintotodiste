@@ -259,12 +259,6 @@ async function bulkAddToWallet() {
   for (const index of indices) {
     const name = columnValue(credentials[index], 'name')
     try {
-      if (!credentials[index].signed) {
-        const signRes = await fetch(`/credentials/${index}/sign`, { method: 'POST' })
-        const signData = await signRes.json()
-        if (!signRes.ok) throw new Error(signData.error || 'Signing failed')
-        credentials[index].signed = signData.signed
-      }
       const offerRes = await fetch(`/credentials/${index}/offer`, { method: 'POST' })
       const offerData = await offerRes.json()
       if (!offerRes.ok) throw new Error(offerData.error || 'Could not create the wallet offer')
