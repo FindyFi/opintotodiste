@@ -45,6 +45,28 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
   }
 }
 
+// The claims of an IETF SD-JWT VC (`dc+sd-jwt`), which most wallets
+// understand better than VCDM 2.0: flat claims identified by `vct`, with no
+// JSON-LD (`@context`, `type`) and no credentialSubject wrapper. Still
+// unsigned; oid4vci-issuer adds `iss`, `iat` and `cnf`.
+export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
+  if (!vct) {
+    throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
+  }
+  return {
+    vct,
+    ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
+    ...(awardedOn ? { awarded_on: new Date(awardedOn).toISOString().slice(0, 10) } : {}),
+    achievement: withoutJsonLdTypes(credentialSubject.achievement),
+  }
+}
+
+function withoutJsonLdTypes(value) {
+  if (Array.isArray(value)) return value.map(withoutJsonLdTypes)
+  if (!value || typeof value !== 'object') return value
+  return Object.fromEntries(Object.entries(value).filter(([key]) => key !== 'type').map(([key, v]) => [key, withoutJsonLdTypes(v)]))
+}
+
 // Inverse of toVerifiableCredential for a stored (signed) ldp_vc, so it can be
 // rebuilt as another kind of credential.
 export function recordFromCredential(vc) {

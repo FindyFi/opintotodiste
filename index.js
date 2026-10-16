@@ -5,7 +5,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
-import { toVerifiableCredential, toVcdm2Credential, recordFromCredential, signCredential } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, recordFromCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
@@ -122,13 +122,16 @@ app.post('/credentials/:index/sign', async (req, res) => {
   }
 })
 
-// Hands a VCDM 2.0 VC for `record` to the OID4VCI issuer and returns what the
-// wallet dialog needs: the offer URI as a QR code, plus the tx code.
+// Hands an unsigned credential for `record` to the OID4VCI issuer and returns
+// what the wallet dialog needs: the offer URI as a QR code, plus the tx code.
+// With OID4VCI_CREDENTIAL_VCT set it's SD-JWT VC claims, otherwise VCDM 2.0.
 async function createWalletOffer(record) {
-  const vc = toVcdm2Credential(record, {
-    issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
-    issuerName: process.env.ISSUER_NAME,
-  })
+  const vc = process.env.OID4VCI_CREDENTIAL_VCT
+    ? toSdJwtVcClaims(record, { vct: process.env.OID4VCI_CREDENTIAL_VCT })
+    : toVcdm2Credential(record, {
+        issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
+        issuerName: process.env.ISSUER_NAME,
+      })
   const { offerUri, txCode, expiresIn } = await createOffer(vc, {
     baseUrl: process.env.OID4VCI_ISSUER_URL,
     tenant: process.env.OID4VCI_ISSUER_INSTANCE,

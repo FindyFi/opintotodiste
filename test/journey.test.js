@@ -275,3 +275,45 @@ describe('the Koski journey', needsPostgres, () => {
     })
   })
 })
+
+describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
+  const VCT = 'https://issuer.example/vct/OpenBadgeCredential'
+  let app
+  let issuer
+
+  before(async () => {
+    issuer = await startStubServer(() => ({
+      json: { offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
+    }))
+    app = await startApp({
+      koskiFixture: FIXTURE,
+      env: {
+        OID4VCI_ISSUER_URL: issuer.url,
+        OID4VCI_ISSUER_INSTANCE: 'test',
+        OID4VCI_CREDENTIAL_CONFIGURATION_ID: 'OpenBadgeCredentialSdJwtVc',
+        OID4VCI_CREDENTIAL_VCT: VCT,
+      },
+    })
+  })
+
+  after(async () => {
+    await app?.stop()
+    await issuer?.stop()
+  })
+
+  test('sends flat claims with the configured vct', async () => {
+    const client = createClient(app.baseUrl)
+    const loaded = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    assert.equal(loaded.status, 200, JSON.stringify(loaded.body))
+
+    const offer = await client.json('/credentials/0/offer', { method: 'POST' })
+    assert.equal(offer.status, 200, JSON.stringify(offer.body))
+
+    const { credentialConfigurationId, unsignedCredential: claims } = issuer.requests.at(-1).body
+    assert.equal(credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
+    assert.equal(claims.vct, VCT)
+    assert.ok(claims.achievement?.name)
+    assert.match(claims.awarded_on, /^\d{4}-\d{2}-\d{2}$/)
+    for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf']) assert.equal(key in claims, false, key)
+  })
+})
