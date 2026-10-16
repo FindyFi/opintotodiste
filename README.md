@@ -137,7 +137,6 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `OID4VCI_ISSUER_URL`, `OID4VCI_ISSUER_INSTANCE`, `OID4VCI_ISSUER_TOKEN` | Where/how to reach oid4vci-issuer |
 | `OID4VCI_CREDENTIAL_CONFIGURATION_ID` | Credential configuration requested for wallet offers (default `OpenBadgeCredentialSdJwt`; Compose uses `OpenBadgeCredentialSdJwtVc`) |
 | `OID4VCI_CREDENTIAL_VCT` | The `vct` of a `dc+sd-jwt` configuration. When set, wallet offers carry flat SD-JWT VC claims; when unset, a VCDM 2.0 VC |
-| `OID4VCI_CREDENTIAL_VCT_INTEGRITY` | Optional `vct#integrity` (SRI hash of the type metadata) added to SD-JWT VC claims |
 | `OID4VCI_CREDENTIAL_ISSUER_ID` | Only without `OID4VCI_CREDENTIAL_VCT`: issuer URL written as `issuer.id` into VCDM 2.0 wallet credentials. Must equal the oid4vci-issuer's SD-JWT issuer URL (origin only) |
 
 ## Tests

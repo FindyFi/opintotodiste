@@ -127,10 +127,7 @@ app.post('/credentials/:index/sign', async (req, res) => {
 // With OID4VCI_CREDENTIAL_VCT set it's SD-JWT VC claims, otherwise VCDM 2.0.
 async function createWalletOffer(record) {
   const vc = process.env.OID4VCI_CREDENTIAL_VCT
-    ? toSdJwtVcClaims(record, {
-        vct: process.env.OID4VCI_CREDENTIAL_VCT,
-        vctIntegrity: process.env.OID4VCI_CREDENTIAL_VCT_INTEGRITY,
-      })
+    ? toSdJwtVcClaims(record, { vct: process.env.OID4VCI_CREDENTIAL_VCT })
     : toVcdm2Credential(record, {
         issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
         issuerName: process.env.ISSUER_NAME,

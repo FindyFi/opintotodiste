@@ -30,11 +30,6 @@ describe('toSdJwtVcClaims', () => {
     })
   })
 
-  test('adds vct#integrity when given', () => {
-    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, vctIntegrity: 'sha256-abc' })
-    assert.equal(claims['vct#integrity'], 'sha256-abc')
-  })
-
   test('leaves out what the record lacks', () => {
     assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, achievement: { name: 'A' } })
   })

@@ -51,13 +51,12 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // unsigned; oid4vci-issuer adds `iss`, `iat` and `cnf`.
 // Claim names follow Open Badges 3.0, as the shared Open Badge type at
 // https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT defines.
-export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, vctIntegrity }) {
+export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
   }
   return {
     vct,
-    ...(vctIntegrity ? { 'vct#integrity': vctIntegrity } : {}),
     ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
