@@ -196,4 +196,82 @@ describe('the Koski journey', needsPostgres, () => {
     assert.equal(download.status, 200)
     assert.ok((await download.json()).proof, 'the shared credential should still carry its proof')
   })
+
+  describe('sending a collection item to a wallet', () => {
+    async function signUp(name) {
+      const client = createClient(app.baseUrl)
+      const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
+      const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: name } })
+      await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
+      return client
+    }
+
+    async function collectionWithItem(client) {
+      await loadCredentials(client)
+      const collection = await client.json('/collections', { method: 'POST', body: { name: 'Omat' } })
+      const added = await client.json(`/collections/${collection.body.id}/items`, {
+        method: 'POST',
+        body: { indices: [0] },
+      })
+      return { collection: collection.body, itemId: added.body.results[0].itemId, signed: added.body.results[0].signed }
+    }
+
+    test('re-issues the stored credential as a VCDM 2.0 offer for its owner', async () => {
+      const client = await signUp('Owner')
+      const { collection, itemId, signed } = await collectionWithItem(client)
+
+      const offer = await client.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      assert.equal(offer.status, 200, JSON.stringify(offer.body))
+      assert.match(offer.body.offerUri, /^openid-credential-offer:\/\//)
+      assert.match(offer.body.qrDataUrl, /^data:image\/png;base64,/)
+
+      const vc = issuer.requests.at(-1).body.unsignedCredential
+      assert.equal(issuer.requests.at(-1).body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
+      assert.equal(vc['@context'][0], 'https://www.w3.org/ns/credentials/v2')
+      assert.equal(vc.issuer.id, 'https://issuer.example')
+      assert.equal(vc.validFrom, signed.issuanceDate)
+      assert.deepEqual(vc.credentialSubject, signed.credentialSubject)
+      assert.equal(vc.proof, undefined)
+    })
+
+    test('lists the items of an owned collection, and only to the owner', async () => {
+      const owner = await signUp('Lister')
+      const { collection } = await collectionWithItem(owner)
+
+      const listed = await owner.json(`/collections/${collection.id}/items`)
+      assert.equal(listed.status, 200)
+      assert.equal(listed.body.items.length, 1)
+
+      const stranger = await signUp('Stranger')
+      assert.equal((await stranger.json(`/collections/${collection.id}/items`)).status, 404)
+    })
+
+    test('404s for someone who does not own the collection', async () => {
+      const owner = await signUp('Owner 2')
+      const { collection, itemId } = await collectionWithItem(owner)
+      const stranger = await signUp('Stranger 2')
+
+      const res = await stranger.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      assert.equal(res.status, 404)
+    })
+
+    test('401s when signed out, including through the share link', async () => {
+      const owner = await signUp('Owner 3')
+      const { collection, itemId } = await collectionWithItem(owner)
+
+      const anonymous = createClient(app.baseUrl)
+      const res = await anonymous.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      assert.equal(res.status, 401)
+      assert.equal((await anonymous.request(`/c/${collection.shareToken}/items/${itemId}/offer`, { method: 'POST' })).status, 404)
+    })
+
+    test('shows the award date on the shared page', async () => {
+      const owner = await signUp('Owner 4')
+      const { collection, signed } = await collectionWithItem(owner)
+      const [y, m, d] = signed.issuanceDate.slice(0, 10).split('-')
+
+      const page = await createClient(app.baseUrl).request(`/c/${collection.shareToken}`)
+      assert.match(await page.text(), new RegExp(`${Number(d)}\\.${Number(m)}\\.${y}`))
+    })
+  })
 })

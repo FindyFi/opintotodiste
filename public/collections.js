@@ -42,10 +42,38 @@ const createCollection = (name) =>
 const renameCollection = (id, name) =>
   requestJson(`/collections/${id}`, { method: 'PATCH', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name }) })
 const deleteCollectionRequest = (id) => requestJson(`/collections/${id}`, { method: 'DELETE' })
+const fetchItems = (id) => requestJson(`/collections/${id}/items`).then((data) => data.items)
+const requestWalletOffer = (collectionId, itemId) =>
+  requestJson(`/collections/${collectionId}/items/${itemId}/offer`, { method: 'POST' })
 const regenerateShareToken = (id) => requestJson(`/collections/${id}/share-token/regenerate`, { method: 'POST' })
 
 function shareUrl(token) {
   return `${location.origin}/c/${token}`
+}
+
+function buildItemRow(collection, item) {
+  const achievement = item.credential?.credentialSubject?.achievement || {}
+  const name = achievement.name || ''
+  const meta = [achievement.achievementType, achievement.creator?.name].filter(Boolean).join(' · ')
+
+  const walletBtn = el('button', { type: 'button', class: 'small primary' }, el('span', { lang: 'fi' }, 'Lisää lompakkoon'))
+  walletBtn.addEventListener('click', async () => {
+    walletBtn.disabled = true
+    walletBtn.classList.add('busy')
+    try {
+      WalletOffer.show([{ name, ...(await requestWalletOffer(collection.id, item.id)) }])
+    } catch (err) {
+      showError(err.message)
+    } finally {
+      walletBtn.disabled = false
+      walletBtn.classList.remove('busy')
+    }
+  })
+
+  return el('li', { class: 'credential' }, [
+    el('div', { class: 'credential-body' }, [el('span', { class: 'credential-name' }, name), el('span', { class: 'credential-meta' }, meta)]),
+    el('div', { class: 'credential-status' }, walletBtn),
+  ])
 }
 
 function buildCollectionRow(collection) {
@@ -103,11 +131,17 @@ function buildCollectionRow(collection) {
     }
   })
 
+  const itemList = el('ul', { class: 'collection-items' })
+  fetchItems(collection.id)
+    .then((items) => itemList.append(...items.map((item) => buildItemRow(collection, item))))
+    .catch((err) => showError(err.message))
+
   return el('li', { class: 'collection-card' }, [
     el('div', { class: 'collection-head' }, [
       el('h3', {}, collection.name),
       el('span', { class: 'muted' }, [`${collection.itemCount} `, el('span', { lang: 'fi' }, 'kohdetta')]),
     ]),
+    itemList,
     el('div', { class: 'share-row' }, [linkEl, copyBtn]),
     el('div', { class: 'collection-actions' }, [regenBtn, renameBtn, deleteBtn]),
   ])

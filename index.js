@@ -5,7 +5,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
-import { toVerifiableCredential, toVcdm2Credential, signCredential } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, recordFromCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
@@ -122,6 +122,23 @@ app.post('/credentials/:index/sign', async (req, res) => {
   }
 })
 
+// Hands a VCDM 2.0 VC for `record` to the OID4VCI issuer and returns what the
+// wallet dialog needs: the offer URI as a QR code, plus the tx code.
+async function createWalletOffer(record) {
+  const vc = toVcdm2Credential(record, {
+    issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
+    issuerName: process.env.ISSUER_NAME,
+  })
+  const { offerUri, txCode, expiresIn } = await createOffer(vc, {
+    baseUrl: process.env.OID4VCI_ISSUER_URL,
+    tenant: process.env.OID4VCI_ISSUER_INSTANCE,
+    token: process.env.OID4VCI_ISSUER_TOKEN,
+    credentialConfigurationId: process.env.OID4VCI_CREDENTIAL_CONFIGURATION_ID || undefined,
+  })
+  const qrDataUrl = await QRCode.toDataURL(offerUri)
+  return { offerUri, qrDataUrl, txCode, expiresIn }
+}
+
 // Unlike /sign, this never calls signCredential itself - it hands an
 // unsigned VC to the OID4VCI issuer, which signs it only once a wallet
 // actually completes the flow.
@@ -131,18 +148,7 @@ app.post('/credentials/:index/offer', async (req, res) => {
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   try {
-    const vc = toVcdm2Credential(record, {
-      issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
-      issuerName: process.env.ISSUER_NAME,
-    })
-    const { offerUri, txCode, expiresIn } = await createOffer(vc, {
-      baseUrl: process.env.OID4VCI_ISSUER_URL,
-      tenant: process.env.OID4VCI_ISSUER_INSTANCE,
-      token: process.env.OID4VCI_ISSUER_TOKEN,
-      credentialConfigurationId: process.env.OID4VCI_CREDENTIAL_CONFIGURATION_ID || undefined,
-    })
-    const qrDataUrl = await QRCode.toDataURL(offerUri)
-    res.json({ offerUri, qrDataUrl, txCode, expiresIn })
+    res.json(await createWalletOffer(record))
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
@@ -278,6 +284,29 @@ app.post('/collections/:id/items', requireAuth, async (req, res) => {
     }
   }
   res.json({ results })
+})
+
+app.get('/collections/:id/items', requireAuth, async (req, res) => {
+  try {
+    res.json({ items: await collections.listItems(req.session.userId, req.params.id) })
+  } catch (err) {
+    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+})
+
+// Owner only: with no holder binding, a public share link must not be able to
+// put someone else's badge into the visitor's wallet. The stored ldp_vc is
+// re-issued as a VCDM 2.0 credential for the wallet.
+app.post('/collections/:id/items/:itemId/offer', requireAuth, async (req, res) => {
+  const credential = await collections.findOwnedItem(req.session.userId, req.params.id, req.params.itemId)
+  if (!credential) return res.status(404).json({ error: 'Credential not found.' })
+
+  try {
+    res.json(await createWalletOffer(recordFromCredential(credential)))
+  } catch (err) {
+    console.error('Creating a credential offer failed:', err.message)
+    res.status(502).json({ error: err.message })
+  }
 })
 
 // --- Public share links -----------------------------------------------------

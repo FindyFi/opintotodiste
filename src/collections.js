@@ -93,6 +93,27 @@ export async function addItem(ownerId, collectionId, credential) {
   return { id: rows[0].id, addedAt: rows[0].added_at }
 }
 
+export async function listItems(ownerId, collectionId) {
+  await assertOwnedCollection(ownerId, collectionId)
+  const { rows } = await pool.query(
+    'SELECT id, credential, added_at FROM collection_items WHERE collection_id = $1 ORDER BY added_at',
+    [collectionId]
+  )
+  return rows.map((r) => ({ id: r.id, credential: r.credential, addedAt: r.added_at }))
+}
+
+// The stored credential, or null unless the item sits in a collection owned by
+// ownerId - callers answer 404 either way so ids of strangers' items don't leak.
+export async function findOwnedItem(ownerId, collectionId, itemId) {
+  const { rows } = await pool.query(
+    `SELECT i.credential FROM collection_items i
+     JOIN collections c ON c.id = i.collection_id
+     WHERE c.owner_id = $1 AND c.id = $2 AND i.id = $3`,
+    [ownerId, collectionId, itemId]
+  )
+  return rows[0]?.credential ?? null
+}
+
 export async function findByShareToken(token) {
   const { rows } = await pool.query('SELECT id, name, created_at FROM collections WHERE share_token = $1', [token])
   if (!rows[0]) return null
