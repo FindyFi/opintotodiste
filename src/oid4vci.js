@@ -1,9 +1,8 @@
 // Calls an https://github.com/FindyFi/oid4vci-issuer instance to turn an
 // already-built, unsigned Verifiable Credential into a wallet-scannable
-// OID4VCI credential offer. Actual signing happens inside that service (via
-// its own signing-service call) once a wallet completes the flow - this
-// only creates the offer.
-export async function createOffer(unsignedCredential, { baseUrl, tenant, token, txCode = true }) {
+// OID4VCI credential offer. Actual signing happens inside that service once a
+// wallet completes the flow - this only creates the offer.
+export async function createOffer(unsignedCredential, { baseUrl, tenant, token, txCode = true, credentialConfigurationId = 'OpenBadgeCredentialSdJwt' }) {
   if (!baseUrl || !tenant) {
     throw new Error('The OID4VCI issuer is not configured (set OID4VCI_ISSUER_URL and OID4VCI_ISSUER_INSTANCE).')
   }
@@ -16,7 +15,7 @@ export async function createOffer(unsignedCredential, { baseUrl, tenant, token, 
       ...(token ? { authorization: `Bearer ${token}` } : {}),
     },
     body: JSON.stringify({
-      credentialConfigurationId: 'OpenBadgeCredential',
+      credentialConfigurationId,
       unsignedCredential,
       txCode,
     }),

@@ -31,7 +31,7 @@ describe('createOffer', () => {
       assert.equal(request.method, 'POST')
       assert.equal(request.url, '/instance/test/offers')
       assert.equal(request.headers.authorization, 'Bearer coordinator-token')
-      assert.equal(request.body.credentialConfigurationId, 'OpenBadgeCredential')
+      assert.equal(request.body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
       assert.deepEqual(request.body.unsignedCredential, UNSIGNED_CREDENTIAL)
       assert.equal(request.body.txCode, true)
       assert.deepEqual(offer, OFFER_RESPONSE)
@@ -45,6 +45,16 @@ describe('createOffer', () => {
     try {
       await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test' })
       assert.equal(issuer.requests[0].headers.authorization, undefined)
+    } finally {
+      await issuer.stop()
+    }
+  })
+
+  test('uses the configured credential configuration', async () => {
+    const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
+    try {
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', credentialConfigurationId: 'Other' })
+      assert.equal(issuer.requests[0].body.credentialConfigurationId, 'Other')
     } finally {
       await issuer.stop()
     }
