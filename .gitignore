@@ -1,2 +1,4 @@
 node_modules/
 .env
+# Local stack overrides (e.g. building oid4vci-issuer from a checkout), see README.
+docker-compose.override.yml

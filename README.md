@@ -18,10 +18,16 @@ Issues Open Badges 3.0 credentials from Koski study records, with passkey-authen
 
 [Koski](https://opintopolku.fi/koski/) is Finland's national registry of study records. opintotodiste lets a person paste a link to their own Koski data, converts the eligible records into draft [Open Badges 3.0](https://www.imsglobal.org/spec/ob/v3p0) credentials via [`koski2openbadge`](https://github.com/FindyFi/koski2openbadge), and from there signs, delivers, or archives them.
 
-Signing and wallet delivery are delegated to two companion services rather than implemented here:
+Two credential formats are in use, and each is signed by a different component:
 
-- [`digitalcredentials/signing-service`](https://github.com/digitalcredentials/signing-service) turns a draft badge into a signed Verifiable Credential.
-- [`FindyFi/oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer) hands a signed credential to a wallet app over OID4VCI (pre-authorized-code flow, QR code + deep link).
+| Use | Format | Signed by |
+| --- | --- | --- |
+| Download (JSON file, "Get credential") | `ldp_vc`: VCDM 1.1 with a Data Integrity proof | [`digitalcredentials/signing-service`](https://github.com/digitalcredentials/signing-service) |
+| Add to wallet (OID4VCI offer, QR code + deep link) | `vc+sd-jwt`: VCDM 2.0 secured as an SD-JWT, with an ES256 signature | [`FindyFi/oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer), with its own key |
+
+Downloads are never SD-JWTs, and wallets only ever receive SD-JWTs. The wallet credential has no selective disclosure and no holder binding (no `cnf` claim): the format is used for interoperability, and the issuer's public keys are published at `/.well-known/jwt-vc-issuer` on its origin.
+
+[`FindyFi/oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer) runs the OID4VCI pre-authorized-code flow with the wallet app. The `ldp_vc` configuration still exists there, and is the only one that goes through signing-service.
 
 opintotodiste itself owns the Koski import, the signing/delivery UI, and its own persistence layer: PostgreSQL for user accounts, [WebAuthn passkeys](https://simplewebauthn.dev/), and named, shareable collections of credentials.
 
@@ -41,6 +47,19 @@ To install and run without Docker instead:
 npm install
 cp .env.example .env   # then edit as needed
 ```
+
+### Running a local oid4vci-issuer checkout
+
+The compose file builds `oid4vci-issuer` from GitHub `main`, so changes that are not pushed (or live only in a worktree) are not picked up. To build it from a local checkout, create a `docker-compose.override.yml` next to `docker-compose.yml`. Docker Compose reads it automatically, and it is gitignored:
+
+```yaml
+services:
+  oid4vci-issuer:
+    build:
+      context: ../oid4vci-issuer
+```
+
+The path is relative to this repository. For a worktree, use its absolute path instead, for example `context: /Users/you/github/worktrees/oid4vci-issuer/B2`. Then rebuild with `docker compose up --build oid4vci-issuer`.
 
 ### The `koski2openbadge` dependency
 
@@ -85,6 +104,8 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `ISSUER_ID`, `ISSUER_NAME` | Identity used as the issuer on issued credentials |
 | `SIGNING_SERVICE_URL`, `SIGNING_SERVICE_INSTANCE_ID`, `SIGNING_SERVICE_SUITE` | Where/how to reach signing-service |
 | `OID4VCI_ISSUER_URL`, `OID4VCI_ISSUER_INSTANCE`, `OID4VCI_ISSUER_TOKEN` | Where/how to reach oid4vci-issuer |
+| `OID4VCI_CREDENTIAL_CONFIGURATION_ID` | Credential configuration requested for wallet offers (default `OpenBadgeCredentialSdJwt`) |
+| `OID4VCI_CREDENTIAL_ISSUER_ID` | Issuer URL written as `issuer.id` into wallet credentials. Must equal the oid4vci-issuer's SD-JWT issuer URL (origin only) |
 
 ## Tests
 
