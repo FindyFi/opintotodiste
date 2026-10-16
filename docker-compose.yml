@@ -59,6 +59,9 @@ services:
       # fresh key on every start - fine for local dev, but credentials issued
       # before a restart no longer verify against the published JWKS.
       SD_JWT_SIGNING_KEY: generate
+      # A self-signed certificate for that key, sent as x5c in SD-JWT headers
+      # for wallets that find issuer keys only from certificates (Paradym).
+      SD_JWT_X5C: generate
       # Only the ldp_vc configuration above needs signing-service.
       SIGNING_SERVICE_URL: http://signing-service:4006
       SIGNING_SERVICE_INSTANCE: test
