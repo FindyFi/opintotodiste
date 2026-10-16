@@ -126,6 +126,7 @@ ${header()}
 <script>window.__INITIAL_DATA__ = ${embedJson(initialData)}</script>
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/wallet-offer.js" defer></script>
 <script src="/app.js" defer></script>
 </body>
 </html>`
@@ -158,8 +159,14 @@ ${header()}
   <div id="collectionsContainer"></div>
 </main>
 
+<dialog id="detailDialog">
+  <div id="detailDialogContent"></div>
+  <form method="dialog"><button type="submit" lang="fi">Sulje</button></form>
+</dialog>
+
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
+<script src="/wallet-offer.js" defer></script>
 <script src="/collections.js" defer></script>
 </body>
 </html>`
@@ -169,7 +176,7 @@ export function sharedCollectionPage({ token, collection, items }) {
   const rows = items
     .map((item) => {
       const achievement = item.credential?.credentialSubject?.achievement || {}
-      const meta = [achievement.achievementType, achievement.creator?.name, formatDate(item.credential?.awardedOn)].filter(Boolean)
+      const meta = [achievement.achievementType, achievement.creator?.name, formatDate((item.credential?.issuanceDate ?? item.credential?.validFrom)?.slice(0, 10))].filter(Boolean)
       const iconClass = MAJOR_ACHIEVEMENT_TYPES.test(achievement.achievementType ?? '') ? 'credential-icon strong' : 'credential-icon'
       return `<li class="credential">
         <span class="${iconClass}">${BADGE_ICON}</span>

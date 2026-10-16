@@ -233,11 +233,6 @@ function buildStatusCell(record, index) {
   ]
 }
 
-function formatDuration(seconds) {
-  const minutes = Math.round(seconds / 60)
-  return minutes >= 1 ? `${minutes} min` : `${seconds} s`
-}
-
 function updateBulkBar() {
   if (!credentials.length) {
     bulkBar.hidden = true
@@ -270,13 +265,13 @@ async function bulkAddToWallet() {
   bulkWalletBtn.classList.remove('busy')
   selectedIndices.clear()
   renderTable()
-  showWalletOffers(results)
+  WalletOffer.show(results)
 }
 
 bulkWalletBtn.addEventListener('click', bulkAddToWallet)
 
 // Reuses the same <dialog id="detailDialog"> a third way (also used for the
-// credential detail view and for showWalletOffers()). Resolves with the
+// credential detail view and for WalletOffer.show()). Resolves with the
 // chosen/created collection id, or null if the user cancelled.
 function pickOrCreateCollection() {
   return new Promise(async (resolve) => {
@@ -392,26 +387,6 @@ async function bulkAddToCollection() {
 }
 
 bulkCollectionBtn.addEventListener('click', bulkAddToCollection)
-
-function showWalletOffers(results) {
-  const content = [el('h2', { lang: 'fi' }, 'Lisää lompakkoon'), el('p', { lang: 'fi' }, 'Skannaa QR-koodi lompakkosovelluksella.')]
-  results.forEach((r) => {
-    if (r.error) {
-      content.push(el('div', { class: 'wallet-offer' }, [el('strong', {}, r.name), el('div', { class: 'row-error' }, r.error)]))
-      return
-    }
-    const item = [
-      el('h3', {}, r.name),
-      el('img', { src: r.qrDataUrl, alt: 'QR', width: '180', height: '180' }),
-      el('p', {}, el('a', { href: r.offerUri, lang: 'fi' }, 'Avaa lompakkosovelluksessa')),
-    ]
-    if (r.txCode) item.push(el('p', {}, [el('span', { lang: 'fi' }, 'Vahvistuskoodi:'), ' ', el('strong', {}, r.txCode)]))
-    if (r.expiresIn) item.push(el('p', { class: 'muted' }, [el('span', { lang: 'fi' }, 'Voimassa:'), ' ', formatDuration(r.expiresIn)]))
-    content.push(el('div', { class: 'wallet-offer' }, item))
-  })
-  detailDialogContent.replaceChildren(...content)
-  detailDialog.showModal()
-}
 
 function openDetail(index) {
   const record = credentials[index]

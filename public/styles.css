@@ -539,3 +539,5 @@ dd { margin: 0; }
   .credential-status:empty { display: none; }
   dialog { padding: 24px; }
 }
+
+.collection-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
