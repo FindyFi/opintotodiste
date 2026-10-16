@@ -59,24 +59,22 @@ async function renderAuthNav() {
   nav.replaceChildren()
 
   if (currentMe.loggedIn) {
-    const logoutBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Kirjaudu ulos'))
+    const logoutBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu ulos'))
     logoutBtn.addEventListener('click', async () => {
       await logout()
       await renderAuthNav()
     })
     nav.append(
-      el('span', { class: 'muted' }, currentMe.displayName),
-      ' · ',
       el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani'),
-      ' · ',
+      el('span', { class: 'muted' }, currentMe.displayName),
       logoutBtn
     )
   } else {
-    const loginBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Kirjaudu sisään'))
+    const loginBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu sisään'))
     loginBtn.addEventListener('click', () => openAuthFlow('login').catch(() => {}))
-    const registerBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Rekisteröi kulkuavain'))
+    const registerBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Rekisteröi kulkuavain'))
     registerBtn.addEventListener('click', () => openAuthFlow('register').catch(() => {}))
-    nav.append(loginBtn, ' ', registerBtn)
+    nav.append(registerBtn, loginBtn)
   }
   return currentMe
 }
@@ -107,12 +105,12 @@ function openAuthFlow(initialMode) {
       const fields = []
       if (mode === 'register') {
         nameInput = el('input', { type: 'text', placeholder: 'Nimesi' })
-        fields.push(el('p', {}, [el('label', {}, [el('span', { lang: 'fi' }, 'Näyttönimi:'), ' ', nameInput])]))
+        fields.push(el('p', {}, [el('label', { class: 'field' }, [el('span', { lang: 'fi' }, 'Näyttönimi:'), nameInput])]))
       }
 
       const submitBtn = el(
         'button',
-        { type: 'button' },
+        { type: 'button', class: 'primary' },
         el('span', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi kulkuavain' : 'Kirjaudu sisään')
       )
       submitBtn.addEventListener('click', async () => {
@@ -152,10 +150,9 @@ function openAuthFlow(initialMode) {
       content.replaceChildren(
         el('h2', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi kulkuavain' : 'Kirjaudu sisään'),
         ...fields,
-        el('p', {}, submitBtn),
-        el('p', {}, switchBtn),
-        el('p', {}, cancelBtn),
-        errorBox
+        errorBox,
+        el('p', {}, [submitBtn, cancelBtn]),
+        el('p', {}, switchBtn)
       )
     }
 

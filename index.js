@@ -20,6 +20,7 @@ app.use(express.json())
 app.use(express.static('public'))
 app.use('/vendor/translate-element', express.static('node_modules/translate-element'))
 app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewebauthn/browser/dist/bundle'))
+app.use('/vendor/archivo', express.static('node_modules/@fontsource-variable/archivo'))
 app.use(
   session({
     store: new (connectPgSimple(session))({ pool }),

@@ -51,12 +51,24 @@ function shareUrl(token) {
 function buildCollectionRow(collection) {
   const linkEl = el('a', { class: 'share-link', href: shareUrl(collection.shareToken) }, shareUrl(collection.shareToken))
 
-  const copyBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Kopioi linkki'))
-  copyBtn.addEventListener('click', () => {
-    navigator.clipboard?.writeText(linkEl.href).catch(() => {})
+  // Toggled with a class rather than `hidden`: translate-element keeps an
+  // English copy of each lang="fi" label, and a class on the button reaches
+  // both copies.
+  const copyBtn = el('button', { type: 'button', class: 'small primary copy-btn' }, [
+    el('span', { class: 'label-default', lang: 'fi' }, 'Kopioi linkki'),
+    el('span', { class: 'label-done', lang: 'fi' }, 'Kopioitu!'),
+  ])
+  copyBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(linkEl.href)
+    } catch {
+      return
+    }
+    copyBtn.classList.add('done')
+    setTimeout(() => copyBtn.classList.remove('done'), 2000)
   })
 
-  const regenBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Uusi jakolinkki'))
+  const regenBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Uusi jakolinkki'))
   regenBtn.addEventListener('click', async () => {
     if (!confirm('Vanha jakolinkki lakkaa toimimasta. Jatketaanko?')) return
     try {
@@ -68,7 +80,7 @@ function buildCollectionRow(collection) {
     }
   })
 
-  const renameBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Nimeä uudelleen'))
+  const renameBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Nimeä uudelleen'))
   renameBtn.addEventListener('click', async () => {
     const name = prompt('Uusi nimi', collection.name)
     if (!name || !name.trim() || name.trim() === collection.name) return
@@ -80,7 +92,7 @@ function buildCollectionRow(collection) {
     }
   })
 
-  const deleteBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Poista'))
+  const deleteBtn = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
   deleteBtn.addEventListener('click', async () => {
     if (!confirm(`Poistetaanko kokoelma "${collection.name}"?`)) return
     try {
@@ -91,25 +103,23 @@ function buildCollectionRow(collection) {
     }
   })
 
-  return el('div', { class: 'collection-row' }, [
-    el('span', { class: 'name' }, collection.name),
-    el('span', { class: 'muted' }, `${collection.itemCount} `),
-    el('span', { lang: 'fi' }, 'kohdetta'),
-    linkEl,
-    copyBtn,
-    regenBtn,
-    renameBtn,
-    deleteBtn,
+  return el('li', { class: 'collection-card' }, [
+    el('div', { class: 'collection-head' }, [
+      el('h3', {}, collection.name),
+      el('span', { class: 'muted' }, [`${collection.itemCount} `, el('span', { lang: 'fi' }, 'kohdetta')]),
+    ]),
+    el('div', { class: 'share-row' }, [linkEl, copyBtn]),
+    el('div', { class: 'collection-actions' }, [regenBtn, renameBtn, deleteBtn]),
   ])
 }
 
 function renderCollections(collections) {
   collectionsContainer.replaceChildren()
   if (!collections.length) {
-    collectionsContainer.append(el('p', { class: 'muted', lang: 'fi' }, 'Ei kokoelmia vielä.'))
+    collectionsContainer.append(el('p', { class: 'empty', lang: 'fi' }, 'Ei kokoelmia vielä.'))
     return
   }
-  collections.forEach((c) => collectionsContainer.appendChild(buildCollectionRow(c)))
+  collectionsContainer.append(el('ul', { class: 'collection-list' }, collections.map(buildCollectionRow)))
 }
 
 async function refresh() {

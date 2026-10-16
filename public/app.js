@@ -3,6 +3,7 @@ const koskiUrlInput = document.getElementById('koskiUrlInput')
 const submitBtn = document.getElementById('submitBtn')
 const errorBox = document.getElementById('errorBox')
 const metaBox = document.getElementById('metaBox')
+const resultsPanel = document.getElementById('resultsPanel')
 const tableContainer = document.getElementById('tableContainer')
 const bulkBar = document.getElementById('bulkBar')
 const bulkCount = document.getElementById('bulkCount')
@@ -84,6 +85,47 @@ function el(tag, props = {}, children = []) {
   return node
 }
 
+const SVG_NS = 'http://www.w3.org/2000/svg'
+
+// Builds an inline stroke icon from [tag, attributes] pairs.
+function svgIcon(shapes, size = 24, strokeWidth = 2) {
+  const svg = document.createElementNS(SVG_NS, 'svg')
+  Object.entries({
+    width: size,
+    height: size,
+    viewBox: '0 0 24 24',
+    fill: 'none',
+    stroke: 'currentColor',
+    'stroke-width': strokeWidth,
+    'stroke-linecap': 'round',
+    'stroke-linejoin': 'round',
+    'aria-hidden': 'true',
+  }).forEach(([key, value]) => svg.setAttribute(key, value))
+  shapes.forEach(([tag, attrs]) => {
+    const shape = document.createElementNS(SVG_NS, tag)
+    Object.entries(attrs).forEach(([key, value]) => shape.setAttribute(key, value))
+    svg.appendChild(shape)
+  })
+  return svg
+}
+
+// Same rosette as BADGE_ICON in src/views.js.
+const badgeIcon = () => svgIcon([['circle', { cx: 12, cy: 9, r: 6 }], ['path', { d: 'M8.5 13.8 7 22l5-3 5 3-1.5-8.2' }]])
+const checkIcon = () => svgIcon([['path', { d: 'M5 12.5 10 17l9-10' }]], 16, 2.4)
+
+// Whole qualifications get the stronger icon tint; their parts and single
+// courses the softer one.
+const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
+
+// Koski dates are ISO (YYYY-MM-DD); shown in the UI language's own format,
+// while sorting keeps using the raw ISO string.
+function formatDate(iso) {
+  if (!iso) return ''
+  const date = new Date(`${iso}T00:00:00`)
+  if (Number.isNaN(date.getTime())) return iso
+  return date.toLocaleDateString(currentLang() === 'en' ? 'en-GB' : 'fi-FI', { day: 'numeric', month: 'numeric', year: 'numeric' })
+}
+
 function columnValue(record, key) {
   const achievement = record.credentialSubject.achievement
   switch (key) {
@@ -109,7 +151,7 @@ function sortedEntries() {
   )
 }
 
-function buildHeaderRow() {
+function buildToolbar() {
   const visibleIndices = sortedEntries().map(({ index }) => index)
   const selectAllCb = el('input', { type: 'checkbox' })
   selectAllCb.checked = visibleIndices.length > 0 && visibleIndices.every((i) => selectedIndices.has(i))
@@ -119,48 +161,52 @@ function buildHeaderRow() {
     renderTable()
   })
 
-  const headCells = [el('th', { class: 'select-col' }, selectAllCb)]
-  COLUMNS.forEach(({ key, label }) => {
+  const sortButtons = COLUMNS.map(({ key, label }) => {
     const active = sortState.key === key
-    const ariaSort = active ? (sortState.direction === -1 ? 'descending' : 'ascending') : 'none'
     const arrow = el('span', { class: 'arrow', 'aria-hidden': 'true' }, active && sortState.direction === -1 ? '▼' : '▲')
-    const btn = el('button', { type: 'button', class: 'sort-btn' }, [el('span', { lang: 'fi' }, label), arrow])
+    const btn = el('button', { type: 'button', class: 'sort-btn small ghost', 'aria-pressed': String(active) }, [
+      el('span', { lang: 'fi' }, label),
+      arrow,
+    ])
     btn.addEventListener('click', () => {
       sortState.direction = sortState.key === key ? sortState.direction * -1 : 1
       sortState.key = key
       renderTable()
     })
-    headCells.push(el('th', { 'aria-sort': ariaSort }, btn))
+    return btn
   })
-  headCells.push(el('th', {}, el('span', { lang: 'fi' }, 'Tila')))
-  return el('tr', {}, headCells)
+
+  return el('div', { class: 'list-toolbar' }, [
+    el('label', { class: 'select-all' }, [selectAllCb, el('span', { lang: 'fi' }, 'Valitse kaikki')]),
+    el('div', { class: 'sort-control', role: 'group', 'aria-label': 'Järjestä' }, [el('span', { lang: 'fi' }, 'Järjestä:'), ...sortButtons]),
+  ])
 }
 
 function renderTable() {
+  resultsPanel.hidden = false
   tableContainer.replaceChildren()
 
   if (!credentials.length) {
-    tableContainer.append(el('p', { class: 'muted', lang: 'fi' }, 'Koski-tiedoista ei löytynyt osaamismerkkikelpoisia suorituksia.'))
+    tableContainer.append(el('p', { class: 'empty', lang: 'fi' }, 'Koski-tiedoista ei löytynyt osaamismerkkikelpoisia suorituksia.'))
     updateBulkBar()
     return
   }
 
-  const tbody = el('tbody')
+  const list = el('ul', { class: 'credential-list' })
   sortedEntries().forEach(({ record, index }) => {
-    tbody.appendChild(buildRow(record, index))
+    list.appendChild(buildRow(record, index))
   })
 
-  const table = el('table', {}, [el('thead', {}, buildHeaderRow()), tbody])
-  tableContainer.appendChild(table)
+  tableContainer.append(buildToolbar(), list)
   updateBulkBar()
 }
 
 function buildRow(record, index) {
   const achievement = record.credentialSubject.achievement
-  const nameBtn = el('button', { class: 'link-btn', type: 'button' }, achievement.name)
+  const nameBtn = el('button', { class: 'credential-name', type: 'button' }, achievement.name)
   nameBtn.addEventListener('click', () => openDetail(index))
 
-  const rowCb = el('input', { type: 'checkbox' })
+  const rowCb = el('input', { type: 'checkbox', 'aria-label': achievement.name ?? '' })
   rowCb.checked = selectedIndices.has(index)
   rowCb.addEventListener('change', () => {
     if (rowCb.checked) selectedIndices.add(index)
@@ -168,21 +214,21 @@ function buildRow(record, index) {
     renderTable()
   })
 
-  return el('tr', {}, [
-    el('td', { class: 'select-col' }, rowCb),
-    el('td', {}, nameBtn),
-    el('td', {}, el('span', { class: 'badge' }, achievement.achievementType)),
-    el('td', {}, achievement.creator?.name ?? ''),
-    el('td', {}, record.awardedOn ?? ''),
-    el('td', {}, buildStatusCell(record, index)),
+  const meta = [achievement.achievementType, achievement.creator?.name, formatDate(record.awardedOn)].filter(Boolean).join(' · ')
+  const major = MAJOR_ACHIEVEMENT_TYPES.test(achievement.achievementType ?? '')
+
+  return el('li', { class: 'credential' }, [
+    rowCb,
+    el('span', { class: major ? 'credential-icon strong' : 'credential-icon' }, badgeIcon()),
+    el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
+    el('div', { class: 'credential-status' }, buildStatusCell(record, index)),
   ])
 }
 
 function buildStatusCell(record, index) {
   if (!record.signed) return []
   return [
-    el('span', { class: 'badge signed', lang: 'fi' }, 'Allekirjoitettu'),
-    ' ',
+    el('span', { class: 'badge signed' }, [checkIcon(), el('span', { lang: 'fi' }, 'Allekirjoitettu')]),
     el('a', { href: `/credentials/${index}/download`, lang: 'fi' }, 'Lataa'),
   ]
 }
@@ -264,14 +310,14 @@ function pickOrCreateCollection() {
     collections.forEach((c, i) => {
       const input = el('input', { type: 'radio', name: 'collectionChoice', value: c.id })
       if (i === 0) input.checked = true
-      choices.append(el('p', {}, el('label', {}, [input, ' ', c.name, ' ', el('span', { class: 'muted' }, `(${c.itemCount})`)])))
+      choices.append(el('p', {}, el('label', {}, [input, c.name, el('span', { class: 'muted' }, `(${c.itemCount})`)])))
     })
     const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma' })
     const newRadio = el('input', { type: 'radio', name: 'collectionChoice', value: '__new__' })
     if (!collections.length) newRadio.checked = true
-    choices.append(el('p', {}, [newRadio, ' ', newInput]))
+    choices.append(el('p', {}, el('label', {}, [newRadio, newInput])))
 
-    const confirmBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Lisää'))
+    const confirmBtn = el('button', { type: 'button', class: 'primary' }, el('span', { lang: 'fi' }, 'Lisää'))
     confirmBtn.addEventListener('click', async () => {
       const choice = choices.querySelector('input[name=collectionChoice]:checked')?.value
       if (!choice) return
@@ -297,7 +343,7 @@ function pickOrCreateCollection() {
     const cancelBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Peruuta'))
     cancelBtn.addEventListener('click', () => finish(null))
 
-    detailDialogContent.replaceChildren(el('h2', { lang: 'fi' }, 'Valitse kokoelma'), choices, el('p', {}, [confirmBtn, ' ', cancelBtn]))
+    detailDialogContent.replaceChildren(el('h2', { lang: 'fi' }, 'Valitse kokoelma'), choices, el('p', {}, [confirmBtn, cancelBtn]))
     detailDialog.addEventListener('close', () => finish(null), { once: true })
     detailDialog.showModal()
   })
@@ -383,7 +429,7 @@ function openDetail(index) {
     dl.append(el('dt', { lang: 'fi' }, term), el('dd', {}, value))
   }
   addRow('Myöntäjä', achievement.creator?.name)
-  addRow('Myönnetty', record.awardedOn)
+  addRow('Myönnetty', formatDate(record.awardedOn))
   addRow('Koulutusala', achievement.fieldOfStudy)
   addRow('Koodi', achievement.humanCode)
 
