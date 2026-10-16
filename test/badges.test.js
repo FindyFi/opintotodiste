@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { recordFromCredential, signCredential, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { recordFromCredential, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -10,6 +10,39 @@ const RECORD = {
 }
 
 const ISSUER = { issuerId: 'did:web:example.org', issuerName: 'Example Issuer' }
+
+describe('toSdJwtVcClaims', () => {
+  const VCT = 'https://issuer.example/vct/OpenBadgeCredential'
+  const achievement = {
+    id: 'urn:x:a',
+    type: ['Achievement'],
+    name: 'A',
+    creator: { id: 'urn:x:c', type: ['Profile'], name: 'C' },
+  }
+
+  test('builds flat SD-JWT VC claims without JSON-LD', () => {
+    const claims = toSdJwtVcClaims({ ...RECORD, credentialSubject: { ...RECORD.credentialSubject, achievement } }, { vct: VCT })
+    assert.deepEqual(claims, {
+      vct: VCT,
+      sub: 'urn:oid:1.2.3',
+      awardedDate: '2021-06-01T00:00:00.000Z',
+      achievement: { id: 'urn:x:a', name: 'A', creator: { id: 'urn:x:c', name: 'C' } },
+    })
+  })
+
+  test('adds vct#integrity when given', () => {
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, vctIntegrity: 'sha256-abc' })
+    assert.equal(claims['vct#integrity'], 'sha256-abc')
+  })
+
+  test('leaves out what the record lacks', () => {
+    assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, achievement: { name: 'A' } })
+  })
+
+  test('refuses to build claims with no configured vct', () => {
+    assert.throws(() => toSdJwtVcClaims(RECORD, {}), /OID4VCI_CREDENTIAL_VCT/)
+  })
+})
 
 describe('toVcdm2Credential', () => {
   const ISSUER2 = { issuerId: 'https://issuer.example', issuerName: 'Example Issuer' }

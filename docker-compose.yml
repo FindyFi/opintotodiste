@@ -43,19 +43,25 @@ services:
       - '4007:4007'
     environment:
       PORT: 4007
-      # Placeholder for local dev only - real wallet interop needs a real
-      # HTTPS hostname here (see oid4vci-issuer's own README). This value is
-      # also the issuer id that the app puts into SD-JWT credentials, so it
+      # Real wallets need a public HTTPS URL here. Set OID4VCI_PUBLIC_URL to
+      # a tunnel's URL (see README, "Testing with a real wallet"). This value
+      # is also the issuer id that the app puts into SD-JWT credentials, so it
       # must match OID4VCI_CREDENTIAL_ISSUER_ID in the app's environment below.
-      CREDENTIAL_ISSUER: http://localhost:4007
+      CREDENTIAL_ISSUER: ${OID4VCI_PUBLIC_URL:-http://localhost:4007}
       # OpenBadgeCredential is the ldp_vc configuration (signed via
-      # signing-service). OpenBadgeCredentialSdJwt is what wallets get: a
-      # vc+sd-jwt signed by this service with its own key.
-      CREDENTIAL_CONFIGURATIONS_SUPPORTED: '{"OpenBadgeCredential":{"format":"ldp_vc","credential_definition":{"@context":["https://www.w3.org/2018/credentials/v1","https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"],"type":["VerifiableCredential","OpenBadgeCredential"]},"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}},"OpenBadgeCredentialSdJwt":{"format":"vc+sd-jwt","credential_definition":{"@context":["https://www.w3.org/ns/credentials/v2","https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"],"type":["VerifiableCredential","OpenBadgeCredential"]},"credential_signing_alg_values_supported":["ES256"],"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}}}'
+      # signing-service). OpenBadgeCredentialSdJwtVc is what wallets get: an
+      # IETF SD-JWT VC (dc+sd-jwt) bound to the wallet's key and signed by
+      # this service with its own key. Its vct is the shared Open Badge type
+      # (https://openbadge.digicredential.eu, GitHub Pages). OpenBadgeCredentialSdJwt (VCDM 2.0 as
+      # vc+sd-jwt) stays available, but wallets tested in I1 didn't accept it.
+      CREDENTIAL_CONFIGURATIONS_SUPPORTED: '{"OpenBadgeCredential":{"format":"ldp_vc","credential_definition":{"@context":["https://www.w3.org/2018/credentials/v1","https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"],"type":["VerifiableCredential","OpenBadgeCredential"]},"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}}},"OpenBadgeCredentialSdJwt":{"format":"vc+sd-jwt","credential_definition":{"@context":["https://www.w3.org/ns/credentials/v2","https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json"],"type":["VerifiableCredential","OpenBadgeCredential"]},"credential_signing_alg_values_supported":["ES256"],"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}},"cryptographic_binding_methods_supported":["jwk"]},"OpenBadgeCredentialSdJwtVc":{"format":"dc+sd-jwt","vct":"https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT","cryptographic_binding_methods_supported":["jwk"],"credential_signing_alg_values_supported":["ES256"],"proof_types_supported":{"jwt":{"proof_signing_alg_values_supported":["ES256"]}},"credential_metadata":{"display":[{"name":"Opintotodiste","locale":"fi","description":"Open Badge Koski-opintotiedoista"},{"name":"Study credential","locale":"en","description":"Open Badge from Koski study records"}],"claims":[{"path":["achievement","name"],"display":[{"name":"Tutkinto tai suoritus","locale":"fi"},{"name":"Qualification","locale":"en"}]},{"path":["achievement","fieldOfStudy"],"display":[{"name":"Koulutusala","locale":"fi"},{"name":"Field of study","locale":"en"}]},{"path":["achievement","creator","name"],"display":[{"name":"Oppilaitos","locale":"fi"},{"name":"Institution","locale":"en"}]},{"path":["achievement","description"],"display":[{"name":"Kuvaus","locale":"fi"},{"name":"Description","locale":"en"}]},{"path":["awardedDate"],"display":[{"name":"Myönnetty","locale":"fi"},{"name":"Awarded on","locale":"en"}]}]}}}'
       # Private EC P-256 key (JWK) for signing SD-JWTs. "generate" makes a
       # fresh key on every start - fine for local dev, but credentials issued
       # before a restart no longer verify against the published JWKS.
       SD_JWT_SIGNING_KEY: generate
+      # A self-signed certificate for that key, sent as x5c in SD-JWT headers
+      # for wallets that find issuer keys only from certificates (Paradym).
+      SD_JWT_X5C: generate
       # Only the ldp_vc configuration above needs signing-service.
       SIGNING_SERVICE_URL: http://signing-service:4006
       SIGNING_SERVICE_INSTANCE: test
@@ -89,11 +95,17 @@ services:
       OID4VCI_ISSUER_INSTANCE: test
       # Must match oid4vci-issuer's COORDINATOR_TOKEN above.
       OID4VCI_ISSUER_TOKEN: dev-coordinator-token-change-me
-      # Wallet credentials are vc+sd-jwt, issued by oid4vci-issuer under the
-      # OpenBadgeCredentialSdJwt configuration. The issuer id must equal the
-      # oid4vci-issuer CREDENTIAL_ISSUER above (origin only, no path).
-      OID4VCI_CREDENTIAL_CONFIGURATION_ID: OpenBadgeCredentialSdJwt
-      OID4VCI_CREDENTIAL_ISSUER_ID: http://localhost:4007
+      # Wallet credentials are dc+sd-jwt, issued by oid4vci-issuer under the
+      # OpenBadgeCredentialSdJwtVc configuration. OID4VCI_CREDENTIAL_VCT
+      # must equal that configuration's vct; with it unset the app sends a
+      # VCDM 2.0 VC instead (for OpenBadgeCredentialSdJwt), whose issuer id
+      # must equal the oid4vci-issuer CREDENTIAL_ISSUER above (origin only).
+      OID4VCI_CREDENTIAL_CONFIGURATION_ID: OpenBadgeCredentialSdJwtVc
+      OID4VCI_CREDENTIAL_VCT: https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT
+      # SRI hash of the exact bytes served at the vct URL. Recompute it if
+      # the type metadata changes (see that repository's README).
+      OID4VCI_CREDENTIAL_VCT_INTEGRITY: sha256-WJg8DHarTmTzfFFytReMZCq5+b3MM3WWz6iqIaqXZLY=
+      OID4VCI_CREDENTIAL_ISSUER_ID: ${OID4VCI_PUBLIC_URL:-http://localhost:4007}
     depends_on:
       db:
         condition: service_healthy
