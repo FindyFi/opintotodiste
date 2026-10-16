@@ -43,11 +43,11 @@ services:
       - '4007:4007'
     environment:
       PORT: 4007
-      # Placeholder for local dev only - real wallet interop needs a real
-      # HTTPS hostname here (see oid4vci-issuer's own README). This value is
-      # also the issuer id that the app puts into SD-JWT credentials, so it
+      # Real wallets need a public HTTPS URL here. Set OID4VCI_PUBLIC_URL to
+      # a tunnel's URL (see README, "Testing with a real wallet"). This value
+      # is also the issuer id that the app puts into SD-JWT credentials, so it
       # must match OID4VCI_CREDENTIAL_ISSUER_ID in the app's environment below.
-      CREDENTIAL_ISSUER: http://localhost:4007
+      CREDENTIAL_ISSUER: ${OID4VCI_PUBLIC_URL:-http://localhost:4007}
       # OpenBadgeCredential is the ldp_vc configuration (signed via
       # signing-service). OpenBadgeCredentialSdJwt is what wallets get: a
       # vc+sd-jwt signed by this service with its own key.
@@ -93,7 +93,7 @@ services:
       # OpenBadgeCredentialSdJwt configuration. The issuer id must equal the
       # oid4vci-issuer CREDENTIAL_ISSUER above (origin only, no path).
       OID4VCI_CREDENTIAL_CONFIGURATION_ID: OpenBadgeCredentialSdJwt
-      OID4VCI_CREDENTIAL_ISSUER_ID: http://localhost:4007
+      OID4VCI_CREDENTIAL_ISSUER_ID: ${OID4VCI_PUBLIC_URL:-http://localhost:4007}
     depends_on:
       db:
         condition: service_healthy

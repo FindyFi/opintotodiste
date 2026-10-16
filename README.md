@@ -61,6 +61,35 @@ services:
 
 The path is relative to this repository. For a worktree, use its absolute path instead, for example `context: /Users/you/github/worktrees/oid4vci-issuer/B2`. Then rebuild with `docker compose up --build oid4vci-issuer`.
 
+### Testing with a real wallet
+
+A wallet app on a phone has to reach `oid4vci-issuer` over public HTTPS: it fetches the offer, the issuer metadata, `/token`, `/nonce` and `/credential` from `CREDENTIAL_ISSUER`. Only `oid4vci-issuer` needs to be public. The app stays on `localhost`, because your browser shows the QR code and the phone only talks to the issuer.
+
+1. Start a tunnel to port 4007. A [Cloudflare quick tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/do-more-with-tunnels/trycloudflare/) needs no account:
+
+   ```sh
+   brew install cloudflared
+   cloudflared tunnel --url http://localhost:4007
+   ```
+
+   It prints a URL like `https://random-words.trycloudflare.com`. Keep it running. The URL changes on every start.
+
+2. Start the stack with that URL. `OID4VCI_PUBLIC_URL` sets both the issuer's `CREDENTIAL_ISSUER` and the app's `OID4VCI_CREDENTIAL_ISSUER_ID`, which must match:
+
+   ```sh
+   OID4VCI_PUBLIC_URL=https://random-words.trycloudflare.com docker compose up -d --build
+   ```
+
+   You can also put `OID4VCI_PUBLIC_URL=…` in `.env`, which Compose reads too. Use the origin only, with no path and no trailing slash. When the tunnel URL changes, run the command again so the issuer restarts with the new URL.
+
+3. Check the tunnel from outside: `curl https://random-words.trycloudflare.com/.well-known/openid-credential-issuer` should return metadata whose `credential_issuer` is that same URL.
+
+4. Open <http://localhost:3000>, import a credential, choose "Add to wallet", and scan the QR code with the wallet. Enter the confirmation code when the wallet asks for it.
+
+If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_ISSUER_ID` to the tunnel URL yourself and keep `OID4VCI_ISSUER_URL=http://localhost:4007`; the app creates offers over the private URL.
+
+[ngrok](https://ngrok.com/) works too (`ngrok http 4007`) and gives a free account one fixed domain, so the URL survives restarts. Its free plan shows a warning page to browser user agents, which can break wallets that fetch with a browser-like client.
+
 ### The `koski2openbadge` dependency
 
 `koski2openbadge` — the converter that turns Koski study records into Open Badges achievement data — is not published to npm. `package.json` depends on it straight from GitHub, and `package-lock.json` pins the exact commit that gets installed.
