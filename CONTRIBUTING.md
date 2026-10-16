@@ -34,6 +34,10 @@ required.
 - Add or update tests alongside behaviour changes. The app-level tests boot `index.js` in a child
   process and drive it over HTTP rather than importing handlers, so a change to the env-var wiring
   is covered too.
+- A new environment variable goes into `.env.example` with an `# @env required|optional [secret]` tag
+  directly above it; `test/env-manifest.test.js` fails if a variable the code reads is untagged or missing
+  from `APP_ENV_KEYS` in `test/helpers/app.js`. Deployment config (FindyFi/aws-environment, the image
+  builder's integration compose) must follow.
 - Passkey flows are testable: `test/helpers/authenticator.js` is a virtual WebAuthn authenticator
   that answers both ceremonies, and `createClient` in `test/helpers/app.js` keeps cookies so a
   sequence of requests shares one session.

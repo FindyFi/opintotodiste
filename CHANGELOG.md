@@ -11,6 +11,8 @@ version to pin.
 
 ### Added
 
+- `.env.example` tags every variable `# @env required|optional [secret]`; with `NODE_ENV=production` the
+  app now exits at startup naming all missing required variables (no more dev session secret fallback).
 - Test suite (`node --test`) covering the Koski import and its URL restrictions, credential
   building, the signing-service and oid4vci-issuer clients, and the running app driven over HTTP.
 - End-to-end coverage of the primary journey — Koski link to draft badges, signing, download, wallet

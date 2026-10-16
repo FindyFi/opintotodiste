@@ -124,7 +124,9 @@ npm start
 
 ## Configuration
 
-All configuration is via environment variables — see [`.env.example`](.env.example) for the full list with explanations. In short:
+All configuration is via environment variables — see [`.env.example`](.env.example) for the full list with explanations. Each variable carries an `# @env required|optional [secret]` tag
+(machine-readable, see `src/env-manifest.js`): with `NODE_ENV=production` the app refuses to start and names every
+missing `required` variable; `secret` ones belong in a secret store, not plain deployment config. In short:
 
 | Variable | Purpose |
 | --- | --- |
