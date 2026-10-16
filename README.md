@@ -23,7 +23,7 @@ Two credential formats are in use, and each is signed by a different component:
 | Use | Format | Signed by |
 | --- | --- | --- |
 | Download (JSON file, "Get credential") | `ldp_vc`: VCDM 1.1 with a Data Integrity proof | [`digitalcredentials/signing-service`](https://github.com/digitalcredentials/signing-service) |
-| Add to wallet (OID4VCI offer, QR code + deep link) | `dc+sd-jwt`: an IETF SD-JWT VC with flat claims and a `vct`, bound to the wallet's key, with an ES256 signature | [`FindyFi/oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer), with its own key |
+| Add to wallet (OID4VCI offer, QR code + deep link) | `dc+sd-jwt`: an IETF SD-JWT VC with flat claims and a `vct`, bound to the wallet's key, with an ES256 signature. The `vct` is the shared [Open Badge type](https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT) | [`FindyFi/oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer), with its own key |
 
 Downloads are never SD-JWTs, and wallets only ever receive SD-JWTs. The wallet credential has no selective disclosure; the format is used for interoperability, and the issuer's public keys are published at `/.well-known/jwt-vc-issuer` on its origin. It is bound to the key the wallet proved (a `cnf` claim), because several wallets refuse unbound credentials. So it can't be restored from a wallet backup onto a new device. Instead, the user sends it to the new wallet again from opintotodiste (from a collection, or by importing the Koski link again), which issues a fresh copy.
 
@@ -76,7 +76,7 @@ A wallet app on a phone has to reach `oid4vci-issuer` over public HTTPS: it fetc
 
    It prints a URL like `https://random-words.trycloudflare.com`. Keep it running. The URL changes on every start.
 
-2. Start the stack with that URL. `OID4VCI_PUBLIC_URL` sets the issuer's `CREDENTIAL_ISSUER` and the `vct` URL, in both the issuer's configuration and the app's environment, which must match:
+2. Start the stack with that URL. `OID4VCI_PUBLIC_URL` sets the issuer's `CREDENTIAL_ISSUER`, and the app's `OID4VCI_CREDENTIAL_ISSUER_ID`, which must match:
 
    ```sh
    OID4VCI_PUBLIC_URL=https://random-words.trycloudflare.com docker compose up -d --build
@@ -88,7 +88,7 @@ A wallet app on a phone has to reach `oid4vci-issuer` over public HTTPS: it fetc
 
 4. Open <http://localhost:3000>, import a credential, choose "Add to wallet", and scan the QR code with the wallet. Enter the confirmation code when the wallet asks for it.
 
-If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_VCT` to `<tunnel URL>/vct/OpenBadgeCredential` yourself and keep `OID4VCI_ISSUER_URL=http://localhost:4007`; the app creates offers over the private URL.
+If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_ISSUER_ID` to the tunnel URL yourself (it's used only for the VCDM 2.0 payload) and keep `OID4VCI_ISSUER_URL=http://localhost:4007`; the app creates offers over the private URL.
 
 [ngrok](https://ngrok.com/) works too (`ngrok http 4007`) and gives a free account one fixed domain, so the URL survives restarts. Its free plan shows a warning page to browser user agents, which can break wallets that fetch with a browser-like client.
 
@@ -137,6 +137,7 @@ All configuration is via environment variables — see [`.env.example`](.env.exa
 | `OID4VCI_ISSUER_URL`, `OID4VCI_ISSUER_INSTANCE`, `OID4VCI_ISSUER_TOKEN` | Where/how to reach oid4vci-issuer |
 | `OID4VCI_CREDENTIAL_CONFIGURATION_ID` | Credential configuration requested for wallet offers (default `OpenBadgeCredentialSdJwt`; Compose uses `OpenBadgeCredentialSdJwtVc`) |
 | `OID4VCI_CREDENTIAL_VCT` | The `vct` of a `dc+sd-jwt` configuration. When set, wallet offers carry flat SD-JWT VC claims; when unset, a VCDM 2.0 VC |
+| `OID4VCI_CREDENTIAL_VCT_INTEGRITY` | Optional `vct#integrity` (SRI hash of the type metadata) added to SD-JWT VC claims |
 | `OID4VCI_CREDENTIAL_ISSUER_ID` | Only without `OID4VCI_CREDENTIAL_VCT`: issuer URL written as `issuer.id` into VCDM 2.0 wallet credentials. Must equal the oid4vci-issuer's SD-JWT issuer URL (origin only) |
 
 ## Tests

@@ -25,9 +25,14 @@ describe('toSdJwtVcClaims', () => {
     assert.deepEqual(claims, {
       vct: VCT,
       sub: 'urn:oid:1.2.3',
-      awarded_on: '2021-06-01',
+      awardedDate: '2021-06-01T00:00:00.000Z',
       achievement: { id: 'urn:x:a', name: 'A', creator: { id: 'urn:x:c', name: 'C' } },
     })
+  })
+
+  test('adds vct#integrity when given', () => {
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, vctIntegrity: 'sha256-abc' })
+    assert.equal(claims['vct#integrity'], 'sha256-abc')
   })
 
   test('leaves out what the record lacks', () => {

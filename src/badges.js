@@ -49,14 +49,17 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // understand better than VCDM 2.0: flat claims identified by `vct`, with no
 // JSON-LD (`@context`, `type`) and no credentialSubject wrapper. Still
 // unsigned; oid4vci-issuer adds `iss`, `iat` and `cnf`.
-export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
+// Claim names follow Open Badges 3.0, as the shared Open Badge type at
+// https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT defines.
+export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, vctIntegrity }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
   }
   return {
     vct,
+    ...(vctIntegrity ? { 'vct#integrity': vctIntegrity } : {}),
     ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
-    ...(awardedOn ? { awarded_on: new Date(awardedOn).toISOString().slice(0, 10) } : {}),
+    ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
   }
 }
