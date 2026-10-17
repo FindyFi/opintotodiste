@@ -189,6 +189,9 @@ describe('the Koski journey', needsPostgres, () => {
     const anonymous = createClient(app.baseUrl)
     const page = await anonymous.request(`/c/${collection.body.shareToken}`)
     assert.equal(page.status, 200)
+    const pageHtml = await page.text()
+    const verifyLink = `/verify?url=${encodeURIComponent(`/c/${collection.body.shareToken}/items/${result.itemId}/download`)}`
+    assert.ok(pageHtml.includes(`href="${verifyLink}"`), 'each shared item should link to /verify')
 
     const download = await anonymous.request(
       `/c/${collection.body.shareToken}/items/${result.itemId}/download`
@@ -198,12 +201,12 @@ describe('the Koski journey', needsPostgres, () => {
 
     // The public item page, linked from the shared collection page.
     const itemUrl = `/c/${collection.body.shareToken}/items/${result.itemId}`
-    assert.match(await page.text(), new RegExp(`href="${itemUrl}"`))
+    assert.match(pageHtml, new RegExp(`href="${itemUrl}"`))
     const itemPage = await anonymous.request(itemUrl)
     assert.equal(itemPage.status, 200)
     const html = await itemPage.text()
     assert.match(html, new RegExp(`href="${itemUrl}/download"`))
-    assert.match(html, /href="\/verify"/)
+    assert.ok(html.includes(`href="${verifyLink}"`), 'the item page should verify its own download')
     assert.equal((await anonymous.request(`/c/${collection.body.shareToken}/items/not-a-uuid`)).status, 404)
 
     // Regenerating the token revokes the item page along with the collection.

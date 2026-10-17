@@ -11,6 +11,12 @@
   "Jaa osaamisesi työnantajalle – Opintotodiste": {
     "en": "Share your skills with an employer – Study credential"
   },
+  "Tarkasta todiste – Opintotodiste": {
+    "en": "Verify a credential – Study credential"
+  },
+  "Tarkasta": {
+    "en": "Verify"
+  },
   "Syötä Koski-opintotietojesi linkki nähdäksesi, mitkä osaamismerkit tiedoista voidaan myöntää.": {
     "en": "Enter the link to your Koski study records to see which badges can be issued from them."
   },

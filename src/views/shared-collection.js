@@ -22,7 +22,7 @@ export function sharedCollectionPage({ token, collection, items }) {
           <a class="credential-name" href="/c/${esc(token)}/items/${esc(item.id)}">${esc(achievement.name)}</a>
           <span class="credential-meta">${meta.map(esc).join(' · ')}</span>
         </div>
-        <div class="credential-status"><a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>
+        <div class="credential-status"><a href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${item.id}/download`))}" lang="fi">Tarkasta</a> <a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>
       </li>`
     })
     .join('')

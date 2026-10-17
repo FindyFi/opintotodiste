@@ -40,7 +40,10 @@ ${['base', ...styles].map((name) => `<link rel="stylesheet" href="/styles/${name
 // translate-element sits here too, outside #authNav, so auth.js's re-renders
 // never wipe the language switcher. `current` marks the site-nav link of the
 // page being shown.
-const SITE_NAV = [{ id: 'employer', href: '/employer', text: 'Työnantajalle' }]
+const SITE_NAV = [
+  { id: 'employer', href: '/employer', text: 'Työnantajalle' },
+  { id: 'verify', href: '/verify', text: 'Tarkasta todiste' },
+]
 
 export function header({ auth = true, current = '' } = {}) {
   return `<header class="topbar">
