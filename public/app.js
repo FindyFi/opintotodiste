@@ -21,24 +21,6 @@ const COLUMNS = [
   { key: 'awarded', label: 'Myönnetty' },
 ]
 
-// koski2openbadge now localizes its resultDescription names (Grade/Extent)
-// itself via the `lang` option we already pass to convert() server-side, so
-// those arrive pre-translated. Its result *status* ("Completed") is still a
-// fixed English literal, so translations.json (keyed by Finnish source text)
-// can't reach it. We hand-author a bilingual sibling pair for it per the
-// translate-element README's alternate mode: translate-element leaves any
-// lang="fi" element alone once it already has a same-tag lang-tagged
-// neighbour, so no translations.json entry is needed.
-const RESULT_TEXT_TRANSLATIONS = {
-  Completed: 'Suoritettu',
-}
-
-function bilingualText(text) {
-  const fi = RESULT_TEXT_TRANSLATIONS[text]
-  if (!fi) return text ?? ''
-  return [el('span', { lang: 'fi' }, fi), el('span', { lang: 'en' }, text)]
-}
-
 let credentials = []
 const sortState = { key: null, direction: 1 }
 const selectedIndices = new Set()
@@ -111,13 +93,7 @@ function svgIcon(shapes, size = 24, strokeWidth = 2) {
   return svg
 }
 
-// Same rosette as BADGE_ICON in src/views/layout.js.
-const badgeIcon = () => svgIcon([['circle', { cx: 12, cy: 9, r: 6 }], ['path', { d: 'M8.5 13.8 7 22l5-3 5 3-1.5-8.2' }]])
 const checkIcon = () => svgIcon([['path', { d: 'M5 12.5 10 17l9-10' }]], 16, 2.4)
-
-// Whole qualifications get the stronger icon tint; their parts and single
-// courses the softer one.
-const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
 
 // Koski dates are ISO (YYYY-MM-DD); shown in the UI language's own format,
 // while sorting keeps using the raw ISO string.
@@ -206,7 +182,7 @@ function renderTable() {
 function buildRow(record, index) {
   const achievement = record.credentialSubject.achievement
   const nameBtn = el('button', { class: 'credential-name', type: 'button' }, achievement.name)
-  nameBtn.addEventListener('click', () => openDetail(index))
+  nameBtn.addEventListener('click', () => Detail.open(record))
 
   const rowCb = el('input', { type: 'checkbox', 'aria-label': achievement.name ?? '' })
   rowCb.checked = selectedIndices.has(index)
@@ -217,11 +193,10 @@ function buildRow(record, index) {
   })
 
   const meta = [achievement.achievementType, achievement.creator?.name, formatDate(record.awardedOn)].filter(Boolean).join(' · ')
-  const major = MAJOR_ACHIEVEMENT_TYPES.test(achievement.achievementType ?? '')
 
   return el('li', { class: 'credential' }, [
     rowCb,
-    el('span', { class: major ? 'credential-icon strong' : 'credential-icon' }, badgeIcon()),
+    Detail.badgeIcon(Detail.isMajor(achievement)),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, buildStatusCell(record, index)),
   ])
@@ -426,41 +401,6 @@ async function bulkAddToCollection({ share = false } = {}) {
 
 bulkCollectionBtn.addEventListener('click', () => bulkAddToCollection())
 bulkShareBtn.addEventListener('click', () => bulkAddToCollection({ share: true }))
-
-function openDetail(index) {
-  const record = credentials[index]
-  const achievement = record.credentialSubject.achievement
-
-  const dl = el('dl')
-  const addRow = (term, value) => {
-    if (!value) return
-    dl.append(el('dt', { lang: 'fi' }, term), el('dd', {}, value))
-  }
-  addRow('Myöntäjä', achievement.creator?.name)
-  addRow('Myönnetty', formatDate(record.awardedOn))
-  addRow('Koulutusala', achievement.fieldOfStudy)
-  addRow('Koodi', achievement.humanCode)
-
-  const results = record.credentialSubject.result || []
-  // Open Badges 3.0 names this `resultDescription`; koski2openbadge emitted the
-  // plural before 0.1.0. Accept both so the page keeps its grade and credit
-  // labels whichever version is installed - drop the fallback once the
-  // dependency is on >= 0.1.0 everywhere.
-  const descriptions = achievement.resultDescription || achievement.resultDescriptions || []
-  const resultRows = results.map((r) => {
-    const desc = descriptions.find((d) => d.id === r.resultDescription)
-    return el('tr', {}, [el('td', {}, bilingualText(desc?.name)), el('td', {}, bilingualText(r.value ?? r.status))])
-  })
-
-  detailDialogContent.replaceChildren(
-    el('h2', {}, achievement.name),
-    el('p', {}, el('span', { class: 'badge' }, achievement.achievementType)),
-    dl,
-    el('p', {}, achievement.description ?? ''),
-    ...(resultRows.length ? [el('table', {}, el('tbody', {}, resultRows))] : [])
-  )
-  detailDialog.showModal()
-}
 
 function currentLang() {
   return document.documentElement.lang || 'fi'
