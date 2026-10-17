@@ -29,6 +29,9 @@ export function head(title, styles = []) {
   return `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="/icons/icon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
+<link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 ${title}
 <link rel="stylesheet" href="/vendor/archivo/wdth.css">
 <link rel="stylesheet" href="/vendor/translate-element/translate-element.css">

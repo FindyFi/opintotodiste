@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#ffffff"/>
+  <!-- The rosette of BADGE_ICON (src/views/layout.js) in the brand blue (the blue variable in public/styles/base.css). -->
+  <g transform="translate(64 56) scale(16)" fill="none" stroke="#0901b9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="9" r="6"/>
+    <path d="M8.5 13.8 7 22l5-3 5 3-1.5-8.2"/>
+  </g>
+</svg>

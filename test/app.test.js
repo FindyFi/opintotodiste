@@ -34,6 +34,17 @@ describe('the running app', needsPostgres, () => {
     assert.match(res.headers.get('content-type'), /text\/html/)
   })
 
+  test('links the favicons from the head and serves them', async () => {
+    const html = await (await fetch(app.baseUrl)).text()
+    for (const href of ['/icons/icon.svg', '/icons/favicon-32.png', '/icons/apple-touch-icon.png']) {
+      assert.ok(html.includes(`href="${href}"`), href)
+      const res = await fetch(`${app.baseUrl}${href}`)
+      assert.equal(res.status, 200, href)
+    }
+    const logo = await fetch(`${app.baseUrl}/icons/logo-512.png`)
+    assert.equal(logo.headers.get('content-type'), 'image/png')
+  })
+
   test('serves the collections page', async () => {
     const res = await fetch(`${app.baseUrl}/my/collections`)
     assert.equal(res.status, 200)
