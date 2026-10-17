@@ -9,10 +9,35 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.2] - 2026-10-17
+
 ### Added
 
+- "Add to wallet" delivers an IETF SD-JWT VC (`dc+sd-jwt`) with flat Open Badge claims and the shared
+  `vct` `https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT`, issued and signed by
+  oid4vci-issuer and bound to the wallet's key. Accepted by Heidi, Procivis One, Talao and Paradym.
+  Downloads and collections stay `ldp_vc`.
+- Collection owners can send any item of a collection to a wallet, and each collection card lists
+  its items.
 - `.env.example` tags every variable `# @env required|optional [secret]`; with `NODE_ENV=production` the
   app now exits at startup naming all missing required variables (no more dev session secret fallback).
+- README section "Testing with a real wallet", using a tunnel to the local stack.
+
+### Changed
+
+- **Deployments must set** `OID4VCI_CREDENTIAL_CONFIGURATION_ID` and `OID4VCI_CREDENTIAL_VCT`, and
+  every other variable `.env.example` tags `required`: the image refuses to start without them. The
+  configuration must exist in oid4vci-issuer 0.0.2 or later, with the same `vct`.
+- A redesigned UI: styles in `public/styles.css` with light and dark color schemes, a self-hosted
+  Archivo font, card lists for credentials and collections, the language switcher in the header,
+  and dates in the UI language's format.
+
+## [0.0.1]
+
+- Initial release: Koski import, Open Badge issuance, passkey authentication and collections.
+
+### Added
+
 - Test suite (`node --test`) covering the Koski import and its URL restrictions, credential
   building, the signing-service and oid4vci-issuer clients, and the running app driven over HTTP.
 - End-to-end coverage of the primary journey — Koski link to draft badges, signing, download, wallet
@@ -64,7 +89,3 @@ version to pin.
 - The build-and-push workflow. Images are built and published outside this repository instead, so
   that registry credentials — and the cloud account identifiers that come with them — are not
   configured from a public one.
-
-## [0.0.1]
-
-- Initial release: Koski import, Open Badge issuance, passkey authentication and collections.
