@@ -1,5 +1,5 @@
 // Shared across every page that includes the header partial (see
-// src/views.js's header()): owns #authNav (logged-in/out state) and
+// src/views/layout.js's header()): owns #authNav (logged-in/out state) and
 // #authDialog (the login/register prompt), and exposes window.Auth for
 // other page scripts (app.js, collections.js) to drive login from their own
 // flows - e.g. app.js's "Add to collection" bulk action calls

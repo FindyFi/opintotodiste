@@ -1,0 +1,110 @@
+/* The main page: hero, results list head, selection card. */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  align-items: end;
+  gap: 40px 48px;
+  padding: 40px 0 64px;
+}
+.hero-main { display: flex; flex-direction: column; gap: 24px; }
+.hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4.25rem);
+  line-height: 1.02;
+  letter-spacing: -.02em;
+}
+.hero h1 em, .page-hero h1 em { font-style: normal; color: var(--link); }
+.lede { max-width: 38rem; font-size: 1.2rem; }
+
+.koski-form { display: flex; flex-direction: column; gap: 8px; max-width: 48rem; }
+.koski-form label { font-weight: 700; color: var(--heading); }
+.field-row { display: flex; gap: 12px; }
+.field-row input { flex: 1; min-width: 0; }
+.field-row button { min-height: 56px; padding: 0 1.8rem; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: var(--surface);
+  font-size: .95rem;
+  line-height: 1.4;
+}
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.steps li:last-child .step-num { background: var(--orange); color: var(--navy); }
+
+
+.results { display: grid; grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr); gap: 32px 48px; align-items: start; }
+
+.list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line-strong);
+}
+.list-head .muted { overflow-wrap: anywhere; }
+
+
+/* ---------- side column ---------- */
+
+.results-aside { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 24px; }
+.action-card {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 28px;
+  border-radius: 24px;
+  background: var(--navy);
+  color: #ffffff;
+}
+.action-card[hidden] { display: none; }
+.action-card .eyebrow { color: var(--cyan); }
+.action-title { font-family: var(--font-display); font-stretch: 125%; font-weight: 800; font-size: 1.35rem; line-height: 1.25; }
+.action-card button { width: 100%; border-color: rgba(255, 255, 255, .5); color: #ffffff; }
+.action-card button:hover { background: #ffffff; color: var(--navy); }
+.action-card button:disabled:hover { background: transparent; color: #ffffff; }
+.action-card button.primary { background: var(--cyan); border-color: var(--cyan); color: var(--navy); }
+.action-card button.primary:hover { background: #c4f1ff; border-color: #c4f1ff; }
+.action-card button.primary:disabled:hover { background: var(--cyan); }
+.action-card :focus-visible { outline-color: var(--cyan); }
+
+.note-card { display: flex; flex-direction: column; gap: 8px; padding: 24px 28px; border-radius: 24px; background: var(--surface-soft); }
+.note-card p { font-size: .95rem; }
+
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 24px 0 48px; }
+  .results { grid-template-columns: minmax(0, 1fr); }
+  /* Lets the action card stick to the bottom of the viewport while the
+     list scrolls, since its containing block becomes the whole panel. */
+  .results-aside { display: contents; }
+  .action-card { position: sticky; bottom: 12px; padding: 20px; gap: 10px; box-shadow: 0 12px 40px rgba(13, 3, 66, .35); }
+  .action-title { display: none; }
+}
+
+@media (max-width: 560px) {
+  .action-card { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 16px; }
+  .action-card .eyebrow { grid-column: 1 / -1; }
+  .action-card button { padding: 0 .5rem; font-stretch: 100%; }
+  .field-row { flex-direction: column; }
+}

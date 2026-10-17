@@ -109,7 +109,7 @@ function svgIcon(shapes, size = 24, strokeWidth = 2) {
   return svg
 }
 
-// Same rosette as BADGE_ICON in src/views.js.
+// Same rosette as BADGE_ICON in src/views/layout.js.
 const badgeIcon = () => svgIcon([['circle', { cx: 12, cy: 9, r: 6 }], ['path', { d: 'M8.5 13.8 7 22l5-3 5 3-1.5-8.2' }]])
 const checkIcon = () => svgIcon([['path', { d: 'M5 12.5 10 17l9-10' }]], 16, 2.4)
 
