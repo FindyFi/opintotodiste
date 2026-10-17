@@ -19,6 +19,7 @@ export function toVerifiableCredential({ credentialSubject, awardedOn }, { issue
       type: ['Profile'],
       name: issuerName,
     },
+    ...(credentialSubject.achievement?.name ? { name: credentialSubject.achievement.name } : {}),
     issuanceDate: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
     credentialSubject,
   }
@@ -40,6 +41,7 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
       type: ['Profile'],
       name: issuerName,
     },
+    ...(credentialSubject.achievement?.name ? { name: credentialSubject.achievement.name } : {}),
     validFrom: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
     credentialSubject,
   }
@@ -51,6 +53,9 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // unsigned; oid4vci-issuer adds `iss`, `iat` and `cnf`.
 // Claim names follow Open Badges 3.0, as the shared Open Badge type at
 // https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT defines.
+// No top-level `name` here: SD-JWT VC has no registered claim for it, and a
+// wallet's display name for this vct comes from the type metadata (F1), not
+// per-instance data. The achievement's own `name` is still in `achievement`.
 export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')

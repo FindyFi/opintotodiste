@@ -19,6 +19,8 @@ version to pin.
 - "Kulkuavain" is now "pääsyavain" throughout the UI.
 - Views live in `src/views/` (one module per page) and styles in `public/styles/` (a base file plus
   sections a page lists in its head), so page work no longer collides in shared files.
+- Credentials (`ldp_vc` and VCDM 2.0 wallet offers) now carry a top-level `name` from the
+  achievement, for display in wallets and verifiers.
 
 ## [0.0.3] - 2026-10-17
 
