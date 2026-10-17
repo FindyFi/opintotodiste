@@ -1,9 +1,5 @@
 /* The main page: cyan hero with the steps, the full-width results list and
-   the selection bar fixed to the viewport. White page in light mode. */
-
-@media (prefers-color-scheme: light) {
-  body.page-main { --bg: #ffffff; --surface-soft: var(--hero-bg); }
-}
+   the selection bar fixed to the viewport. */
 
 /* ---------- hero ---------- */
 

@@ -1,18 +1,18 @@
 /* Opintotodiste - visual language follows findynet.fi: electric blue, deep
-   navy and peach, a wide grotesk for display type (Archivo at its widest
-   standing in for Findynet's Loos Wide), pill buttons, large radii. */
+   navy and cyan on a white page, a wide grotesk for display type (Archivo at
+   its widest standing in for Findynet's Loos Wide), pill buttons, large
+   radii. */
 
 :root {
   --blue: #0901b9;
   --navy: #0d0342;
   --navy-2: #0b064d;
   --cyan: #8de4fe;
-  --peach: #fff3e4;
   --orange: #ff7510;
 
-  --bg: var(--peach);
+  --bg: #ffffff;
   --surface: #ffffff;
-  --surface-soft: var(--peach);
+  --surface-soft: var(--hero-bg);
   --text: #282539;
   --heading: var(--navy);
   --muted: #5b5870;
@@ -24,7 +24,7 @@
   --primary-fg: #ffffff;
   --primary-hover: var(--navy-2);
   --focus: var(--blue);
-  --icon-bg: var(--peach);
+  --icon-bg: var(--hero-bg);
   --icon-bg-strong: var(--cyan);
   --icon-fg: var(--navy);
   --success-bg: #e3f6ea;

@@ -1,15 +1,5 @@
 /* The guide pages (/guide/...): the main page's cyan hero with the guide's
-   number, numbered steps, side notes and the wallet cards. White page in light mode, like the main page. */
-
-:root { --guide-hero-bg: #ebf9fd; }
-
-@media (prefers-color-scheme: dark) {
-  :root { --guide-hero-bg: var(--surface); }
-}
-
-@media (prefers-color-scheme: light) {
-  body.page-guide { --bg: #ffffff; }
-}
+   number, numbered steps, side notes and the wallet cards. */
 
 /* ---------- hero ---------- */
 
@@ -24,7 +14,7 @@
   gap: 40px;
   padding: 48px 64px;
   border-radius: 40px;
-  background: var(--guide-hero-bg);
+  background: var(--hero-bg);
 }
 .guide-num {
   display: flex;
@@ -98,7 +88,7 @@
   gap: 10px;
   padding: 24px 28px;
   border-radius: 24px;
-  background: var(--guide-hero-bg);
+  background: var(--hero-bg);
 }
 .guide-note h2 { font-size: 1.05rem; }
 .guide-note ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
@@ -172,7 +162,7 @@ p.guide-note { display: block; }
   height: 100%;
   padding: 16px 18px;
   border-radius: 18px;
-  background: var(--guide-hero-bg);
+  background: var(--hero-bg);
   color: var(--heading);
   font-weight: 700;
   line-height: 1.3;

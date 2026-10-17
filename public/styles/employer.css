@@ -1,14 +1,10 @@
 /* The employer page: cyan hero, two-column text sections, three cards and a
-   navy call to action. White page in light mode, like the main page. */
+   navy call to action. */
 
 :root { --cta-bg: var(--navy); }
 
 @media (prefers-color-scheme: dark) {
   :root { --cta-bg: var(--surface-soft); }
-}
-
-@media (prefers-color-scheme: light) {
-  body.page-employer { --bg: #ffffff; }
 }
 
 /* Button colors for the navy call to action (a.button itself is in base.css). */
