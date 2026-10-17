@@ -60,7 +60,10 @@
 .step-body a { font-size: .9rem; font-weight: 700; }
 
 @media (prefers-color-scheme: dark) {
-  .step-num { background: var(--surface-soft); }
+  /* The dark hero is the surface colour itself, so the boxes step up a shade
+     and the numbers sit on the page colour. */
+  .steps li { background: var(--surface-soft); }
+  .step-num { background: var(--bg); }
   .steps li:last-child .step-num { background: var(--cyan); color: var(--navy); }
 }
 
