@@ -9,6 +9,22 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.3] - 2026-10-17
+
+### Added
+
+- The local Compose stack passes `FEDERATION_ENTITY_METADATA`, `FEDERATION_AUTHORITY_HINTS` and
+  `FEDERATION_TRUST_MARKS` from `.env` to oid4vci-issuer, and the README section "OpenID Federation"
+  explains how to make them with oid4vci-issuer's `federation:setup` script.
+- `CONTRIBUTING.md` (branches, worktrees, tests, citing specifications) and `PLAN.example.md`.
+
+### Changed
+
+- `CLAUDE.md` now covers only how Claude works here; shared practices moved to `CONTRIBUTING.md`.
+
+The app image is unchanged apart from the version, and needs no new variables. Pair it with
+oid4vci-issuer 0.0.3.
+
 ## [0.0.2] - 2026-10-17
 
 ### Added
