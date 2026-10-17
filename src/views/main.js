@@ -77,6 +77,7 @@ ${STEPS.map(
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
 <script src="/share.js" defer></script>
+<script src="/detail.js" defer></script>
 <script src="/app.js" defer></script>
 </body>
 </html>`

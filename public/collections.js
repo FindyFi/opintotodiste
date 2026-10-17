@@ -51,15 +51,13 @@ function openShare(target) {
   Share.open(target).catch((err) => showError(err.message))
 }
 
-// Mirrors public/app.js: the same rosette, and whole qualifications get the
-// stronger icon tint.
-const BADGE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.8 7 22l5-3 5 3-1.5-8.2"/></svg>'
-const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
-
 function buildItemRow(collection, item) {
   const achievement = item.credential?.credentialSubject?.achievement || {}
   const name = achievement.name || ''
   const meta = [achievement.achievementType, achievement.creator?.name].filter(Boolean).join(' · ')
+
+  const nameBtn = el('button', { class: 'credential-name', type: 'button' }, name)
+  nameBtn.addEventListener('click', () => Detail.open(item.credential))
 
   const walletBtn = el('button', { type: 'button', class: 'small primary' }, el('span', { lang: 'fi' }, 'Lisää lompakkoon'))
   walletBtn.addEventListener('click', async () => {
@@ -78,12 +76,9 @@ function buildItemRow(collection, item) {
   const shareBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Jaa'))
   shareBtn.addEventListener('click', () => openShare({ collectionId: collection.id, itemId: item.id }))
 
-  const icon = el('span', { class: MAJOR_ACHIEVEMENT_TYPES.test(achievement.achievementType ?? '') ? 'credential-icon strong' : 'credential-icon' })
-  icon.innerHTML = BADGE_ICON
-
   return el('li', { class: 'credential' }, [
-    icon,
-    el('div', { class: 'credential-body' }, [el('span', { class: 'credential-name' }, name), el('span', { class: 'credential-meta' }, meta)]),
+    Detail.badgeIcon(Detail.isMajor(achievement)),
+    el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, [shareBtn, walletBtn]),
   ])
 }

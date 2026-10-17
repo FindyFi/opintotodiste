@@ -1,4 +1,4 @@
-import { head, header, esc, BADGE_ICON, SHARE_ICON, SHIELD_ICON } from './layout.js'
+import { head, header, esc, embedJson, BADGE_ICON, SHARE_ICON, SHIELD_ICON } from './layout.js'
 
 // Mirrors public/app.js: whole qualifications get the stronger icon tint.
 const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
@@ -19,7 +19,7 @@ export function sharedCollectionPage({ token, collection, items }) {
       return `<li class="credential">
         <span class="${iconClass}">${BADGE_ICON}</span>
         <div class="credential-body">
-          <a class="credential-name" href="/c/${esc(token)}/items/${esc(item.id)}">${esc(achievement.name)}</a>
+          <a class="credential-name" href="/c/${esc(token)}/items/${esc(item.id)}" data-item-id="${esc(item.id)}">${esc(achievement.name)}</a>
           <span class="credential-meta">${meta.map(esc).join(' · ')}</span>
         </div>
         <div class="credential-status"><a class="button" href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${item.id}/download`))}" lang="fi">Tarkasta</a> <a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>
@@ -60,6 +60,15 @@ ${
 }
   </div>
 </main>
+
+<dialog id="detailDialog">
+  <div id="detailDialogContent"></div>
+  <form method="dialog"><button type="submit" lang="fi">Sulje</button></form>
+</dialog>
+
+<script>window.__ITEMS__ = ${embedJson(items.map((item) => ({ id: item.id, credential: item.credential })))}</script>
+<script src="/detail.js" defer></script>
+<script src="/shared-collection.js" defer></script>
 </body>
 </html>`
 }
