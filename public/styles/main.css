@@ -1,0 +1,176 @@
+/* The main page: cyan hero with the steps, the full-width results list and
+   the selection bar fixed to the viewport. White page in light mode. */
+
+:root { --hero-bg: #ebf9fd; }
+
+@media (prefers-color-scheme: dark) {
+  :root { --hero-bg: var(--surface); }
+}
+
+@media (prefers-color-scheme: light) {
+  body.page-main { --bg: #ffffff; --surface-soft: var(--hero-bg); }
+}
+
+/* ---------- hero ---------- */
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 40px 48px;
+  padding: 56px 56px 56px 64px;
+  border-radius: 40px;
+  background: var(--hero-bg);
+}
+.hero-main { display: flex; flex-direction: column; gap: 22px; }
+.hero-flow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: .8rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--link);
+}
+.hero h1 {
+  font-size: clamp(2rem, 4.5vw, 3rem);
+  line-height: 1.08;
+  letter-spacing: -.02em;
+}
+.lede { max-width: 38rem; font-size: 1.2rem; }
+
+.koski-form { display: flex; flex-direction: column; gap: 10px; }
+.koski-form label { font-weight: 700; color: var(--heading); }
+.field-row {
+  display: flex;
+  gap: 10px;
+  padding: 7px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(17, 72, 119, .08);
+}
+.field-row input { flex: 1; min-width: 0; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: transparent; }
+.field-row input:focus-visible { outline-offset: 0; border-radius: 999px; }
+.field-row button { min-height: 48px; padding: 0 1.6rem; }
+
+.steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
+.steps li {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: var(--surface);
+}
+.step-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.steps li:last-child .step-num { background: var(--blue); }
+.step-body { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: .95rem; line-height: 1.35; }
+.step-body a { font-size: .9rem; font-weight: 700; }
+
+@media (prefers-color-scheme: dark) {
+  .step-num { background: var(--surface-soft); }
+  .steps li:last-child .step-num { background: var(--cyan); color: var(--navy); }
+}
+
+/* ---------- results ---------- */
+
+/* No white sheet on this page: the list sits straight on the page. The
+   bottom padding keeps the last row clear of the selection bar. */
+body.page-main .panel {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  padding: 48px 0 128px;
+  border-radius: 0;
+  background: none;
+}
+
+.list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line-strong);
+}
+.list-head .muted { overflow-wrap: anywhere; }
+
+/* ---------- selection bar ---------- */
+
+.selection-bar {
+  flex-wrap: wrap;
+  position: fixed;
+  z-index: 10;
+  left: var(--gutter);
+  right: var(--gutter);
+  bottom: 24px;
+  max-width: var(--content);
+  margin-inline: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 12px 12px 28px;
+  border-radius: 999px;
+  background: var(--navy);
+  color: #ffffff;
+  box-shadow: 0 16px 48px rgba(13, 3, 66, .35);
+}
+.selection-bar[hidden] { display: none; }
+@media (prefers-color-scheme: dark) {
+  .selection-bar { background: var(--surface-soft); box-shadow: 0 16px 48px rgba(0, 0, 0, .5); }
+}
+.selection-count { font-weight: 700; }
+.selection-spacer { flex: 1; }
+.selection-bar .link-btn { color: #c9c6e8; font-size: .9rem; padding: 8px; }
+.selection-bar .link-btn:hover { color: #ffffff; }
+.selection-bar button:not(.link-btn) { border-color: rgba(255, 255, 255, .5); color: #ffffff; }
+.selection-bar button:not(.link-btn):hover { background: #ffffff; color: var(--navy); }
+.selection-bar button:disabled { border-color: rgba(255, 255, 255, .25); color: rgba(255, 255, 255, .45); opacity: 1; }
+.selection-bar button:disabled:hover { background: transparent; color: rgba(255, 255, 255, .45); }
+.selection-bar button.primary { border-color: var(--cyan); background: var(--cyan); color: var(--navy); }
+.selection-bar button.primary:hover { border-color: #c4f1ff; background: #c4f1ff; color: var(--navy); }
+.selection-bar button.primary:disabled { border-color: var(--cyan); background: var(--cyan); color: var(--navy); opacity: .5; }
+.selection-bar :focus-visible { outline-color: var(--cyan); }
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  .hero { grid-template-columns: minmax(0, 1fr); padding: 32px 20px 24px; border-radius: 28px; }
+}
+
+@media (max-width: 560px) {
+  .hero { gap: 28px; }
+  .field-row { flex-direction: column; padding: 0; background: none; box-shadow: none; }
+  .field-row input { min-height: 52px; background: var(--surface); }
+  .field-row button { min-height: 52px; }
+}
+
+/* The bar's buttons stop fitting in one row below 900px. */
+@media (max-width: 900px) {
+  .selection-bar {
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    padding: 14px;
+    border-radius: 24px;
+  }
+  .selection-spacer { display: none; }
+  .selection-bar .link-btn { justify-self: end; }
+  .selection-bar #bulkWalletBtn { grid-column: 1 / -1; grid-row: 2; }
+  .selection-bar button:not(.link-btn) { padding: 0 .5rem; font-stretch: 100%; }
+}

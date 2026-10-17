@@ -9,6 +9,17 @@ version to pin.
 
 ## [Unreleased]
 
+### Changed
+
+- Main page redesigned: white page with a light-cyan hero holding the Koski form and the three steps
+  (each links to its guide page under `/guide/`, which come later), a full-width results list, and a
+  selection bar fixed to the bottom of the viewport that appears while something is selected, with
+  "Poista valinnat", a disabled "Jaa" (until sharing lands), "Lisää kokoelmaan" and "Lisää lompakkoon".
+  The right-hand column is gone.
+- "Kulkuavain" is now "pääsyavain" throughout the UI.
+- Views live in `src/views/` (one module per page) and styles in `public/styles/` (a base file plus
+  sections a page lists in its head), so page work no longer collides in shared files.
+
 ## [0.0.3] - 2026-10-17
 
 ### Added

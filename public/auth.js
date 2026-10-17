@@ -1,5 +1,5 @@
 // Shared across every page that includes the header partial (see
-// src/views.js's header()): owns #authNav (logged-in/out state) and
+// src/views/layout.js's header()): owns #authNav (logged-in/out state) and
 // #authDialog (the login/register prompt), and exposes window.Auth for
 // other page scripts (app.js, collections.js) to drive login from their own
 // flows - e.g. app.js's "Add to collection" bulk action calls
@@ -72,7 +72,7 @@ async function renderAuthNav() {
   } else {
     const loginBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu sisään'))
     loginBtn.addEventListener('click', () => openAuthFlow('login').catch(() => {}))
-    const registerBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Rekisteröi kulkuavain'))
+    const registerBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Rekisteröi pääsyavain'))
     registerBtn.addEventListener('click', () => openAuthFlow('register').catch(() => {}))
     nav.append(registerBtn, loginBtn)
   }
@@ -111,7 +111,7 @@ function openAuthFlow(initialMode) {
       const submitBtn = el(
         'button',
         { type: 'button', class: 'primary' },
-        el('span', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi kulkuavain' : 'Kirjaudu sisään')
+        el('span', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi pääsyavain' : 'Kirjaudu sisään')
       )
       submitBtn.addEventListener('click', async () => {
         errorBox.hidden = true
@@ -136,7 +136,7 @@ function openAuthFlow(initialMode) {
         el(
           'span',
           { lang: 'fi' },
-          mode === 'register' ? 'Onko sinulla jo kulkuavain? Kirjaudu sisään.' : 'Ei vielä kulkuavainta? Rekisteröidy.'
+          mode === 'register' ? 'Onko sinulla jo pääsyavain? Kirjaudu sisään.' : 'Ei vielä pääsyavainta? Rekisteröidy.'
         )
       )
       switchBtn.addEventListener('click', () => {
@@ -148,7 +148,7 @@ function openAuthFlow(initialMode) {
       cancelBtn.addEventListener('click', () => finish(reject, new Error('cancelled')))
 
       content.replaceChildren(
-        el('h2', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi kulkuavain' : 'Kirjaudu sisään'),
+        el('h2', { lang: 'fi' }, mode === 'register' ? 'Rekisteröi pääsyavain' : 'Kirjaudu sisään'),
         ...fields,
         errorBox,
         el('p', {}, [submitBtn, cancelBtn]),

@@ -11,7 +11,7 @@ import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
-import * as views from './src/views.js'
+import * as views from './src/views/index.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
