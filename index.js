@@ -334,6 +334,10 @@ app.get('/c/:token/items/:itemId/download', async (req, res) => {
   res.json(credential)
 })
 
+app.get('/employer', (req, res) => {
+  res.send(views.employerPage())
+})
+
 app.get('/my/collections', (req, res) => {
   res.send(views.collectionsPage())
 })

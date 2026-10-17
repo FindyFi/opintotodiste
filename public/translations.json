@@ -150,7 +150,7 @@
     "en": "Achievements"
   },
   "Työnantajalle": {
-    "en": "For employers"
+    "en": "For employer"
   },
   "Valitse kaikki": {
     "en": "Select all"
@@ -226,5 +226,11 @@
   },
   "Jaetut todisteet": {
     "en": "Shared credentials"
+  },
+  "Työnantajalle – Opintotodiste": {
+    "en": "For employer – Study credential"
+  },
+  "Mitä osaamismerkit ovat ja miten ne tarkastetaan?": {
+    "en": "What are badges, and how do I check them?"
   }
 }

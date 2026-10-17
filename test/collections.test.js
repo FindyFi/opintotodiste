@@ -194,7 +194,9 @@ describe('passkeys and collections', needsPostgres, () => {
       const res = await anonymous.request(`/c/${created.body.shareToken}`)
 
       assert.equal(res.status, 200)
-      assert.match(await res.text(), /Shared/)
+      const html = await res.text()
+      assert.match(html, /Shared/)
+      assert.match(html, /href="\/employer"/, 'points the employer to the employer page')
     })
 
     test('regenerating the token breaks the old link', async () => {

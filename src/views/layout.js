@@ -38,11 +38,17 @@ ${['base', ...styles].map((name) => `<link rel="stylesheet" href="/styles/${name
 // it after login/register/logout, so there is exactly one place
 // (client-side) that knows how to draw the logged-in vs. logged-out state.
 // translate-element sits here too, outside #authNav, so auth.js's re-renders
-// never wipe the language switcher.
-export function header({ auth = true } = {}) {
+// never wipe the language switcher. `current` marks the site-nav link of the
+// page being shown.
+const SITE_NAV = [{ id: 'employer', href: '/employer', text: 'Työnantajalle' }]
+
+export function header({ auth = true, current = '' } = {}) {
   return `<header class="topbar">
   <a class="brand" href="/">${BADGE_ICON}<span lang="fi">Opintotodiste</span></a>
   <div class="topbar-right">
+    <nav class="site-nav" aria-label="Sivusto">${SITE_NAV.map(
+      ({ id, href, text }) => `<a href="${href}"${id === current ? ' aria-current="page"' : ''}><span lang="fi">${text}</span></a>`
+    ).join('')}</nav>
     ${auth ? '<nav id="authNav" class="auth-nav"></nav>' : ''}
     <translate-element persist src="/translations.json"></translate-element>
   </div>

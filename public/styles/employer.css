@@ -1,0 +1,112 @@
+/* The employer page: cyan hero, two-column text sections, three cards and a
+   navy call to action. White page in light mode, like the main page. */
+
+:root { --cta-bg: var(--navy); }
+
+@media (prefers-color-scheme: dark) {
+  :root { --cta-bg: var(--surface-soft); }
+}
+
+@media (prefers-color-scheme: light) {
+  body.page-employer { --bg: #ffffff; }
+}
+
+/* Button colors for the navy call to action (a.button itself is in base.css). */
+a.button.cyan { background: var(--cyan); border-color: var(--cyan); color: var(--navy); }
+a.button.cyan:hover { background: #c4f1ff; border-color: #c4f1ff; color: var(--navy); }
+a.button.on-navy { border-color: rgba(255, 255, 255, .5); color: #ffffff; }
+a.button.on-navy:hover { background: #ffffff; border-color: #ffffff; color: var(--navy); }
+
+/* ---------- hero ---------- */
+
+.employer-hero {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin: 4px auto 0;
+  padding: clamp(32px, 6vw, 72px);
+  border-radius: 40px;
+  background: var(--hero-bg);
+}
+.employer-hero-body { display: flex; flex-direction: column; gap: 22px; }
+.employer-hero h1 {
+  max-width: 56rem;
+  font-size: clamp(2rem, 4.5vw, 3.25rem);
+  line-height: 1.06;
+  letter-spacing: -.015em;
+}
+.employer-hero .lede { max-width: 45rem; }
+.employer-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+
+/* ---------- body ---------- */
+
+.employer {
+  flex: 1;
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin: 0 auto;
+  padding: 64px 0;
+}
+.employer-body { display: flex; flex-direction: column; gap: 64px; }
+.employer h2 { font-size: clamp(1.5rem, 2.6vw, 1.9rem); }
+
+.employer-split {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+  align-items: start;
+  gap: 24px 56px;
+}
+.employer-text { display: flex; flex-direction: column; gap: 16px; line-height: 1.6; }
+
+.employer-why { display: flex; flex-direction: column; gap: 24px; }
+.employer-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 20px;
+}
+.employer-cards li {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+}
+.employer-card-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: var(--hero-bg);
+  color: var(--link);
+  font-family: var(--font-display);
+  font-weight: 800;
+}
+.employer-cards h3 { font-stretch: 112%; font-size: 1.15rem; }
+.employer-cards p { font-size: 1rem; }
+
+.employer-steps { margin: 0; padding-left: 22px; display: flex; flex-direction: column; gap: 12px; }
+
+.employer-cta {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 32px 40px;
+  padding: clamp(28px, 5vw, 48px) clamp(24px, 5vw, 56px);
+  border-radius: 32px;
+  background: var(--cta-bg);
+  color: #d9d6f2;
+}
+.employer-cta h2 { color: #ffffff; font-size: clamp(1.4rem, 2.4vw, 1.75rem); line-height: 1.2; }
+.employer-cta-text { display: flex; flex-direction: column; gap: 14px; }
+.employer-cta-links { display: flex; flex-direction: column; gap: 12px; }
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  .employer-split, .employer-cta { grid-template-columns: minmax(0, 1fr); }
+  .employer-cards { grid-template-columns: minmax(0, 1fr); }
+}

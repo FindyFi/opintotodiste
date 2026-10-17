@@ -33,6 +33,7 @@
   --error-fg: #8c2322;
   --error-line: #f0bebc;
   --backdrop: rgba(13, 3, 66, 0.55);
+  --hero-bg: #ebf9fd;
 
   --font-display: 'Archivo Variable', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-body: 'Helvetica Neue', Helvetica, Arial, sans-serif;
@@ -71,6 +72,7 @@
     --error-fg: #ffc2bd;
     --error-line: #7a2a3a;
     --backdrop: rgba(4, 1, 24, 0.7);
+    --hero-bg: var(--surface);
     color-scheme: dark;
   }
 }
@@ -219,6 +221,9 @@ input[type=checkbox], input[type=radio] {
 .topbar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
 .auth-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .auth-nav a { font-weight: 700; color: var(--heading); }
+.site-nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.site-nav a { font-weight: 700; color: var(--heading); text-decoration: none; }
+.site-nav a:hover, .site-nav a[aria-current=page] { color: var(--link); text-decoration: underline; text-underline-offset: 6px; }
 
 /* translate-element's language switcher, placed in the top bar */
 .translate-element { position: static; }
