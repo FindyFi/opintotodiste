@@ -1,6 +1,5 @@
 /* The guide pages (/guide/...): the main page's cyan hero with the guide's
-   number, numbered steps with optional screenshots, side notes and the
-   wallet cards. White page in light mode, like the main page. */
+   number, numbered steps, side notes and the wallet cards. White page in light mode, like the main page. */
 
 :root { --guide-hero-bg: #ebf9fd; }
 
@@ -67,13 +66,14 @@
 .guide-steps li {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
+  grid-template-rows: auto auto;
   column-gap: 20px;
   row-gap: 10px;
   counter-increment: guide-step;
 }
 .guide-steps li::before {
   content: counter(guide-step);
-  grid-row: 1 / span 3;
+  grid-row: 1 / span 2;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -86,18 +86,9 @@
   font-weight: 800;
 }
 .guide-steps h2 { font-size: 1.25rem; font-stretch: 112%; align-self: center; }
-.guide-steps p, .guide-steps .guide-shot { grid-column: 2; }
+.guide-steps p { grid-column: 2; }
 .guide-steps strong { color: var(--heading); }
 .guide-steps code { font-size: .9em; overflow-wrap: anywhere; }
-
-.guide-shot {
-  display: block;
-  max-width: 100%;
-  height: auto;
-  margin-top: 6px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-}
 
 /* Side notes, and notes under a section. */
 .guide-asides { display: flex; flex-direction: column; gap: 20px; }
@@ -138,18 +129,13 @@ p.guide-note { display: block; }
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 12px;
+  gap: 16px;
   padding: 24px;
   border: 1px solid var(--line);
   border-radius: 24px;
   background: var(--surface);
 }
-.wallet-card.coming { border-style: dashed; }
 .wallet-card h3 { font-size: 1.15rem; font-stretch: 112%; }
-.wallet-card > p:not(.store-links) { flex: 1; font-size: .95rem; color: var(--muted); }
-.wallet-status { padding: 4px 10px; border-radius: 999px; font-size: .8rem; font-weight: 700; }
-.wallet-status.works { background: var(--success-bg); color: var(--success-fg); }
-.wallet-status.coming { background: var(--peach); color: #8a3b00; }
 .store-links { display: flex; flex-wrap: wrap; gap: 8px; align-self: stretch; }
 .store-link {
   flex: 1;
@@ -167,10 +153,6 @@ p.guide-note { display: block; }
   white-space: nowrap;
 }
 .store-link:hover { background: var(--heading); color: var(--bg); }
-
-@media (prefers-color-scheme: dark) {
-  .wallet-status.coming { background: #4a2a10; color: #ffd2a8; }
-}
 
 /* ---------- guide navigation ---------- */
 
