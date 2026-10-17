@@ -94,13 +94,16 @@ If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_
 
 ### OpenID Federation
 
-`oid4vci-issuer` can publish an OpenID Federation Entity Configuration at `/.well-known/openid-federation` (for DIIP v5 and the OpenID Federation wallet architectures), and then adds a `fed` claim to the credentials it issues. It is off until `FEDERATION_ENTITY_METADATA` is set. Compose passes `FEDERATION_ENTITY_METADATA`, `FEDERATION_AUTHORITY_HINTS` and `FEDERATION_TRUST_MARKS` from your environment or `.env` to the issuer, so you only have to produce the values. You don't have to write the JSON: the script in your `oid4vci-issuer` checkout asks for them and writes the lines into `.env` here. It needs no `npm install`:
+`oid4vci-issuer` can publish an OpenID Federation Entity Configuration at `/.well-known/openid-federation` (for DIIP v5 and the OpenID Federation wallet architectures), and then adds a `fed` claim to the credentials it issues. It is off until `FEDERATION_ENTITY_METADATA` is set. Compose passes `FEDERATION_ENTITY_METADATA`, `FEDERATION_AUTHORITY_HINTS` and `FEDERATION_TRUST_MARKS` from your environment or `.env` to the issuer, so you only have to produce the values. You don't have to write the JSON: the script in a checkout of [oid4vci-issuer](https://github.com/FindyFi/oid4vci-issuer) asks for them and writes the lines into the `.env` in this repository's main checkout (Compose reads it from there; a worktree has no `.env`). It needs no `npm install`. Run it from this repository's root:
 
 ```sh
-node ../oid4vci-issuer/scripts/federation-metadata.js --write .env
-docker compose up -d oid4vci-issuer
+OID4VCI_ISSUER_REPO="<path to your oid4vci-issuer checkout>"
+node "$OID4VCI_ISSUER_REPO/scripts/federation-metadata.js" --write .env
+docker compose up -d --build oid4vci-issuer
 curl -s http://localhost:4007/.well-known/openid-federation | cut -d. -f2 | base64 -d 2>/dev/null | jq .
 ```
+
+(`OID4VCI_ISSUER_REPO` is only a shell variable for these commands; nothing reads it.) A 404 from the `curl` means the running issuer image doesn't have federation support yet, because Compose built it from GitHub `main`: build it from your checkout instead, as described above. A `FEDERATION_*` variable exported in your shell overrides `.env`.
 
 The script prints the lines instead of writing them if you leave out `--write`; `--help` lists the options for non-interactive use. Compose builds the issuer from GitHub `main`, so until the federation support is pushed there, build it from your checkout (see "Running a local oid4vci-issuer checkout"). The app itself needs nothing: the Entity Identifier is the issuer's `CREDENTIAL_ISSUER`, which is `OID4VCI_PUBLIC_URL` when you set it (use a public HTTPS URL for anything a verifier or trust anchor will fetch). For the full list of `FEDERATION_*` variables and what the document contains, see the oid4vci-issuer README. Deployed environments set the same variables in the issuer's task definition (FindyFi/aws-environment).
 

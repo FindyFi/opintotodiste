@@ -66,9 +66,11 @@ spawned them, and that chat does steps 2–3.
 ## Project notes
 
 - Node 20+, ES modules, Express 5, PostgreSQL; tests use `node --test`.
-- Signing is delegated: `ldp_vc` via digitalcredentials/signing-service, and
-  wallet delivery via FindyFi/oid4vci-issuer (sibling checkout at
-  `~/github/oid4vci-issuer`).
+- Wallet delivery goes through FindyFi/oid4vci-issuer, which signs the SD-JWT
+  credentials (`dc+sd-jwt`) itself. Only `ldp_vc` (downloads, collections) is
+  signed by digitalcredentials/signing-service. The issuer's own checkout is a
+  sibling of this repository on the maintainer's machine; other setups differ,
+  so find its path (`git worktree list`, or ask) instead of assuming one.
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
   (FindyFi/aws-environment, the image builder's integration compose) must follow.
