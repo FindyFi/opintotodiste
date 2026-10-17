@@ -16,7 +16,7 @@ export function page({ koskiUrl = '', initialData = null } = {}) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Opintotodiste</title>', ['credentials', 'main'])}
+${head('<title lang="fi">Opintotodiste</title>', ['credentials', 'share', 'main'])}
 </head>
 <body class="page-main">
 ${header()}
@@ -62,7 +62,7 @@ ${STEPS.map(
   <span id="bulkCount" class="selection-count"></span>
   <button type="button" class="link-btn" id="bulkClearBtn"><span lang="fi">Poista valinnat</span></button>
   <span class="selection-spacer"></span>
-  <button type="button" id="bulkShareBtn" disabled title="Tulossa pian">${SHARE_ICON}<span lang="fi">Jaa</span></button>
+  <button type="button" id="bulkShareBtn">${SHARE_ICON}<span lang="fi">Jaa</span></button>
   <button type="button" id="bulkCollectionBtn" disabled><span lang="fi">Lisää kokoelmaan</span></button>
   <button type="button" class="primary" id="bulkWalletBtn" disabled>${WALLET_ICON}<span lang="fi">Lisää lompakkoon</span></button>
 </div>
@@ -76,6 +76,7 @@ ${STEPS.map(
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
+<script src="/share.js" defer></script>
 <script src="/app.js" defer></script>
 </body>
 </html>`

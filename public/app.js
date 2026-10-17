@@ -9,6 +9,7 @@ const bulkBar = document.getElementById('bulkBar')
 const bulkCount = document.getElementById('bulkCount')
 const bulkWalletBtn = document.getElementById('bulkWalletBtn')
 const bulkCollectionBtn = document.getElementById('bulkCollectionBtn')
+const bulkShareBtn = document.getElementById('bulkShareBtn')
 const bulkClearBtn = document.getElementById('bulkClearBtn')
 const detailDialog = document.getElementById('detailDialog')
 const detailDialogContent = document.getElementById('detailDialogContent')
@@ -242,6 +243,7 @@ function updateBulkBar() {
   bulkCount.replaceChildren(String(count) + ' ', el('span', { lang: 'fi' }, 'valittu'), el('span', { lang: 'en' }, 'selected'))
   bulkWalletBtn.disabled = count === 0
   bulkCollectionBtn.disabled = count === 0
+  bulkShareBtn.disabled = count === 0
 }
 
 bulkClearBtn.addEventListener('click', () => {
@@ -358,12 +360,16 @@ function showCollectionResults(results) {
   detailDialog.showModal()
 }
 
-async function bulkAddToCollection() {
+// Signs and adds the selection to a collection the user picks or creates.
+// With `share`, ends in the share dialog for that collection instead of the
+// "added" results (unless some item failed, which the results then show).
+async function bulkAddToCollection({ share = false } = {}) {
   const indices = [...selectedIndices].sort((a, b) => a - b)
   if (!indices.length) return
 
-  bulkCollectionBtn.disabled = true
-  bulkCollectionBtn.classList.add('busy')
+  const button = share ? bulkShareBtn : bulkCollectionBtn
+  button.disabled = true
+  button.classList.add('busy')
   try {
     await Auth.ensureLoggedIn()
     const collectionId = await pickOrCreateCollection()
@@ -382,16 +388,18 @@ async function bulkAddToCollection() {
     })
     selectedIndices.clear()
     renderTable()
-    showCollectionResults(data.results)
+    if (share && data.results.every((r) => !r.error)) await Share.open({ collectionId })
+    else showCollectionResults(data.results)
   } catch (err) {
     if (err.message !== 'cancelled') showError(err.message)
   } finally {
-    bulkCollectionBtn.classList.remove('busy')
+    button.classList.remove('busy')
     updateBulkBar()
   }
 }
 
-bulkCollectionBtn.addEventListener('click', bulkAddToCollection)
+bulkCollectionBtn.addEventListener('click', () => bulkAddToCollection())
+bulkShareBtn.addEventListener('click', () => bulkAddToCollection({ share: true }))
 
 function openDetail(index) {
   const record = credentials[index]

@@ -5,7 +5,7 @@ const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|Licens
 
 // Koski's ISO dates (YYYY-MM-DD) in Finnish form (D.M.YYYY), the page's
 // default language. Anything else passes through unchanged.
-function formatDate(iso) {
+export function formatDate(iso) {
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso ?? '')
   return match ? `${Number(match[3])}.${Number(match[2])}.${match[1]}` : iso
 }
@@ -19,7 +19,7 @@ export function sharedCollectionPage({ token, collection, items }) {
       return `<li class="credential">
         <span class="${iconClass}">${BADGE_ICON}</span>
         <div class="credential-body">
-          <span class="credential-name">${esc(achievement.name)}</span>
+          <a class="credential-name" href="/c/${esc(token)}/items/${esc(item.id)}">${esc(achievement.name)}</a>
           <span class="credential-meta">${meta.map(esc).join(' · ')}</span>
         </div>
         <div class="credential-status"><a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>

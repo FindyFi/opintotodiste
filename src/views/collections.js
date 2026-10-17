@@ -4,7 +4,7 @@ export function collectionsPage() {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'collections'])}
+${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'])}
 </head>
 <body>
 ${header()}
@@ -35,6 +35,7 @@ ${header()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
+<script src="/share.js" defer></script>
 <script src="/collections.js" defer></script>
 </body>
 </html>`

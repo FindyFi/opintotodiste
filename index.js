@@ -321,6 +321,12 @@ app.get('/c/:token', async (req, res) => {
   res.send(views.sharedCollectionPage({ token: req.params.token, ...found }))
 })
 
+app.get('/c/:token/items/:itemId', async (req, res) => {
+  const found = await collections.findSharedItem(req.params.token, req.params.itemId)
+  if (!found) return res.status(404).send('Credential not found.')
+  res.send(views.sharedItemPage({ token: req.params.token, itemId: req.params.itemId, ...found }))
+})
+
 app.get('/c/:token/items/:itemId/download', async (req, res) => {
   const credential = await collections.findItemByShareToken(req.params.token, req.params.itemId)
   if (!credential) return res.status(404).send('Credential not found.')

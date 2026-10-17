@@ -172,5 +172,29 @@
   },
   "Jaa": {
     "en": "Share"
+  },
+  "Kopioi": {
+    "en": "Copy"
+  },
+  "Jaa todistus": {
+    "en": "Share credential"
+  },
+  "Jaa kokoelma": {
+    "en": "Share collection"
+  },
+  "Linkin avaaja näkee todistukset ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.": {
+    "en": "Anyone with the link can see the credentials and download them. You can close the link by creating a new share link for the collection."
+  },
+  "Viesti vastaanottajalle": {
+    "en": "Message for the recipient"
+  },
+  "Lataa todiste": {
+    "en": "Download credential"
+  },
+  "Tarkasta todiste": {
+    "en": "Verify a credential"
+  },
+  "Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Lataa se tarkistaaksesi sen aitouden.": {
+    "en": "This badge is a digitally signed Open Badges 3.0 credential. Download it to check that it is genuine."
   }
 }
