@@ -19,22 +19,26 @@ export function verifyPage({ issuers }) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Tarkasta todiste – Opintotodiste</title>', ['verify'])}
+${head('<title lang="fi">Tarkasta todiste – Opintotodiste</title>', ['recipient', 'verify'])}
 <script type="module" src="/vendor/veri-good/bundle.js"></script>
 <script src="/verify.js" defer></script>
 </head>
-<body class="page-verify">
+<body class="page-verify page-recipient">
+<div class="recipient-band">
 ${header({ auth: false, current: 'verify' })}
 
-<section class="verify-hero">
-  ${pair('h1', '', 'Tarkasta osaamistodiste', 'Verify a credential')}
-  ${pair(
-    'p',
-    ' class="lede"',
-    'Lisää ladattu todiste: valitse tiedosto, liitä sen sisältö (JSON) tai linkki siihen. Tarkastus tehdään selaimessasi, eikä todistetta lähetetä palvelimelle.',
-    'Add a downloaded credential: choose the file, or paste its content (JSON) or a link to it. The check runs in your browser, and the credential is not sent to any server.'
-  )}
+<section class="recipient-hero single">
+  <div class="recipient-hero-text">
+    ${pair('h1', '', 'Tarkasta osaamistodiste', 'Verify a credential')}
+    ${pair(
+      'p',
+      ' class="lede"',
+      'Lisää ladattu todiste: valitse tiedosto, liitä sen sisältö (JSON) tai linkki siihen. Tarkastus tehdään selaimessasi, eikä todistetta lähetetä palvelimelle.',
+      'Add a downloaded credential: choose the file, or paste its content (JSON) or a link to it. The check runs in your browser, and the credential is not sent to any server.'
+    )}
+  </div>
 </section>
+</div>
 
 <main class="verify">
   <div class="verifier">

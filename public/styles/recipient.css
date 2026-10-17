@@ -1,0 +1,153 @@
+/* The recipient's look: the pages an employer opens from a share link
+   (/c/:token, its item pages) and /verify. A navy band holds the header and
+   the hero, so these pages read as "shared with you" rather than as the
+   student's own; below it the page is peach, with the content on white. */
+
+:root { --peach: #fff3e4; --band-bg: var(--navy); }
+
+@media (prefers-color-scheme: light) {
+  body.page-recipient { --bg: var(--peach); --line: #ece6dc; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root { --band-bg: var(--surface-soft); }
+}
+
+/* ---------- navy band ---------- */
+
+/* Re-scoped tokens: the header, the language switcher and the buttons inside
+   the band draw themselves light-on-navy without rules of their own. */
+.recipient-band {
+  --bg: var(--band-bg);
+  --text: #ffffff;
+  --heading: #ffffff;
+  --muted: #d9d6f2;
+  --link: var(--cyan);
+  --link-hover: #ffffff;
+  --line-strong: rgba(255, 255, 255, .5);
+  --primary-bg: var(--cyan);
+  --primary-fg: var(--navy);
+  --primary-hover: #c4f1ff;
+  --focus: var(--cyan);
+  --translate-element-color-text: #ffffff;
+  padding-bottom: clamp(40px, 6vw, 72px);
+  border-radius: 0 0 40px 40px;
+  background: var(--band-bg);
+  color: var(--text);
+}
+.recipient-band a.button.primary:hover { color: var(--navy); }
+
+.recipient-hero, .recipient-main {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin-inline: auto;
+}
+
+.recipient-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: end;
+  gap: 32px 56px;
+  padding: 24px clamp(16px, 3vw, 40px) 0;
+}
+.recipient-hero.single { grid-template-columns: minmax(0, 1fr); }
+.recipient-hero-text { display: flex; flex-direction: column; gap: 20px; }
+.recipient-hero h1 { font-size: clamp(1.75rem, 4.5vw, 3.25rem); line-height: 1.06; letter-spacing: -.015em; overflow-wrap: break-word; hyphens: auto; }
+.recipient-hero .lede { max-width: 42rem; font-size: 1.15rem; color: var(--muted); }
+
+.recipient-pill {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 10px;
+  border-radius: 999px;
+  background: var(--cyan);
+  color: var(--navy);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.recipient-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 28px;
+  border: 1px solid rgba(255, 255, 255, .18);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, .08);
+}
+.recipient-card h2 { display: flex; align-items: center; gap: 10px; font-family: var(--font-body); font-stretch: normal; font-size: 1rem; }
+.recipient-card h2 svg { color: var(--cyan); flex-shrink: 0; }
+.recipient-card p { font-size: .95rem; color: var(--muted); }
+
+.recipient-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 4px; }
+
+/* The item page: a large badge mark beside the text. */
+.recipient-item { display: flex; gap: 40px; align-items: flex-start; }
+.recipient-item-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  flex-shrink: 0;
+  border-radius: 28px;
+  background: var(--cyan);
+  color: var(--navy);
+}
+.recipient-item-icon svg { width: 44px; height: 44px; stroke-width: 1.8; }
+
+/* ---------- content below the band ---------- */
+
+.recipient-main { flex: 1; padding: 48px 0 72px; }
+
+/* White sheets on the peach ground. */
+.recipient-sheet {
+  padding: 24px clamp(16px, 3vw, 40px);
+  border-radius: 32px;
+  background: var(--surface);
+}
+.recipient-list-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 0 16px;
+  border-bottom: 2px solid var(--line-strong);
+}
+.recipient-sheet .credential:last-child { border-bottom: 0; }
+.credential-status a.button { min-height: 40px; padding: 0 1rem; font-size: .85rem; }
+
+.recipient-item-main {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 32px 56px;
+}
+.recipient-item-main .item-details { display: block; max-width: none; margin: 0; padding-block: 8px; }
+/* One row per <div>, so translate-element's hidden clones stay inside it. */
+.item-details > div { display: grid; grid-template-columns: 12rem minmax(0, 1fr); gap: 4px 20px; padding: 16px 0; }
+.item-details > div + div { border-top: 1px solid var(--line); }
+.recipient-aside { display: flex; flex-direction: column; gap: 12px; }
+.recipient-aside h2 { font-stretch: 112%; font-size: 1.15rem; }
+.recipient-aside p { font-size: .95rem; }
+.recipient-aside a { font-weight: 700; }
+
+/* ---------- small screens ---------- */
+
+@media (max-width: 900px) {
+  .recipient-hero, .recipient-item-main { grid-template-columns: minmax(0, 1fr); }
+  .recipient-band { border-radius: 0 0 28px 28px; }
+}
+
+@media (max-width: 560px) {
+  .recipient-item { flex-direction: column; gap: 20px; }
+  .recipient-item-icon { width: 64px; height: 64px; border-radius: 20px; }
+  .recipient-item-icon svg { width: 30px; height: 30px; }
+  .item-details > div { grid-template-columns: minmax(0, 1fr); }
+  /* No checkbox on these lists: line the actions up with the name. */
+  .recipient-sheet .credential-status { padding-left: 58px; }
+  .recipient-card { padding: 22px; }
+}
