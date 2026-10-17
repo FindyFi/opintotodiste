@@ -9,18 +9,42 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.4] - 2026-10-18
+
+### Added
+
+- Guide pages `/guide/studyinfo`, `/guide/wallet` and `/guide/sharing` (the Koski share link,
+  the tested wallets with their store links, and sharing), linked from the main page's steps.
+- Sharing: "Jaa" opens a share dialog with the link, a copy button and a fi/en message for the
+  recipient. One selected credential goes into the user's "Jaetut todisteet" collection; several
+  make a new collection. `GET /c/:token/items/:itemId` is a public page for one item, with download
+  and verify links; regenerating the share token revokes it.
+- LinkedIn in the share dialog: "Lisää LinkedIn-profiiliin" per credential (LinkedIn's Add to
+  Profile link) and "Jaa LinkedInissä" per collection.
+- `/employer`: what the badges are and how an employer checks one. The header gets a site nav.
+- `/verify`: in-browser verification of a downloaded `ldp_vc` (or a VP holding one) with
+  `@digitalcredentials/veri-good` 0.0.0-beta.7, from a file, pasted JSON, a link or `?url=` (same
+  origin only). It trusts only this deployment's own signing DID, which the app learns by having
+  signing-service sign a minimal credential (cached for ten minutes).
+- The credential detail dialog also opens from the collections page and the shared collection page.
+
 ### Changed
 
-- Main page redesigned: white page with a light-cyan hero holding the Koski form and the three steps
-  (each links to its guide page under `/guide/`, which come later), a full-width results list, and a
-  selection bar fixed to the bottom of the viewport that appears while something is selected, with
-  "Poista valinnat", a disabled "Jaa" (until sharing lands), "Lisää kokoelmaan" and "Lisää lompakkoon".
-  The right-hand column is gone.
+- Main page redesigned: white page with a light-cyan hero holding the Koski form and the three
+  steps, a full-width results list, and a selection bar fixed to the bottom of the viewport that
+  appears while something is selected. The right-hand column is gone.
+- The collections page and the share dialog follow the same design. Pages a recipient opens from a
+  share link, and `/verify`, get their own look: a navy band over white sheets on a peach page.
+- The chosen language is remembered across pages (translate-element 4.0.0; `?lang=` still wins).
 - "Kulkuavain" is now "pääsyavain" throughout the UI.
 - Views live in `src/views/` (one module per page) and styles in `public/styles/` (a base file plus
   sections a page lists in its head), so page work no longer collides in shared files.
 - Credentials (`ldp_vc` and VCDM 2.0 wallet offers) now carry a top-level `name` from the
   achievement, for display in wallets and verifiers.
+- The local Compose stack pins the frozen Open Badge VCT v1 hash (`vct#integrity`), as the deployed
+  environments do.
+
+The image needs no new variables and no schema changes. Pair it with oid4vci-issuer 0.0.3.
 
 ## [0.0.3] - 2026-10-17
 
