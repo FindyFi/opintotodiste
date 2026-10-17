@@ -39,6 +39,7 @@ ${header({ auth: false })}
   <span class="eyebrow" lang="fi">Jaettu kokoelma</span>
   <h1>${esc(collection.name)}</h1>
   <p class="lede" lang="fi">Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Avaa merkki nähdäksesi sen tiedot ja tarkastaaksesi sen aitouden.</p>
+  <p><a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a></p>
 </section>
 
 <main class="panel">

@@ -1,12 +1,6 @@
 /* The main page: cyan hero with the steps, the full-width results list and
    the selection bar fixed to the viewport. White page in light mode. */
 
-:root { --hero-bg: #ebf9fd; }
-
-@media (prefers-color-scheme: dark) {
-  :root { --hero-bg: var(--surface); }
-}
-
 @media (prefers-color-scheme: light) {
   body.page-main { --bg: #ffffff; --surface-soft: var(--hero-bg); }
 }

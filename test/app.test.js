@@ -81,6 +81,17 @@ describe('the running app', needsPostgres, () => {
     assert.equal(res.status, 400)
   })
 
+  test('serves the employer page in both languages', async () => {
+    const res = await fetch(`${app.baseUrl}/employer`)
+    assert.equal(res.status, 200)
+    const html = await res.text()
+    assert.match(html, /<div lang="fi" class="employer-body">/)
+    assert.match(html, /<div lang="en" class="employer-body">/)
+    assert.match(html, /href="https:\/\/osaaja\.todiste\.fi\/"/)
+    assert.match(html, /href="https:\/\/findynet\.fi\/yhteys\/"/)
+    assert.match(html, /<a href="\/employer" aria-current="page">/, 'marks the header link as the current page')
+  })
+
   test('404s an unknown shared collection', async () => {
     const res = await fetch(`${app.baseUrl}/c/not-a-real-token`)
     assert.equal(res.status, 404)
