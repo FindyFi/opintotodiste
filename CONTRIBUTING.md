@@ -52,6 +52,33 @@ required.
 - Match the surrounding style: two-space indentation, single quotes, no semicolons.
 - Update `CHANGELOG.md` under `## [Unreleased]`.
 
+## Working on several changes at once
+
+Whether or not you use an AI assistant, and whether or not you keep a plan (see `PLAN.example.md`):
+
+- **One change, one branch, one worktree.** Start from an up-to-date `main`:
+  `git fetch && git worktree add <worktree-root>/opintotodiste/<dev>-<topic> -b <dev>/<topic> main`.
+  Keep worktrees outside the repository, so test globs and Docker build contexts never pick up another
+  one. Run `npm install` in each.
+- **Put your developer id in branch and worktree names** (`<dev>/<topic>`, any short stable id such as
+  your initials). Branches pushed by different developers then never collide, even when two people
+  number their tasks the same way.
+- **Check before you start.** `git fetch`, then look at `git log origin/main -20`, the open branches
+  and pull requests, and the issues for the area you are about to touch. Someone else may have changed
+  it, or be changing it now. A written plan can be stale: trust the repository over the plan, and fix
+  the plan.
+- **Plans are personal; agreements are shared.** Coordination between developers happens outside the
+  plans: calls, e-mail, issues, pull requests. Anything others depend on goes there, not only in
+  your plan: a change to an interface between this repository and `oid4vci-issuer`, to the env
+  manifest, to a release or to something you want nobody to do (for example, which history must not be
+  pushed). Open an issue before changing a shared contract.
+- **One database per worktree** when tests run in parallel. They share one PostgreSQL otherwise:
+  `docker compose exec db createdb -U opintotodiste opintotodiste_<name>`, then
+  `TEST_DATABASE_URL=postgres://opintotodiste:opintotodiste@localhost:5432/opintotodiste_<name> REQUIRE_POSTGRES=1 npm test`.
+- **Before integrating,** rebase on `main`, run the full suite, and integrate the way the team agreed
+  (a pull request; CI runs on those). Don't push to a shared branch unless that was agreed, and never
+  push a branch built on history that was rewritten on the remote.
+
 ## Database schema
 
 `src/schema.sql` is applied at startup and is expected to be idempotent — it runs against an
