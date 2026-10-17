@@ -68,7 +68,7 @@
   "Kirjaudu ulos": {
     "en": "Sign out"
   },
-  "Rekisteröi kulkuavain": {
+  "Rekisteröi pääsyavain": {
     "en": "Register a passkey"
   },
   "Kokoelmani": {
@@ -77,16 +77,16 @@
   "Näyttönimi:": {
     "en": "Display name:"
   },
-  "Onko sinulla jo kulkuavain? Kirjaudu sisään.": {
+  "Onko sinulla jo pääsyavain? Kirjaudu sisään.": {
     "en": "Already have a passkey? Sign in."
   },
-  "Ei vielä kulkuavainta? Rekisteröidy.": {
+  "Ei vielä pääsyavainta? Rekisteröidy.": {
     "en": "Don't have a passkey yet? Register."
   },
   "Peruuta": {
     "en": "Cancel"
   },
-  "Kirjaudu sisään kulkuavaimella hallitaksesi kokoelmia.": {
+  "Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.": {
     "en": "Sign in with a passkey to manage collections."
   },
   "Luo kokoelma": {
@@ -125,9 +125,6 @@
   "Kokoelmassa ei ole vielä kohteita.": {
     "en": "This collection has no items yet."
   },
-  "Näytä, mitä osaat.": {
-    "en": "Show what you <em>know.</em>"
-  },
   "Koski-jakolinkki": {
     "en": "Koski share link"
   },
@@ -143,14 +140,8 @@
   "Suoritukset": {
     "en": "Achievements"
   },
-  "Mitä teet valituilla?": {
-    "en": "What would you like to do with them?"
-  },
   "Työnantajalle": {
     "en": "For employers"
-  },
-  "Kokoelman jakolinkin avaaja näkee osaamismerkit ja voi ladata ne tarkistettaviksi ilman kirjautumista.": {
-    "en": "Anyone with a collection's share link can see its badges and download them for verification, without signing in."
   },
   "Valitse kaikki": {
     "en": "Select all"
@@ -166,5 +157,20 @@
   },
   "Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Lataa merkki tarkistaaksesi sen.": {
     "en": "The badges in this collection are digitally signed Open Badges 3.0 credentials. Download a badge to verify it."
+  },
+  "Opintosi todennettaviksi osaamismerkeiksi": {
+    "en": "Your studies as verifiable badges"
+  },
+  "Osaamismerkit": {
+    "en": "Badges"
+  },
+  "Ohjeet →": {
+    "en": "Instructions →"
+  },
+  "Poista valinnat": {
+    "en": "Clear selection"
+  },
+  "Jaa": {
+    "en": "Share"
   }
 }

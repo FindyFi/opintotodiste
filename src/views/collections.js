@@ -14,7 +14,7 @@ ${header()}
   <p class="lede" lang="fi">Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä.</p>
   <div id="errorBox" class="error" role="alert" hidden></div>
   <p id="loginPrompt" class="login-prompt" hidden>
-    <span lang="fi">Kirjaudu sisään kulkuavaimella hallitaksesi kokoelmia.</span>
+    <span lang="fi">Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.</span>
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
   <form class="new-collection" id="newCollectionForm" hidden>

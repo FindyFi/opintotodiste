@@ -9,6 +9,7 @@ const bulkBar = document.getElementById('bulkBar')
 const bulkCount = document.getElementById('bulkCount')
 const bulkWalletBtn = document.getElementById('bulkWalletBtn')
 const bulkCollectionBtn = document.getElementById('bulkCollectionBtn')
+const bulkClearBtn = document.getElementById('bulkClearBtn')
 const detailDialog = document.getElementById('detailDialog')
 const detailDialogContent = document.getElementById('detailDialogContent')
 
@@ -233,16 +234,20 @@ function buildStatusCell(record, index) {
   ]
 }
 
+// The selection bar is only there while something is selected (the buttons
+// can't be clicked with nothing selected, so there is nothing to enable).
 function updateBulkBar() {
-  if (!credentials.length) {
-    bulkBar.hidden = true
-    return
-  }
-  bulkBar.hidden = false
-  bulkCount.replaceChildren(String(selectedIndices.size) + ' ', el('span', { lang: 'fi' }, 'valittu'), el('span', { lang: 'en' }, 'selected'))
-  bulkWalletBtn.disabled = selectedIndices.size === 0
-  bulkCollectionBtn.disabled = selectedIndices.size === 0
+  const count = selectedIndices.size
+  bulkBar.hidden = count === 0
+  bulkCount.replaceChildren(String(count) + ' ', el('span', { lang: 'fi' }, 'valittu'), el('span', { lang: 'en' }, 'selected'))
+  bulkWalletBtn.disabled = count === 0
+  bulkCollectionBtn.disabled = count === 0
 }
+
+bulkClearBtn.addEventListener('click', () => {
+  selectedIndices.clear()
+  renderTable()
+})
 
 async function bulkAddToWallet() {
   const indices = [...selectedIndices].sort((a, b) => a - b)
