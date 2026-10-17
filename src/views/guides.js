@@ -1,4 +1,5 @@
 import { head, header, esc } from './layout.js'
+import { OG_PAGES } from './og.js'
 import { WALLETS, WALLET_GROUPS } from '../wallets.js'
 
 // The three guide pages (/guide/studyinfo, /guide/wallet, /guide/sharing).
@@ -228,7 +229,7 @@ export function guidePage(name) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head(`<title lang="fi">${esc(guide.title.fi)} – Opintotodiste</title>`, ['guide'])}
+${head(`<title lang="fi">${esc(guide.title.fi)} – Opintotodiste</title>`, ['guide'], { path: `/guide/${name}`, title: { fi: `${guide.title.fi} – Opintotodiste`, en: `${guide.title.en} – Study credential` }, description: OG_PAGES[name].description })}
 </head>
 <body class="page-guide">
 ${header()}

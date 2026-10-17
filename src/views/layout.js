@@ -1,3 +1,5 @@
+import { ogTags } from './og.js'
+
 export function esc(value) {
   return String(value ?? '').replace(/[&<>"']/g, (c) => ({
     '&': '&amp;',
@@ -22,10 +24,11 @@ export const BADGE_ICON = `<svg width="24" height="24" viewBox="0 0 24 24" fill=
 export const SHARE_ICON = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.6 13.5 6.8 4M15.4 6.5l-6.8 4"/></svg>`
 export const SHIELD_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3 4 6v6c0 4.5 3.4 8.2 8 9 4.6-.8 8-4.5 8-9V6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>`
 
-// Everything in <head> except the <title>. Styles live in public/styles/:
+// Everything in <head> except the <title>. `og` feeds the link-preview tags
+// (see og.js); without it a page gets the generic site ones. Styles live in public/styles/:
 // base.css everywhere, plus the sections a page names in `styles` (in order).
 // Archivo is self-hosted from @fontsource-variable/archivo (see index.js).
-export function head(title, styles = []) {
+export function head(title, styles = [], og = {}) {
   return `<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="light dark">
@@ -33,6 +36,7 @@ export function head(title, styles = []) {
 <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png">
 <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
 ${title}
+${ogTags(og)}
 <link rel="stylesheet" href="/vendor/archivo/wdth.css">
 <link rel="stylesheet" href="/vendor/translate-element/translate-element.css">
 ${['base', ...styles].map((name) => `<link rel="stylesheet" href="/styles/${name}.css">`).join('\n')}

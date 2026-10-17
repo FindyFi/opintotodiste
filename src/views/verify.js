@@ -1,4 +1,5 @@
 import { head, header, esc } from './layout.js'
+import { OG_PAGES } from './og.js'
 
 // /verify: in-browser verification of a downloaded ldp_vc (or a VP holding
 // one) with @digitalcredentials/veri-good, served from /vendor/veri-good.
@@ -19,7 +20,7 @@ export function verifyPage({ issuers }) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Tarkasta todiste – Opintotodiste</title>', ['recipient', 'verify'])}
+${head('<title lang="fi">Tarkasta todiste – Opintotodiste</title>', ['recipient', 'verify'], { path: '/verify', ...OG_PAGES.verify })}
 <script type="module" src="/vendor/veri-good/bundle.js"></script>
 <script src="/verify.js" defer></script>
 </head>

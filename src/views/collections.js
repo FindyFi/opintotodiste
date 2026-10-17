@@ -4,7 +4,7 @@ export function collectionsPage() {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'])}
+${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'], { path: '/my/collections' })}
 </head>
 <body class="page-collections">
 ${header()}
