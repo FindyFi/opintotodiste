@@ -52,26 +52,33 @@ required.
 - Match the surrounding style: two-space indentation, single quotes, no semicolons.
 - Update `CHANGELOG.md` under `## [Unreleased]`.
 
+## Spec and format changes
+
+Open Badges 3.0, SD-JWT, OpenID for Verifiable Credential Issuance and the other formats and protocols
+this repository relies on are versioned, and new versions keep arriving: 1.1, 2.0 and so on, not only
+the step from draft to final. When a change touches the shape of a credential, the OID4VCI interaction
+with `oid4vci-issuer`, or how a Koski record is interpreted, cite the version and section it follows in
+the commit message or pull request description. Several details have changed between versions, and the
+citation keeps the reasoning in review.
+
 ## Working on several changes at once
 
-Whether or not you use an AI assistant, and whether or not you keep a plan (see `PLAN.example.md`):
+Some habits that help when several changes are in flight:
 
-- **One change, one branch, one worktree.** Start from an up-to-date `main`:
-  `git fetch && git worktree add <worktree-root>/opintotodiste/<dev>-<topic> -b <dev>/<topic> main`.
+- **One change, one branch, one worktree**, as a hint rather than a rule. Start from an up-to-date
+  `main`: `git fetch && git worktree add <worktree-root>/opintotodiste/<dev>-<topic> -b <dev>/<topic> main`.
   Keep worktrees outside the repository, so test globs and Docker build contexts never pick up another
   one. Run `npm install` in each.
-- **Put your developer id in branch and worktree names** (`<dev>/<topic>`, any short stable id such as
-  your initials). Branches pushed by different developers then never collide, even when two people
-  number their tasks the same way.
+- **Put your developer id in branch names** (`<dev>/<topic>`, any short stable id such as your
+  initials). Branches pushed by different developers then never collide, even when two people number
+  their tasks the same way.
 - **Check before you start.** `git fetch`, then look at `git log origin/main -20`, the open branches
   and pull requests, and the issues for the area you are about to touch. Someone else may have changed
-  it, or be changing it now. A written plan can be stale: trust the repository over the plan, and fix
-  the plan.
-- **Plans are personal; agreements are shared.** Coordination between developers happens outside the
-  plans: calls, e-mail, issues, pull requests. Anything others depend on goes there, not only in
-  your plan: a change to an interface between this repository and `oid4vci-issuer`, to the env
-  manifest, to a release or to something you want nobody to do (for example, which history must not be
-  pushed). Open an issue before changing a shared contract.
+  it, or be changing it now. Notes and plans can go stale: trust the repository over them.
+- **Shared agreements go in shared places.** Anything others depend on belongs in an issue, a pull
+  request or a conversation with the team, not only in your own notes: a change to an interface between
+  this repository and `oid4vci-issuer`, to the env manifest, to a release, or anything you want nobody
+  to do (for example, which history must not be pushed). Open an issue before changing a shared contract.
 - **One database per worktree** when tests run in parallel. They share one PostgreSQL otherwise:
   `docker compose exec db createdb -U opintotodiste opintotodiste_<name>`, then
   `TEST_DATABASE_URL=postgres://opintotodiste:opintotodiste@localhost:5432/opintotodiste_<name> REQUIRE_POSTGRES=1 npm test`.
