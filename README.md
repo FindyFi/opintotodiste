@@ -92,6 +92,18 @@ If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_
 
 [ngrok](https://ngrok.com/) works too (`ngrok http 4007`) and gives a free account one fixed domain, so the URL survives restarts. Its free plan shows a warning page to browser user agents, which can break wallets that fetch with a browser-like client.
 
+### OpenID Federation
+
+`oid4vci-issuer` can publish an OpenID Federation Entity Configuration at `/.well-known/openid-federation` (for DIIP v5 and the OpenID Federation wallet architectures), and then adds a `fed` claim to the credentials it issues. It is off until `FEDERATION_ENTITY_METADATA` is set. Compose passes `FEDERATION_ENTITY_METADATA`, `FEDERATION_AUTHORITY_HINTS` and `FEDERATION_TRUST_MARKS` from your environment or `.env` to the issuer, so you only have to produce the values. You don't have to write the JSON: the script in your `oid4vci-issuer` checkout asks for them and writes the lines into `.env` here. It needs no `npm install`:
+
+```sh
+node ../oid4vci-issuer/scripts/federation-metadata.js --write .env
+docker compose up -d oid4vci-issuer
+curl -s http://localhost:4007/.well-known/openid-federation | cut -d. -f2 | base64 -d 2>/dev/null | jq .
+```
+
+The script prints the lines instead of writing them if you leave out `--write`; `--help` lists the options for non-interactive use. Compose builds the issuer from GitHub `main`, so until the federation support is pushed there, build it from your checkout (see "Running a local oid4vci-issuer checkout"). The app itself needs nothing: the Entity Identifier is the issuer's `CREDENTIAL_ISSUER`, which is `OID4VCI_PUBLIC_URL` when you set it (use a public HTTPS URL for anything a verifier or trust anchor will fetch). For the full list of `FEDERATION_*` variables and what the document contains, see the oid4vci-issuer README. Deployed environments set the same variables in the issuer's task definition (FindyFi/aws-environment).
+
 ### The `koski2openbadge` dependency
 
 `koski2openbadge` — the converter that turns Koski study records into Open Badges achievement data — is not published to npm. `package.json` depends on it straight from GitHub, and `package-lock.json` pins the exact commit that gets installed.
