@@ -104,7 +104,7 @@ function openAuthFlow(initialMode) {
 
       const fields = []
       if (mode === 'register') {
-        nameInput = el('input', { type: 'text', placeholder: 'Nimesi' })
+        nameInput = el('input', { type: 'text', placeholder: 'Nimesi', lang: 'fi' })
         fields.push(el('p', {}, [el('label', { class: 'field' }, [el('span', { lang: 'fi' }, 'Näyttönimi:'), nameInput])]))
       }
 

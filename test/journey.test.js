@@ -195,6 +195,20 @@ describe('the Koski journey', needsPostgres, () => {
     )
     assert.equal(download.status, 200)
     assert.ok((await download.json()).proof, 'the shared credential should still carry its proof')
+
+    // The public item page, linked from the shared collection page.
+    const itemUrl = `/c/${collection.body.shareToken}/items/${result.itemId}`
+    assert.match(await page.text(), new RegExp(`href="${itemUrl}"`))
+    const itemPage = await anonymous.request(itemUrl)
+    assert.equal(itemPage.status, 200)
+    const html = await itemPage.text()
+    assert.match(html, new RegExp(`href="${itemUrl}/download"`))
+    assert.match(html, /href="\/verify"/)
+    assert.equal((await anonymous.request(`/c/${collection.body.shareToken}/items/not-a-uuid`)).status, 404)
+
+    // Regenerating the token revokes the item page along with the collection.
+    await client.json(`/collections/${collection.body.id}/share-token/regenerate`, { method: 'POST' })
+    assert.equal((await anonymous.request(itemUrl)).status, 404)
   })
 
   describe('sending a collection item to a wallet', () => {

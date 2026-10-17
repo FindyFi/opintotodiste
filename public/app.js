@@ -9,6 +9,7 @@ const bulkBar = document.getElementById('bulkBar')
 const bulkCount = document.getElementById('bulkCount')
 const bulkWalletBtn = document.getElementById('bulkWalletBtn')
 const bulkCollectionBtn = document.getElementById('bulkCollectionBtn')
+const bulkShareBtn = document.getElementById('bulkShareBtn')
 const bulkClearBtn = document.getElementById('bulkClearBtn')
 const detailDialog = document.getElementById('detailDialog')
 const detailDialogContent = document.getElementById('detailDialogContent')
@@ -242,6 +243,7 @@ function updateBulkBar() {
   bulkCount.replaceChildren(String(count) + ' ', el('span', { lang: 'fi' }, 'valittu'), el('span', { lang: 'en' }, 'selected'))
   bulkWalletBtn.disabled = count === 0
   bulkCollectionBtn.disabled = count === 0
+  bulkShareBtn.disabled = count === 0
 }
 
 bulkClearBtn.addEventListener('click', () => {
@@ -306,7 +308,7 @@ function pickOrCreateCollection() {
       if (i === 0) input.checked = true
       choices.append(el('p', {}, el('label', {}, [input, c.name, el('span', { class: 'muted' }, `(${c.itemCount})`)])))
     })
-    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma' })
+    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma', lang: 'fi' })
     const newRadio = el('input', { type: 'radio', name: 'collectionChoice', value: '__new__' })
     if (!collections.length) newRadio.checked = true
     choices.append(el('p', {}, el('label', {}, [newRadio, newInput])))
@@ -354,19 +356,48 @@ function showCollectionResults(results) {
       )
     )
   })
+  content.push(el('p', {}, el('a', { href: '/my/collections', lang: 'fi' }, 'Avaa kokoelmani')))
   detailDialogContent.replaceChildren(...content)
   detailDialog.showModal()
 }
 
-async function bulkAddToCollection() {
+// "Jaa" needs no choice from the user. One credential goes into the user's
+// "Jaetut todisteet" collection (made on first use), so sharing single
+// credentials doesn't litter the list; several make a new collection named
+// after the date. Both can be renamed on the collections page.
+const SHARED_ITEMS_COLLECTION = 'Jaetut todisteet'
+async function createCollectionFor(indices) {
+  let name = `Jaettu ${new Date().toLocaleDateString('fi-FI')}`
+  if (indices.length === 1) {
+    // One credential: all of those live in one collection, found again by name.
+    name = SHARED_ITEMS_COLLECTION
+    const listed = await fetch('/collections')
+    const existing = (await listed.json().catch(() => ({}))).collections?.find((c) => c.name === name)
+    if (existing) return existing.id
+  }
+  const res = await fetch('/collections', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not create the collection')
+  return data.id
+}
+
+// Signs and adds the selection to a collection the user picks or creates.
+// With `share`, skips the picker (a new collection) and ends in the share dialog instead of the
+// "added" results (unless some item failed, which the results then show).
+async function bulkAddToCollection({ share = false } = {}) {
   const indices = [...selectedIndices].sort((a, b) => a - b)
   if (!indices.length) return
 
-  bulkCollectionBtn.disabled = true
-  bulkCollectionBtn.classList.add('busy')
+  const button = share ? bulkShareBtn : bulkCollectionBtn
+  button.disabled = true
+  button.classList.add('busy')
   try {
     await Auth.ensureLoggedIn()
-    const collectionId = await pickOrCreateCollection()
+    const collectionId = share ? await createCollectionFor(indices) : await pickOrCreateCollection()
     if (!collectionId) return
 
     const res = await fetch(`/collections/${collectionId}/items`, {
@@ -382,16 +413,19 @@ async function bulkAddToCollection() {
     })
     selectedIndices.clear()
     renderTable()
-    showCollectionResults(data.results)
+    if (share && data.results.every((r) => !r.error)) {
+      await Share.open({ collectionId, itemId: data.results.length === 1 ? data.results[0].itemId : undefined })
+    } else showCollectionResults(data.results)
   } catch (err) {
     if (err.message !== 'cancelled') showError(err.message)
   } finally {
-    bulkCollectionBtn.classList.remove('busy')
+    button.classList.remove('busy')
     updateBulkBar()
   }
 }
 
-bulkCollectionBtn.addEventListener('click', bulkAddToCollection)
+bulkCollectionBtn.addEventListener('click', () => bulkAddToCollection())
+bulkShareBtn.addEventListener('click', () => bulkAddToCollection({ share: true }))
 
 function openDetail(index) {
   const record = credentials[index]

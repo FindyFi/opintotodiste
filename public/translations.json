@@ -164,9 +164,6 @@
   "Kopioitu!": {
     "en": "Copied!"
   },
-  "Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Lataa merkki tarkistaaksesi sen.": {
-    "en": "The badges in this collection are digitally signed Open Badges 3.0 credentials. Download a badge to verify it."
-  },
   "Opintosi todennettaviksi osaamismerkeiksi": {
     "en": "Your studies as verifiable badges"
   },
@@ -181,5 +178,53 @@
   },
   "Jaa": {
     "en": "Share"
+  },
+  "Kopioi": {
+    "en": "Copy"
+  },
+  "Jaa todiste": {
+    "en": "Share credential"
+  },
+  "Jaa kokoelma": {
+    "en": "Share collection"
+  },
+  "Viesti vastaanottajalle": {
+    "en": "Message for the recipient"
+  },
+  "Lataa todiste": {
+    "en": "Download credential"
+  },
+  "Tarkasta todiste": {
+    "en": "Verify a credential"
+  },
+  "Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Avaa merkki nähdäksesi sen tiedot ja tarkastaaksesi sen aitouden.": {
+    "en": "The badges in this collection are digitally signed Open Badges 3.0 credentials. Open a badge to see its details and to verify it."
+  },
+  "Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.": {
+    "en": "This badge is a digitally signed Open Badges 3.0 credential. You can verify that it is genuine without downloading it; download it only if you want to keep a copy."
+  },
+  "Linkin avaaja näkee tämän todisteen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.": {
+    "en": "Anyone with the link can see this credential and download it. The link stops working when the collection's share link is renewed."
+  },
+  "Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.": {
+    "en": "Anyone with the link can see all the credentials in the collection and download them. You can close the link by creating a new share link for the collection."
+  },
+  "Nimesi": {
+    "en": "Your name"
+  },
+  "Uusi kokoelma": {
+    "en": "New collection"
+  },
+  "Kokoelman nimi": {
+    "en": "Collection name"
+  },
+  "Jaettu todiste": {
+    "en": "Shared credential"
+  },
+  "Avaa kokoelmani": {
+    "en": "Open my collections"
+  },
+  "Jaetut todisteet": {
+    "en": "Shared credentials"
   }
 }

@@ -116,7 +116,7 @@ a:hover { color: var(--link-hover); }
 
 /* ---------- buttons & inputs ---------- */
 
-button {
+button, a.button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -136,14 +136,15 @@ button {
   cursor: pointer;
   transition: background-color .15s, color .15s, border-color .15s;
 }
-button:hover { background: var(--heading); color: var(--bg); }
+button:hover, a.button:hover { background: var(--heading); color: var(--bg); }
+a.button { text-decoration: none; }
 button:focus-visible { border-radius: 999px; }
 button:disabled { opacity: .5; cursor: default; }
 button:disabled:hover { background: transparent; color: var(--heading); }
 button.busy::after { content: '\2026'; }
 
-button.primary { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-fg); }
-button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--primary-fg); }
+button.primary, a.button.primary { background: var(--primary-bg); border-color: var(--primary-bg); color: var(--primary-fg); }
+button.primary:hover, a.button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--primary-fg); }
 button.primary:disabled:hover { background: var(--primary-bg); border-color: var(--primary-bg); }
 
 button.small { min-height: 40px; padding: 0 1rem; font-size: .85rem; }

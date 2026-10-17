@@ -4,7 +4,7 @@ export function collectionsPage() {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'collections'])}
+${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'])}
 </head>
 <body>
 ${header()}
@@ -18,7 +18,7 @@ ${header()}
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
   <form class="new-collection" id="newCollectionForm" hidden>
-    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" aria-label="Kokoelman nimi" required>
+    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" lang="fi" aria-label="Kokoelman nimi" required>
     <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
   </form>
 </section>
@@ -35,6 +35,7 @@ ${header()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
+<script src="/share.js" defer></script>
 <script src="/collections.js" defer></script>
 </body>
 </html>`

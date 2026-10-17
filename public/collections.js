@@ -47,8 +47,8 @@ const requestWalletOffer = (collectionId, itemId) =>
   requestJson(`/collections/${collectionId}/items/${itemId}/offer`, { method: 'POST' })
 const regenerateShareToken = (id) => requestJson(`/collections/${id}/share-token/regenerate`, { method: 'POST' })
 
-function shareUrl(token) {
-  return `${location.origin}/c/${token}`
+function openShare(target) {
+  Share.open(target).catch((err) => showError(err.message))
 }
 
 function buildItemRow(collection, item) {
@@ -70,39 +70,25 @@ function buildItemRow(collection, item) {
     }
   })
 
+  const shareBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Jaa'))
+  shareBtn.addEventListener('click', () => openShare({ collectionId: collection.id, itemId: item.id }))
+
   return el('li', { class: 'credential' }, [
     el('div', { class: 'credential-body' }, [el('span', { class: 'credential-name' }, name), el('span', { class: 'credential-meta' }, meta)]),
-    el('div', { class: 'credential-status' }, walletBtn),
+    el('div', { class: 'credential-status' }, [shareBtn, walletBtn]),
   ])
 }
 
 function buildCollectionRow(collection) {
-  const linkEl = el('a', { class: 'share-link', href: shareUrl(collection.shareToken) }, shareUrl(collection.shareToken))
-
-  // Toggled with a class rather than `hidden`: translate-element keeps an
-  // English copy of each lang="fi" label, and a class on the button reaches
-  // both copies.
-  const copyBtn = el('button', { type: 'button', class: 'small primary copy-btn' }, [
-    el('span', { class: 'label-default', lang: 'fi' }, 'Kopioi linkki'),
-    el('span', { class: 'label-done', lang: 'fi' }, 'Kopioitu!'),
-  ])
-  copyBtn.addEventListener('click', async () => {
-    try {
-      await navigator.clipboard.writeText(linkEl.href)
-    } catch {
-      return
-    }
-    copyBtn.classList.add('done')
-    setTimeout(() => copyBtn.classList.remove('done'), 2000)
-  })
+  const shareBtn = el('button', { type: 'button', class: 'small primary' }, el('span', { lang: 'fi' }, 'Jaa'))
+  shareBtn.addEventListener('click', () => openShare({ collectionId: collection.id }))
 
   const regenBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Uusi jakolinkki'))
   regenBtn.addEventListener('click', async () => {
     if (!confirm('Vanha jakolinkki lakkaa toimimasta. Jatketaanko?')) return
     try {
-      const updated = await regenerateShareToken(collection.id)
-      linkEl.textContent = shareUrl(updated.shareToken)
-      linkEl.href = shareUrl(updated.shareToken)
+      await regenerateShareToken(collection.id)
+      openShare({ collectionId: collection.id })
     } catch (err) {
       showError(err.message)
     }
@@ -142,8 +128,7 @@ function buildCollectionRow(collection) {
       el('span', { class: 'muted' }, [`${collection.itemCount} `, el('span', { lang: 'fi' }, 'kohdetta')]),
     ]),
     itemList,
-    el('div', { class: 'share-row' }, [linkEl, copyBtn]),
-    el('div', { class: 'collection-actions' }, [regenBtn, renameBtn, deleteBtn]),
+    el('div', { class: 'collection-actions' }, [shareBtn, regenBtn, renameBtn, deleteBtn]),
   ])
 }
 

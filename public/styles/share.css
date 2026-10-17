@@ -1,0 +1,31 @@
+/* The share dialog (public/share.js); on every page that can open it. */
+
+.share-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding: 10px 10px 10px 18px;
+  border-radius: 16px;
+  background: var(--surface-soft);
+}
+.share-link { flex: 1; min-width: 12rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; word-break: break-all; }
+.copy-btn:not(.done) .label-done, .copy-btn.done .label-default { display: none; }
+
+.share-message-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
+.share-message-head h3 { margin: 0; }
+.lang-toggle { display: inline-flex; gap: 4px; }
+.lang-toggle button[aria-pressed=true] { background: var(--surface-soft); }
+.share-message {
+  width: 100%;
+  padding: 14px 16px;
+  border: 2px solid var(--line-strong);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  font-size: .95rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+

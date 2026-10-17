@@ -134,3 +134,18 @@ export async function findItemByShareToken(token, itemId) {
   )
   return rows[0]?.credential ?? null
 }
+
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+// One item, for the public item page. Null for an unknown token or item, and for an itemId that isn't a UUID (Postgres would
+// throw on it).
+export async function findSharedItem(token, itemId) {
+  if (!UUID.test(itemId)) return null
+  const { rows } = await pool.query(
+    `SELECT i.credential FROM collection_items i
+     JOIN collections c ON c.id = i.collection_id
+     WHERE c.share_token = $1 AND i.id = $2`,
+    [token, itemId]
+  )
+  return rows[0] ? { credential: rows[0].credential } : null
+}
