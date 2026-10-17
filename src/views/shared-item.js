@@ -35,7 +35,7 @@ ${header({ auth: false })}
   <dl class="item-details">${details}</dl>
   <p class="item-actions">
     <a class="button primary" href="/c/${esc(token)}/items/${esc(itemId)}/download" lang="fi">Lataa todiste</a>
-    <a class="button" href="/verify" lang="fi">Tarkasta todiste</a>
+    <a class="button" href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${itemId}/download`))}" lang="fi">Tarkasta todiste</a>
   </p>
 </main>
 </body>

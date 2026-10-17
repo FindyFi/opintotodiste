@@ -11,6 +11,7 @@ import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
+import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
 
 const app = express()
@@ -22,6 +23,8 @@ app.use(express.static('public'))
 app.use('/vendor/translate-element', express.static('node_modules/translate-element'))
 app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewebauthn/browser/dist/bundle'))
 app.use('/vendor/archivo', express.static('node_modules/@fontsource-variable/archivo'))
+// bundle.js plus the JSON-LD contexts it loads next to itself; not its demo page.
+app.use('/vendor/veri-good', express.static('node_modules/@digitalcredentials/veri-good/dist', { index: false }))
 app.use(
   session({
     store: new (connectPgSimple(session))({ pool }),
@@ -345,6 +348,18 @@ app.get('/my/collections', (req, res) => {
 app.get('/guide/:name', (req, res) => {
   if (!views.GUIDE_NAMES.includes(req.params.name)) return res.status(404).send('Guide not found.')
   res.send(views.guidePage(req.params.name))
+})
+
+app.get('/verify', async (req, res) => {
+  const issuers = await trustedIssuers(
+    {
+      baseUrl: process.env.SIGNING_SERVICE_URL,
+      instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
+      suite: process.env.SIGNING_SERVICE_SUITE,
+    },
+    { issuerName: process.env.ISSUER_NAME, url: process.env.ORIGIN }
+  )
+  res.send(views.verifyPage({ issuers }))
 })
 
 await runSchema()

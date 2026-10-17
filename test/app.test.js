@@ -46,6 +46,17 @@ describe('the running app', needsPostgres, () => {
     }
   })
 
+  // No signing service here: the page still renders, trusting nobody.
+  test('serves the verify page with veri-good', async () => {
+    const res = await fetch(`${app.baseUrl}/verify`)
+    assert.equal(res.status, 200)
+    assert.match(await res.text(), /<template id="issuer-dids">\{\}<\/template>/)
+    const bundle = await fetch(`${app.baseUrl}/vendor/veri-good/bundle.js`)
+    assert.equal(bundle.status, 200)
+    assert.match(bundle.headers.get('content-type'), /javascript/)
+    assert.equal((await fetch(`${app.baseUrl}/vendor/veri-good/`)).status, 404)
+  })
+
   test('404s an unknown guide', async () => {
     for (const name of ['nope', 'constructor']) {
       const res = await fetch(`${app.baseUrl}/guide/${name}`)
