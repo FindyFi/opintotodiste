@@ -12,6 +12,9 @@
 .share-link { flex: 1; min-width: 12rem; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85rem; word-break: break-all; }
 .copy-btn:not(.done) .label-done, .copy-btn.done .label-default { display: none; }
 
+.linkedin-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.linkedin-actions:empty { display: none; }
+
 .share-message-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .share-message-head h3 { margin: 0; }
 .lang-toggle { display: inline-flex; gap: 4px; }
