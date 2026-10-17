@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test, { describe } from 'node:test'
 
 import { GUIDE_NAMES, guidePage } from '../src/views/guides.js'
@@ -13,20 +12,9 @@ describe('guide pages', () => {
   test('hold their text as fi/en sibling pairs', () => {
     for (const name of GUIDE_NAMES) {
       const html = guidePage(name)
-      assert.match(html, /<h1 lang="fi">[^<]+<\/h1>/, name)
+      assert.match(html, /<h1 lang="fi">[^<]+<\/h1><h1 lang="en">[^<]+<\/h1>/, name)
       assert.match(html, /<\/article><article lang="en">/, name)
       assert.equal((html.match(/<article lang="fi">/g) ?? []).length, 1, name)
-    }
-  })
-
-  // translate-element would add a second English copy next to the sibling.
-  test('never pair a sibling with text that translations.json already has', () => {
-    const dictionary = JSON.parse(readFileSync(new URL('../public/translations.json', import.meta.url), 'utf8'))
-    for (const name of GUIDE_NAMES) {
-      for (const [, , fi] of guidePage(name).matchAll(/<(\w+)[^>]* lang="fi">([\s\S]*?)<\/\1><\1[^>]* lang="en">/g)) {
-        const text = fi.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-        assert.ok(!Object.hasOwn(dictionary, text), `${name}: ${text}`)
-      }
     }
   })
 

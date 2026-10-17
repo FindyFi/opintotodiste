@@ -23,7 +23,7 @@ ${header()}
 
 <section class="hero">
   <div class="hero-main">
-    <p class="hero-flow" aria-hidden="true"><span lang="fi">Koski</span>${ARROW_ICON}<span lang="fi">Osaamismerkit</span></p>
+    <p class="hero-flow" aria-hidden="true"><span>Koski</span>${ARROW_ICON}<span lang="fi">Osaamismerkit</span></p>
     <h1 lang="fi">Opintosi todennettaviksi osaamismerkeiksi</h1>
     <p class="lede" lang="fi">Syötä Koski-opintotietojesi linkki nähdäksesi, mitkä osaamismerkit tiedoista voidaan myöntää.</p>
     <form class="koski-form" id="koskiForm">

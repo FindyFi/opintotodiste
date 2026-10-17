@@ -1,4 +1,3 @@
-import { readFileSync } from 'node:fs'
 import { head, header, esc } from './layout.js'
 import { WALLETS, WALLET_GROUPS } from '../wallets.js'
 
@@ -7,17 +6,11 @@ import { WALLETS, WALLET_GROUPS } from '../wallets.js'
 // shows one at a time without translations.json entries. No screenshots on
 // purpose (user, 2026-10-17): the text is clear and images would clutter it.
 
-// translate-element prefers a translations.json entry over a hand-written
-// sibling, and would then show two English copies. So text that is already a
-// key there (e.g. the main page's step texts) gets no sibling.
-const DICTIONARY = JSON.parse(readFileSync(new URL('../../public/translations.json', import.meta.url), 'utf8'))
-const plainText = (html) => html.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-
-// <tag lang="fi">fi</tag><tag lang="en">en</tag>: a same-tag sibling pair.
+// <tag lang="fi">fi</tag><tag lang="en">en</tag>: a same-tag sibling pair. The
+// sibling wins over a translations.json entry for the same text (e.g. the main
+// page's step texts), so English is shown once.
 const pair = (tag, attrs, fi, en) =>
-  Object.hasOwn(DICTIONARY, plainText(fi))
-    ? `<${tag}${attrs} lang="fi">${fi}</${tag}>`
-    : `<${tag}${attrs} lang="fi">${fi}</${tag}><${tag}${attrs} lang="en">${en}</${tag}>`
+  `<${tag}${attrs} lang="fi">${fi}</${tag}><${tag}${attrs} lang="en">${en}</${tag}>`
 
 // One numbered step: a heading and its text (HTML).
 const step = ({ title, body }) => `<li>

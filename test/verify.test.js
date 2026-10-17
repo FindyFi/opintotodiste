@@ -1,5 +1,4 @@
 import assert from 'node:assert/strict'
-import { readFileSync } from 'node:fs'
 import test, { beforeEach, describe } from 'node:test'
 
 import { resetTrustedIssuers, signingIssuerDid, trustedIssuers } from '../src/trusted-issuers.js'
@@ -70,17 +69,5 @@ describe('the verify page', () => {
     const html = verifyPage({ issuers: {} })
     assert.ok(html.includes('<script type="module" src="/vendor/veri-good/bundle.js"></script>'))
     assert.ok(html.includes('<script src="/verify.js" defer></script>'))
-  })
-
-  // translate-element would add a second English copy next to the sibling.
-  test('never pairs a sibling with text that translations.json already has', () => {
-    const dictionary = JSON.parse(readFileSync(new URL('../public/translations.json', import.meta.url), 'utf8'))
-    const html = verifyPage({ issuers: {} })
-    const pairs = [...html.matchAll(/<(\w+)[^>]* lang="fi">([\s\S]*?)<\/\1><\1[^>]* lang="en">/g)]
-    assert.ok(pairs.length > 0)
-    for (const [, , fi] of pairs) {
-      const text = fi.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim()
-      assert.ok(!Object.hasOwn(dictionary, text), text)
-    }
   })
 })

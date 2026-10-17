@@ -49,9 +49,9 @@ const Detail = (() => {
   // arrive pre-translated. Its result *status* ("Completed") is still a
   // fixed English literal, so translations.json (keyed by Finnish source
   // text) can't reach it. We hand-author a bilingual sibling pair for it per
-  // translate-element's alternate mode: translate-element leaves any
-  // lang="fi" element alone once it already has a same-tag lang-tagged
-  // neighbour, so no translations.json entry is needed.
+  // translate-element's alternate mode: the lang="en" sibling right after
+  // the lang="fi" element is its translation, so no translations.json entry
+  // is needed.
   const RESULT_TEXT_TRANSLATIONS = { Completed: 'Suoritettu' }
   function bilingualText(text) {
     const fi = RESULT_TEXT_TRANSLATIONS[text]
