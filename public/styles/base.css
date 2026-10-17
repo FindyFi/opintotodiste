@@ -149,9 +149,9 @@ button.primary, a.button.primary { background: var(--primary-bg); border-color: 
 button.primary:hover, a.button.primary:hover { background: var(--primary-hover); border-color: var(--primary-hover); color: var(--primary-fg); }
 button.primary:disabled:hover { background: var(--primary-bg); border-color: var(--primary-bg); }
 
-button.small { min-height: 40px; padding: 0 1rem; font-size: .85rem; }
-button.ghost { border-color: transparent; }
-button.ghost:hover { background: var(--surface-soft); color: var(--heading); }
+button.small, a.button.small { min-height: 40px; padding: 0 1rem; font-size: .85rem; }
+button.ghost, a.button.ghost { border-color: transparent; }
+button.ghost:hover, a.button.ghost:hover { background: var(--surface-soft); color: var(--heading); }
 button.danger { color: var(--error-fg); }
 button.danger:hover { background: var(--error-bg); color: var(--error-fg); }
 

@@ -45,6 +45,46 @@ const Share = (() => {
       ].join('\n'),
   }
 
+  // LinkedIn's "Add to Profile" deep link (linkedin.com/help/linkedin/answer/a528030):
+  // startTask=CERTIFICATION_NAME plus name, organizationName, issueYear/Month,
+  // certUrl and certId pre-fill a licenses & certifications entry.
+  function linkedInAddToProfileUrl({ name, organizationName, issuedAt, certUrl, certId }) {
+    const url = new URL('https://www.linkedin.com/profile/add')
+    url.searchParams.set('startTask', 'CERTIFICATION_NAME')
+    if (name) url.searchParams.set('name', name)
+    if (organizationName) url.searchParams.set('organizationName', organizationName)
+    const issued = issuedAt ? new Date(issuedAt) : null
+    if (issued && !Number.isNaN(issued.getTime())) {
+      url.searchParams.set('issueYear', String(issued.getUTCFullYear()))
+      url.searchParams.set('issueMonth', String(issued.getUTCMonth() + 1))
+    }
+    if (certUrl) url.searchParams.set('certUrl', certUrl)
+    if (certId) url.searchParams.set('certId', certId)
+    return url.toString()
+  }
+
+  function linkedInShareUrl(link) {
+    const url = new URL('https://www.linkedin.com/sharing/share-offsite/')
+    url.searchParams.set('url', link)
+    return url.toString()
+  }
+
+  function linkedInLink(label, href) {
+    return el('a', { class: 'button small ghost', href, target: '_blank', rel: 'noopener' }, el('span', { lang: 'fi' }, label))
+  }
+
+  function addToProfileButton(item, certUrl) {
+    const achievement = item.credential?.credentialSubject?.achievement || {}
+    const href = linkedInAddToProfileUrl({
+      name: achievement.name,
+      organizationName: achievement.creator?.name,
+      issuedAt: item.credential?.issuanceDate ?? item.credential?.validFrom,
+      certUrl,
+      certId: item.credential?.id,
+    })
+    return linkedInLink('Lisää LinkedIn-profiiliin', href)
+  }
+
   function copyButton(getText) {
     const button = el('button', { type: 'button', class: 'small primary copy-btn' }, [
       el('span', { class: 'label-default', lang: 'fi' }, 'Kopioi'),
@@ -70,6 +110,11 @@ const Share = (() => {
     const collection = data.collections.find((c) => c.id === collectionId)
     if (!collection) throw new Error('Collection not found.')
 
+    const itemsRes = await fetch(`/collections/${collectionId}/items`)
+    const itemsData = await itemsRes.json().catch(() => ({}))
+    if (!itemsRes.ok) throw new Error(itemsData.error || 'Request failed')
+    const items = itemId ? itemsData.items.filter((item) => item.id === itemId) : itemsData.items
+
     const origin = location.origin
     const link = itemId
       ? `${origin}/c/${collection.shareToken}/items/${itemId}`
@@ -77,6 +122,10 @@ const Share = (() => {
 
     const linkEl = el('a', { class: 'share-link', href: link, target: '_blank', rel: 'noopener' }, link)
     const linkRow = el('div', { class: 'share-row' }, [linkEl, copyButton(() => link)])
+
+    const linkedInButtons = items.map((item) => addToProfileButton(item, `${origin}/c/${collection.shareToken}/items/${item.id}`))
+    if (!itemId) linkedInButtons.push(linkedInLink('Jaa LinkedInissä', linkedInShareUrl(link)))
+    const linkedInRow = el('div', { class: 'linkedin-actions' }, linkedInButtons)
 
     let lang = document.documentElement.lang === 'en' ? 'en' : 'fi'
     const textarea = el('textarea', { class: 'share-message', rows: '11', 'aria-label': 'Viesti' })
@@ -106,6 +155,7 @@ const Share = (() => {
           : 'Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'
       ),
       linkRow,
+      linkedInRow,
       el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),
       textarea,
       el('p', {}, copyButton(() => textarea.value))
