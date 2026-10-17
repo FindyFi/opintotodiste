@@ -62,6 +62,14 @@ services:
       # A self-signed certificate for that key, sent as x5c in SD-JWT headers
       # for wallets that find issuer keys only from certificates (Paradym).
       SD_JWT_X5C: generate
+      # OpenID Federation Entity Configuration at
+      # /.well-known/openid-federation, off unless FEDERATION_ENTITY_METADATA
+      # is set. These come from .env, which Compose reads; make the lines with
+      # oid4vci-issuer's `npm run federation:setup` (see README, "OpenID
+      # Federation"). Needs the issuer to be built from a version that has it.
+      FEDERATION_ENTITY_METADATA: ${FEDERATION_ENTITY_METADATA:-}
+      FEDERATION_AUTHORITY_HINTS: ${FEDERATION_AUTHORITY_HINTS:-}
+      FEDERATION_TRUST_MARKS: ${FEDERATION_TRUST_MARKS:-}
       # Only the ldp_vc configuration above needs signing-service.
       SIGNING_SERVICE_URL: http://signing-service:4006
       SIGNING_SERVICE_INSTANCE: test

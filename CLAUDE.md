@@ -2,9 +2,10 @@
 
 ## Start of every chat: check for a plan
 
-Look for `/Users/samuel/github/opintotodiste/PLAN.md`. It is deliberately
-**not committed**, so it is missing from worktrees; use that absolute path.
-If it exists:
+Look for `PLAN.md` in the repository's **main checkout**: the first path
+printed by `git worktree list`. It is deliberately **not committed** (each
+developer keeps their own, for their own work), so it is missing from
+worktrees; always read and edit it at that path. If it exists:
 
 - Read it before doing anything else, and follow its **Working agreement**:
   claim a task, work in your own worktree and branch, and don't push.
@@ -66,9 +67,11 @@ spawned them, and that chat does steps 2–3.
 ## Project notes
 
 - Node 20+, ES modules, Express 5, PostgreSQL; tests use `node --test`.
-- Signing is delegated: `ldp_vc` via digitalcredentials/signing-service, and
-  wallet delivery via FindyFi/oid4vci-issuer (sibling checkout at
-  `~/github/oid4vci-issuer`).
+- Wallet delivery goes through FindyFi/oid4vci-issuer, which signs the SD-JWT
+  credentials (`dc+sd-jwt`) itself. Only `ldp_vc` (downloads, collections) is
+  signed by digitalcredentials/signing-service. The issuer's own checkout is a
+  sibling of this repository on the maintainer's machine; other setups differ,
+  so find its path (`git worktree list`, or ask) instead of assuming one.
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
   (FindyFi/aws-environment, the image builder's integration compose) must follow.
