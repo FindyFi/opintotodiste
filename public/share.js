@@ -22,7 +22,7 @@ const Share = (() => {
         single
           ? 'jaan kanssasi digitaalisen todistuksen (Open Badges -osaamismerkin) osaamisestani.'
           : 'jaan kanssasi digitaaliset todistukseni (Open Badges -osaamismerkkejä) osaamisestani.',
-        'Digitaalinen todistus on sähköisesti allekirjoitettu, joten sen aitouden voi tarkistaa ilman yhteydenottoa myöntäjään.',
+        'Digitaalinen todistus on sähköisesti allekirjoitettu, joten sen aitouden voi tarkastaa ilman yhteydenottoa myöntäjään.',
         '',
         single ? `Todistuksen näet ja voit ladata täältä: ${link}` : `Todistukset näet ja voit ladata täältä: ${link}`,
         '',
@@ -98,7 +98,13 @@ const Share = (() => {
 
     dialog.querySelector('#detailDialogContent').replaceChildren(
       el('h2', { lang: 'fi' }, itemId ? 'Jaa todistus' : 'Jaa kokoelma'),
-      el('p', { class: 'muted', lang: 'fi' }, 'Linkin avaaja näkee todistukset ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'),
+      el(
+        'p',
+        { class: 'muted', lang: 'fi' },
+        itemId
+          ? 'Linkin avaaja näkee tämän todistuksen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.'
+          : 'Linkin avaaja näkee kokoelman kaikki todistukset ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'
+      ),
       linkRow,
       el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),
       textarea,

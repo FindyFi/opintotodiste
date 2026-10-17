@@ -38,7 +38,7 @@ ${header({ auth: false })}
 <section class="page-hero">
   <span class="eyebrow" lang="fi">Jaettu kokoelma</span>
   <h1>${esc(collection.name)}</h1>
-  <p class="lede" lang="fi">Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Lataa merkki tarkistaaksesi sen.</p>
+  <p class="lede" lang="fi">Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Avaa merkki nähdäksesi sen tiedot ja tarkastaaksesi sen aitouden.</p>
 </section>
 
 <main class="panel">

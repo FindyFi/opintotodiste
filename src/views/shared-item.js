@@ -27,7 +27,7 @@ ${header({ auth: false })}
 <section class="page-hero">
   <span class="eyebrow"><a href="/c/${esc(token)}">${esc(collectionName)}</a></span>
   <h1>${esc(achievement.name)}</h1>
-  <p class="lede" lang="fi">Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Lataa se tarkistaaksesi sen aitouden.</p>
+  <p class="lede" lang="fi">Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.</p>
 </section>
 
 <main class="panel">

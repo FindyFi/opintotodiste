@@ -308,7 +308,7 @@ function pickOrCreateCollection() {
       if (i === 0) input.checked = true
       choices.append(el('p', {}, el('label', {}, [input, c.name, el('span', { class: 'muted' }, `(${c.itemCount})`)])))
     })
-    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma' })
+    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma', lang: 'fi' })
     const newRadio = el('input', { type: 'radio', name: 'collectionChoice', value: '__new__' })
     if (!collections.length) newRadio.checked = true
     choices.append(el('p', {}, el('label', {}, [newRadio, newInput])))
@@ -360,8 +360,23 @@ function showCollectionResults(results) {
   detailDialog.showModal()
 }
 
+// "Jaa" needs no choice from the user: the selection goes into a new
+// collection (named after the credential, or the date), renamed later on the
+// collections page.
+async function createCollectionFor(indices) {
+  const name = indices.length === 1 ? columnValue(credentials[indices[0]], 'name') : `Jaettu ${new Date().toLocaleDateString('fi-FI')}`
+  const res = await fetch('/collections', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ name }),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Could not create the collection')
+  return data.id
+}
+
 // Signs and adds the selection to a collection the user picks or creates.
-// With `share`, ends in the share dialog for that collection instead of the
+// With `share`, skips the picker (a new collection) and ends in the share dialog instead of the
 // "added" results (unless some item failed, which the results then show).
 async function bulkAddToCollection({ share = false } = {}) {
   const indices = [...selectedIndices].sort((a, b) => a - b)
@@ -372,7 +387,7 @@ async function bulkAddToCollection({ share = false } = {}) {
   button.classList.add('busy')
   try {
     await Auth.ensureLoggedIn()
-    const collectionId = await pickOrCreateCollection()
+    const collectionId = share ? await createCollectionFor(indices) : await pickOrCreateCollection()
     if (!collectionId) return
 
     const res = await fetch(`/collections/${collectionId}/items`, {

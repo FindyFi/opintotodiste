@@ -18,7 +18,7 @@ ${header()}
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
   <form class="new-collection" id="newCollectionForm" hidden>
-    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" aria-label="Kokoelman nimi" required>
+    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" lang="fi" aria-label="Kokoelman nimi" required>
     <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
   </form>
 </section>
