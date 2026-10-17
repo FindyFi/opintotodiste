@@ -1,4 +1,4 @@
-import { head, header, esc, embedJson, BADGE_ICON, SHARE_ICON, SHIELD_ICON } from './layout.js'
+import { head, header, footer, esc, embedJson, BADGE_ICON, SHARE_ICON, SHIELD_ICON } from './layout.js'
 
 // Mirrors public/app.js: whole qualifications get the stronger icon tint.
 const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
@@ -73,6 +73,7 @@ ${
   <form method="dialog"><button type="submit" lang="fi">Sulje</button></form>
 </dialog>
 
+${footer()}
 <script>window.__ITEMS__ = ${embedJson(items.map((item) => ({ id: item.id, credential: item.credential })))}</script>
 <script src="/detail.js" defer></script>
 <script src="/shared-collection.js" defer></script>

@@ -362,6 +362,10 @@ app.get('/employer', (req, res) => {
   res.send(views.employerPage())
 })
 
+app.get('/policy', (req, res) => {
+  res.send(views.policyPage())
+})
+
 app.get('/my/collections', (req, res) => {
   res.send(views.collectionsPage())
 })

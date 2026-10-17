@@ -280,5 +280,11 @@
   },
   "Poista tili pysyvästi": {
     "en": "Delete account permanently"
+  },
+  "Tietosuoja": {
+    "en": "Privacy"
+  },
+  "Tietosuoja ja tietojesi säilytys – Opintotodiste": {
+    "en": "Privacy and how long we keep your data – Opintotodiste"
   }
 }

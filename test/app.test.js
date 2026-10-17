@@ -114,6 +114,14 @@ describe('the running app', needsPostgres, () => {
     assert.match(html, /<a href="\/employer" aria-current="page">/, 'marks the header link as the current page')
   })
 
+  test('serves the policy page in both languages', async () => {
+    const res = await fetch(`${app.baseUrl}/policy`)
+    assert.equal(res.status, 200)
+    const html = await res.text()
+    assert.match(html, /<article lang="fi">/)
+    assert.match(html, /<article lang="en">/)
+  })
+
   test('404s an unknown shared collection', async () => {
     const res = await fetch(`${app.baseUrl}/c/not-a-real-token`)
     assert.equal(res.status, 404)

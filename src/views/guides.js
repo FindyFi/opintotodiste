@@ -1,4 +1,4 @@
-import { head, header, esc } from './layout.js'
+import { head, header, footer, esc } from './layout.js'
 import { OG_PAGES } from './og.js'
 import { WALLETS, WALLET_GROUPS } from '../wallets.js'
 
@@ -248,6 +248,7 @@ ${pair('article', '', guide.body.fi, guide.body.en)}
 ${guideNav(name)}
 </main>
 
+${footer()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
 </body>
