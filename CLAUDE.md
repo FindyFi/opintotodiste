@@ -2,9 +2,10 @@
 
 ## Start of every chat: check for a plan
 
-Look for `/Users/samuel/github/opintotodiste/PLAN.md`. It is deliberately
-**not committed**, so it is missing from worktrees; use that absolute path.
-If it exists:
+Look for `PLAN.md` in the repository's **main checkout**: the first path
+printed by `git worktree list`. It is deliberately **not committed** (each
+developer keeps their own, for their own work), so it is missing from
+worktrees; always read and edit it at that path. If it exists:
 
 - Read it before doing anything else, and follow its **Working agreement**:
   claim a task, work in your own worktree and branch, and don't push.
