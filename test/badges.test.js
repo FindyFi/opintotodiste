@@ -67,6 +67,16 @@ describe('toVcdm2Credential', () => {
   test('refuses to build a credential with no configured issuer', () => {
     assert.throws(() => toVcdm2Credential(RECORD, {}), /OID4VCI_CREDENTIAL_ISSUER_ID/)
   })
+
+  test('takes the top-level name from the achievement', () => {
+    const vc = toVcdm2Credential({ ...RECORD, credentialSubject: { ...RECORD.credentialSubject, achievement: { name: 'A' } } }, ISSUER2)
+    assert.equal(vc.name, 'A')
+  })
+
+  test('has no top-level name when the achievement has none', () => {
+    const vc = toVcdm2Credential(RECORD, ISSUER2)
+    assert.ok(!('name' in vc))
+  })
 })
 
 describe('recordFromCredential', () => {
@@ -120,6 +130,16 @@ describe('toVerifiableCredential', () => {
 
   test('refuses to build a credential with no configured issuer', () => {
     assert.throws(() => toVerifiableCredential(RECORD, {}), /ISSUER_ID/)
+  })
+
+  test('takes the top-level name from the achievement', () => {
+    const vc = toVerifiableCredential({ ...RECORD, credentialSubject: { ...RECORD.credentialSubject, achievement: { name: 'A' } } }, ISSUER)
+    assert.equal(vc.name, 'A')
+  })
+
+  test('has no top-level name when the achievement has none', () => {
+    const vc = toVerifiableCredential(RECORD, ISSUER)
+    assert.ok(!('name' in vc))
   })
 })
 
