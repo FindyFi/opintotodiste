@@ -244,5 +244,17 @@
   },
   "Mitä osaamismerkit ovat ja miten ne tarkastetaan?": {
     "en": "What are badges, and how do I check them?"
+  },
+  "Tarkasta aitous itse": {
+    "en": "Check authenticity yourself"
+  },
+  "Valitse merkin kohdalta Tarkasta. Tarkastus tehdään selaimessasi, eikä kirjautumista tarvita.": {
+    "en": "Choose Verify next to a badge. The check runs in your browser, and no sign-in is needed."
+  },
+  "Mikä on osaamismerkki?": {
+    "en": "What is a badge?"
+  },
+  "Osaamismerkki kuvaa yhden suorituksen. Sen allekirjoituksesta näkee, kuka sen myönsi ja ettei sitä ole muutettu.": {
+    "en": "A badge describes one achievement. Its signature shows who issued it and that it has not been changed."
   }
 }

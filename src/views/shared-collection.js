@@ -1,4 +1,4 @@
-import { head, header, esc, BADGE_ICON } from './layout.js'
+import { head, header, esc, BADGE_ICON, SHARE_ICON, SHIELD_ICON } from './layout.js'
 
 // Mirrors public/app.js: whole qualifications get the stronger icon tint.
 const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
@@ -22,7 +22,7 @@ export function sharedCollectionPage({ token, collection, items }) {
           <a class="credential-name" href="/c/${esc(token)}/items/${esc(item.id)}">${esc(achievement.name)}</a>
           <span class="credential-meta">${meta.map(esc).join(' · ')}</span>
         </div>
-        <div class="credential-status"><a href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${item.id}/download`))}" lang="fi">Tarkasta</a> <a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>
+        <div class="credential-status"><a class="button" href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${item.id}/download`))}" lang="fi">Tarkasta</a> <a href="/c/${esc(token)}/items/${esc(item.id)}/download" lang="fi">Lataa</a></div>
       </li>`
     })
     .join('')
@@ -30,24 +30,35 @@ export function sharedCollectionPage({ token, collection, items }) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head(`<title>${esc(collection.name)} – Opintotodiste</title>`, ['credentials'])}
+${head(`<title>${esc(collection.name)} – Opintotodiste</title>`, ['credentials', 'recipient'])}
 </head>
-<body>
+<body class="page-recipient">
+<div class="recipient-band">
 ${header({ auth: false })}
 
-<section class="page-hero">
-  <span class="eyebrow" lang="fi">Jaettu kokoelma</span>
-  <h1>${esc(collection.name)}</h1>
-  <p class="lede" lang="fi">Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Avaa merkki nähdäksesi sen tiedot ja tarkastaaksesi sen aitouden.</p>
-  <p><a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a></p>
+<section class="recipient-hero">
+  <div class="recipient-hero-text">
+    <span class="recipient-pill">${SHARE_ICON}<span lang="fi">Jaettu kokoelma</span></span>
+    <h1>${esc(collection.name)}</h1>
+    <p class="lede" lang="fi">Kokoelman osaamismerkit ovat digitaalisesti allekirjoitettuja Open Badges 3.0 -todisteita. Avaa merkki nähdäksesi sen tiedot ja tarkastaaksesi sen aitouden.</p>
+  </div>
+  <div class="recipient-card">
+    <h2>${SHIELD_ICON}<span lang="fi">Tarkasta aitous itse</span></h2>
+    <p lang="fi">Valitse merkin kohdalta Tarkasta. Tarkastus tehdään selaimessasi, eikä kirjautumista tarvita.</p>
+    <a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a>
+  </div>
 </section>
+</div>
 
-<main class="panel">
+<main class="recipient-main">
+  <div class="recipient-sheet">
+    <div class="recipient-list-head"><h2 lang="fi">Osaamismerkit</h2></div>
 ${
   items.length
     ? `<ul class="credential-list">${rows}</ul>`
     : `<p class="empty" lang="fi">Kokoelmassa ei ole vielä kohteita.</p>`
 }
+  </div>
 </main>
 </body>
 </html>`

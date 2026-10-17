@@ -1,33 +1,10 @@
-/* /verify: the guide pages' cyan hero, then veri-good on the left and notes
-   on the right. veri-good draws its own fixed-width dark card. */
-
-:root { --verify-hero-bg: #ebf9fd; }
-
-@media (prefers-color-scheme: dark) {
-  :root { --verify-hero-bg: var(--surface); }
-}
-
-@media (prefers-color-scheme: light) {
-  body.page-verify { --bg: #ffffff; }
-}
-
-.verify-hero, .verify {
-  width: min(100% - 2 * var(--gutter), var(--content));
-  margin-inline: auto;
-}
-
-.verify-hero {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 48px 64px;
-  border-radius: 40px;
-  background: var(--verify-hero-bg);
-}
-.verify-hero h1 { font-size: clamp(1.8rem, 4vw, 2.5rem); letter-spacing: -.015em; }
-.verify-hero .lede { max-width: 46rem; font-size: 1.15rem; }
+/* /verify: the recipient's look (recipient.css: navy band, peach page), then
+   veri-good on the left and notes on the right. veri-good draws its own
+   fixed-width dark card. */
 
 .verify {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin-inline: auto;
   flex: 1;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -56,12 +33,11 @@
   gap: 10px;
   padding: 24px 28px;
   border-radius: 24px;
-  background: var(--verify-hero-bg);
+  background: var(--surface);
 }
 .verify-note h2 { font-size: 1.05rem; }
 .verify-note ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
 
 @media (max-width: 900px) {
-  .verify-hero { padding: 32px 24px; border-radius: 28px; }
   .verify { grid-template-columns: minmax(0, 1fr); padding-top: 40px; }
 }

@@ -6,10 +6,10 @@ export function collectionsPage() {
 <head>
 ${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'])}
 </head>
-<body>
+<body class="page-collections">
 ${header()}
 
-<section class="page-hero">
+<section class="collections-hero">
   <h1 lang="fi">Kokoelmani</h1>
   <p class="lede" lang="fi">Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä.</p>
   <div id="errorBox" class="error" role="alert" hidden></div>
@@ -17,7 +17,7 @@ ${header()}
     <span lang="fi">Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.</span>
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
-  <form class="new-collection" id="newCollectionForm" hidden>
+  <form class="new-collection field-row" id="newCollectionForm" hidden>
     <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" lang="fi" aria-label="Kokoelman nimi" required>
     <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
   </form>

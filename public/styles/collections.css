@@ -1,33 +1,69 @@
-/* The collections page. */
+/* The collections page: the main page's cyan hero with the new-collection
+   field, then one card per collection holding the main page's list. */
 
 /* Logged out on the collections page there is nothing to hold yet. */
 .panel:has(> #collectionsContainer:empty) { display: none; }
 
-/* ---------- collections ---------- */
+/* ---------- hero ---------- */
 
-.new-collection { display: flex; gap: 12px; max-width: 40rem; }
+.collections-hero {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin: 4px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: clamp(32px, 5vw, 56px) clamp(20px, 5vw, 64px);
+  border-radius: 40px;
+  background: var(--hero-bg);
+}
+.collections-hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.08; letter-spacing: -.02em; }
+.collections-hero .lede { max-width: 40rem; font-size: 1.15rem; }
+
+.new-collection { max-width: 40rem; }
 .new-collection[hidden] { display: none; }
-.new-collection input { flex: 1; min-width: 0; }
-.new-collection button { min-height: 56px; }
 .login-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .login-prompt[hidden] { display: none; }
 
-.collection-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 16px; }
-.collection-card {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  padding: 24px;
-  border: 1px solid var(--line);
-  border-radius: 24px;
-}
-.collection-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
-.collection-actions { display: flex; flex-wrap: wrap; gap: 4px; margin-left: -1rem; }
+/* ---------- collections ---------- */
 
-.collection-items { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+/* No white sheet: the cards sit straight on the page, as the main page's list. */
+body.page-collections .panel {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  padding: 48px 0 72px;
+  border-radius: 0;
+  background: none;
+}
+
+.collection-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 24px; }
+.collection-card {
+  padding: 24px clamp(16px, 3vw, 32px) 8px;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: var(--surface);
+}
+.collection-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--line-strong);
+}
+.collection-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.collection-title h2 { font-size: 1.4rem; }
+.collection-actions { display: flex; flex-wrap: wrap; gap: 4px; }
+
+.collection-items { list-style: none; margin: 0; padding: 0; }
+.collection-items .credential:last-child { border-bottom: 0; }
 
 /* ---------- small screens ---------- */
 
+@media (max-width: 900px) {
+  .collections-hero { border-radius: 28px; }
+}
+
 @media (max-width: 560px) {
-  .new-collection { flex-direction: column; }
+  /* No checkbox on this list: line the actions up with the name. */
+  .collection-items .credential-status { padding-left: 58px; }
 }

@@ -51,6 +51,11 @@ function openShare(target) {
   Share.open(target).catch((err) => showError(err.message))
 }
 
+// Mirrors public/app.js: the same rosette, and whole qualifications get the
+// stronger icon tint.
+const BADGE_ICON = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.8 7 22l5-3 5 3-1.5-8.2"/></svg>'
+const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
+
 function buildItemRow(collection, item) {
   const achievement = item.credential?.credentialSubject?.achievement || {}
   const name = achievement.name || ''
@@ -73,7 +78,11 @@ function buildItemRow(collection, item) {
   const shareBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Jaa'))
   shareBtn.addEventListener('click', () => openShare({ collectionId: collection.id, itemId: item.id }))
 
+  const icon = el('span', { class: MAJOR_ACHIEVEMENT_TYPES.test(achievement.achievementType ?? '') ? 'credential-icon strong' : 'credential-icon' })
+  icon.innerHTML = BADGE_ICON
+
   return el('li', { class: 'credential' }, [
+    icon,
     el('div', { class: 'credential-body' }, [el('span', { class: 'credential-name' }, name), el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, [shareBtn, walletBtn]),
   ])
@@ -124,11 +133,13 @@ function buildCollectionRow(collection) {
 
   return el('li', { class: 'collection-card' }, [
     el('div', { class: 'collection-head' }, [
-      el('h3', {}, collection.name),
-      el('span', { class: 'muted' }, [`${collection.itemCount} `, el('span', { lang: 'fi' }, 'kohdetta')]),
+      el('div', { class: 'collection-title' }, [
+        el('h2', {}, collection.name),
+        el('span', { class: 'muted' }, [`${collection.itemCount} `, el('span', { lang: 'fi' }, 'kohdetta')]),
+      ]),
+      el('div', { class: 'collection-actions' }, [shareBtn, regenBtn, renameBtn, deleteBtn]),
     ]),
     itemList,
-    el('div', { class: 'collection-actions' }, [shareBtn, regenBtn, renameBtn, deleteBtn]),
   ])
 }
 
