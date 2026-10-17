@@ -37,35 +37,41 @@ Haiku for mechanical config and docs).*
 parallel explicitly: that is what lets several chats work at once.*
 
 ### T1: Add the env manifest test
+
 - Repo: app · Model: Sonnet · Depends: none · Parallel with: T2, T3 · Status: `done (a1b2c3d)`
 - Every `process.env.X` read outside `test/` is listed in `.env.example` with a tag.
 - Done when: `npm test` fails on an untagged variable.
 
 ### T2: Issuer rejects reserved claims
+
 - Repo: issuer · Model: Sonnet · Depends: none · Parallel with: T1, T3 · Status: `in progress (ab/T2-reserved-claims, ~/work/worktrees/issuer/ab-T2, 2026-01-16)`
 - Offers containing `iss`, `iat` or `cnf` get 400; tests cover each.
 - Done when: the issuer suite is green and its README lists the reserved claims.
 
 ### T3: Document the local stack
+
 - Repo: app (README and compose only) · Model: Haiku · Depends: the decision above · Parallel with: anything · Status: `todo`
 - Why it is safe in parallel: it touches no file the other tasks touch.
 
 ### T4: End-to-end check with a real wallet
+
 - Repos: app + issuer · Model: Opus (with the user, hands-on) · Depends: T1, T2, T3 · Status: `blocked (needs T2)`
 - A task spanning two repos uses one worktree per repo with the same branch name.
 - Record the results as a table in the Log. Decide what T5 should be.
 
 ### T5 (contingent): switch the wallet format
+
 - Depends: a T4 decision · Status: `todo`
 - *Detail a contingent task only once it is needed; a sketch is enough until then.*
 
 ### Dependency graph
 
-```
+```text
 T1 ─┐
 T2 ─┼─► T4 ─► T5?
 T3 ─┘
 ```
+
 T1, T2 and T3 can run at the same time, in three chats (or subagents), in
 three worktrees. T4 waits for all three. *Draw it: it is the quickest way to see
 what can run in parallel, and what a change of plan blocks.*
