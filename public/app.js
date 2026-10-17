@@ -356,15 +356,25 @@ function showCollectionResults(results) {
       )
     )
   })
+  content.push(el('p', {}, el('a', { href: '/my/collections', lang: 'fi' }, 'Avaa kokoelmani')))
   detailDialogContent.replaceChildren(...content)
   detailDialog.showModal()
 }
 
-// "Jaa" needs no choice from the user: the selection goes into a new
-// collection (named after the credential, or the date), renamed later on the
-// collections page.
+// "Jaa" needs no choice from the user. One credential goes into the user's
+// "Jaetut todisteet" collection (made on first use), so sharing single
+// credentials doesn't litter the list; several make a new collection named
+// after the date. Both can be renamed on the collections page.
+const SHARED_ITEMS_COLLECTION = 'Jaetut todisteet'
 async function createCollectionFor(indices) {
-  const name = indices.length === 1 ? columnValue(credentials[indices[0]], 'name') : `Jaettu ${new Date().toLocaleDateString('fi-FI')}`
+  let name = `Jaettu ${new Date().toLocaleDateString('fi-FI')}`
+  if (indices.length === 1) {
+    // One credential: all of those live in one collection, found again by name.
+    name = SHARED_ITEMS_COLLECTION
+    const listed = await fetch('/collections')
+    const existing = (await listed.json().catch(() => ({}))).collections?.find((c) => c.name === name)
+    if (existing) return existing.id
+  }
   const res = await fetch('/collections', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -403,8 +413,9 @@ async function bulkAddToCollection({ share = false } = {}) {
     })
     selectedIndices.clear()
     renderTable()
-    if (share && data.results.every((r) => !r.error)) await Share.open({ collectionId })
-    else showCollectionResults(data.results)
+    if (share && data.results.every((r) => !r.error)) {
+      await Share.open({ collectionId, itemId: data.results.length === 1 ? data.results[0].itemId : undefined })
+    } else showCollectionResults(data.results)
   } catch (err) {
     if (err.message !== 'cancelled') showError(err.message)
   } finally {

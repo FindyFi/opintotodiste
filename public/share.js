@@ -20,14 +20,14 @@ const Share = (() => {
         'Hei,',
         '',
         single
-          ? 'jaan kanssasi digitaalisen todistuksen (Open Badges -osaamismerkin) osaamisestani.'
-          : 'jaan kanssasi digitaaliset todistukseni (Open Badges -osaamismerkkejä) osaamisestani.',
-        'Digitaalinen todistus on sähköisesti allekirjoitettu, joten sen aitouden voi tarkastaa ilman yhteydenottoa myöntäjään.',
+          ? 'jaan kanssasi digitaalisen todisteen (Open Badges -osaamismerkin) osaamisestani.'
+          : 'jaan kanssasi digitaaliset todisteeni (Open Badges -osaamismerkkejä) osaamisestani.',
+        'Digitaalinen todiste on sähköisesti allekirjoitettu, joten sen aitouden voi tarkastaa ilman yhteydenottoa myöntäjään.',
         '',
-        single ? `Todistuksen näet ja voit ladata täältä: ${link}` : `Todistukset näet ja voit ladata täältä: ${link}`,
+        single ? `Todisteen näet ja voit ladata täältä: ${link}` : `Todisteet näet ja voit ladata täältä: ${link}`,
         '',
-        `Lisätietoa digitaalisista todistuksista: ${origin}/employer`,
-        `Todistuksen voi tarkastaa täällä: ${origin}/verify`,
+        `Lisätietoa digitaalisista todisteista: ${origin}/employer`,
+        `Todisteen voi tarkastaa täällä: ${origin}/verify`,
       ].join('\n'),
     en: ({ link, origin, single }) =>
       [
@@ -97,13 +97,13 @@ const Share = (() => {
     }
 
     dialog.querySelector('#detailDialogContent').replaceChildren(
-      el('h2', { lang: 'fi' }, itemId ? 'Jaa todistus' : 'Jaa kokoelma'),
+      el('h2', { lang: 'fi' }, itemId ? 'Jaa todiste' : 'Jaa kokoelma'),
       el(
         'p',
         { class: 'muted', lang: 'fi' },
         itemId
-          ? 'Linkin avaaja näkee tämän todistuksen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.'
-          : 'Linkin avaaja näkee kokoelman kaikki todistukset ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'
+          ? 'Linkin avaaja näkee tämän todisteen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.'
+          : 'Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'
       ),
       linkRow,
       el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),

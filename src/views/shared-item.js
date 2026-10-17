@@ -1,8 +1,9 @@
 import { head, header, esc } from './layout.js'
 import { formatDate } from './shared-collection.js'
 
-// The public page for one credential in a shared collection (/c/:token/items/:itemId).
-export function sharedItemPage({ token, itemId, credential, collectionName }) {
+// The public page for one credential (/c/:token/items/:itemId). It doesn't link
+// to the collection: whoever shared one credential may not mean to share the rest.
+export function sharedItemPage({ token, itemId, credential }) {
   const achievement = credential?.credentialSubject?.achievement || {}
   const awarded = formatDate((credential?.issuanceDate ?? credential?.validFrom)?.slice(0, 10))
   const details = [
@@ -25,7 +26,7 @@ ${head(`<title>${esc(achievement.name)} – Opintotodiste</title>`, ['credential
 ${header({ auth: false })}
 
 <section class="page-hero">
-  <span class="eyebrow"><a href="/c/${esc(token)}">${esc(collectionName)}</a></span>
+  <span class="eyebrow" lang="fi">Jaettu todiste</span>
   <h1>${esc(achievement.name)}</h1>
   <p class="lede" lang="fi">Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.</p>
 </section>

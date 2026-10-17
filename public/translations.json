@@ -173,7 +173,7 @@
   "Kopioi": {
     "en": "Copy"
   },
-  "Jaa todistus": {
+  "Jaa todiste": {
     "en": "Share credential"
   },
   "Jaa kokoelma": {
@@ -194,10 +194,10 @@
   "Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.": {
     "en": "This badge is a digitally signed Open Badges 3.0 credential. You can verify that it is genuine without downloading it; download it only if you want to keep a copy."
   },
-  "Linkin avaaja näkee tämän todistuksen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.": {
+  "Linkin avaaja näkee tämän todisteen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.": {
     "en": "Anyone with the link can see this credential and download it. The link stops working when the collection's share link is renewed."
   },
-  "Linkin avaaja näkee kokoelman kaikki todistukset ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.": {
+  "Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.": {
     "en": "Anyone with the link can see all the credentials in the collection and download them. You can close the link by creating a new share link for the collection."
   },
   "Nimesi": {
@@ -208,5 +208,14 @@
   },
   "Kokoelman nimi": {
     "en": "Collection name"
+  },
+  "Jaettu todiste": {
+    "en": "Shared credential"
+  },
+  "Avaa kokoelmani": {
+    "en": "Open my collections"
+  },
+  "Jaetut todisteet": {
+    "en": "Shared credentials"
   }
 }
