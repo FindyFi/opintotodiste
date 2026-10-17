@@ -332,6 +332,11 @@ app.get('/my/collections', (req, res) => {
   res.send(views.collectionsPage())
 })
 
+app.get('/guide/:name', (req, res) => {
+  if (!views.GUIDE_NAMES.includes(req.params.name)) return res.status(404).send('Guide not found.')
+  res.send(views.guidePage(req.params.name))
+})
+
 await runSchema()
 
 app.listen(PORT, () => {

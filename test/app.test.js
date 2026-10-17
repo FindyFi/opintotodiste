@@ -39,6 +39,20 @@ describe('the running app', needsPostgres, () => {
     assert.equal(res.status, 200)
   })
 
+  test('serves the guide pages', async () => {
+    for (const name of ['studyinfo', 'wallet', 'sharing']) {
+      const res = await fetch(`${app.baseUrl}/guide/${name}`)
+      assert.equal(res.status, 200, name)
+    }
+  })
+
+  test('404s an unknown guide', async () => {
+    for (const name of ['nope', 'constructor']) {
+      const res = await fetch(`${app.baseUrl}/guide/${name}`)
+      assert.equal(res.status, 404, name)
+    }
+  })
+
   test('requires a sign-in before listing collections', async () => {
     const res = await fetch(`${app.baseUrl}/collections`)
     assert.equal(res.status, 401)

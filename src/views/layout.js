@@ -44,7 +44,7 @@ export function header({ auth = true } = {}) {
   <a class="brand" href="/">${BADGE_ICON}<span lang="fi">Opintotodiste</span></a>
   <div class="topbar-right">
     ${auth ? '<nav id="authNav" class="auth-nav"></nav>' : ''}
-    <translate-element src="/translations.json"></translate-element>
+    <translate-element persist src="/translations.json"></translate-element>
   </div>
 </header>${
     auth
