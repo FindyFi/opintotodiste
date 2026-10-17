@@ -16,7 +16,7 @@
   --text: #282539;
   --heading: var(--navy);
   --muted: #5b5870;
-  --line: #ece6dc;
+  --line: #ececf2;
   --line-strong: var(--navy);
   --link: var(--blue);
   --link-hover: var(--navy-2);
@@ -181,6 +181,22 @@ input[type=url], input[type=text], select {
 }
 select { min-height: 44px; padding: 0 .8rem; border-width: 1px; border-color: var(--line); border-radius: 10px; font-size: .95rem; }
 input::placeholder { color: var(--muted); }
+/* A text field and its button in one white pill, for use on the cyan hero. */
+.field-row {
+  display: flex;
+  gap: 10px;
+  padding: 7px;
+  border-radius: 999px;
+  background: var(--surface);
+  box-shadow: 0 12px 32px rgba(17, 72, 119, .08);
+}
+.field-row input { flex: 1; min-width: 0; min-height: 48px; padding: 0 18px; border: 0; border-radius: 999px; background: transparent; }
+.field-row input:focus-visible { outline-offset: 0; border-radius: 999px; }
+.field-row button { min-height: 48px; padding: 0 1.6rem; }
+/* The dark hero is the surface colour itself, so the pill steps up a shade. */
+@media (prefers-color-scheme: dark) {
+  .field-row { background: var(--surface-soft); }
+}
 input[type=checkbox], input[type=radio] {
   width: 22px;
   height: 22px;
@@ -325,5 +341,8 @@ dd { margin: 0; }
   .topbar-right { width: 100%; justify-content: space-between; }
   /* Registering stays reachable from the sign-in dialog's switch link. */
   .auth-nav .ghost, .auth-nav .muted { display: none; }
+  .field-row { flex-direction: column; padding: 0; background: none; box-shadow: none; }
+  .field-row input { min-height: 52px; background: var(--surface); }
+  .field-row button { min-height: 52px; }
   dialog { padding: 24px; }
 }

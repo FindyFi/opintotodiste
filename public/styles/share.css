@@ -17,13 +17,15 @@
 
 .share-message-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .share-message-head h3 { margin: 0; }
-.lang-toggle { display: inline-flex; gap: 4px; }
-.lang-toggle button[aria-pressed=true] { background: var(--surface-soft); }
+.lang-toggle { display: inline-flex; gap: 2px; padding: 3px; border-radius: 999px; background: var(--surface-soft); }
+.lang-toggle button { min-height: 36px; padding: 0 .9rem; }
+.lang-toggle button[aria-pressed=false]:hover { background: var(--surface); }
+.lang-toggle button[aria-pressed=true], .lang-toggle button[aria-pressed=true]:hover { background: var(--heading); color: var(--bg); }
 .share-message {
   width: 100%;
   padding: 14px 16px;
-  border: 2px solid var(--line-strong);
-  border-radius: 14px;
+  border: 2px solid var(--line);
+  border-radius: 16px;
   background: var(--surface);
   color: var(--text);
   font: inherit;
