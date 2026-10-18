@@ -84,7 +84,7 @@ const COPY = {
         body: `<p>Voit käyttää alla olevia oikeuksiasi lähettämällä pyynnön osoitteeseen ${CONTACT}.</p>
 <ul>
 <li><strong>Tietojen tarkastus:</strong> Näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
-<li><strong>Tietojen korjaus:</strong> Palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen. Pääsyavaimesi näyttönimi on käyttäjätilisi yksilöivä tunniste, jota ei voi muuttaa. Voit halutessasi poistaa käyttäjätilisi ja luoda uuden tilin uudella näyttönimellä. Käyttäjätilisi näyttönimi näkyy vain sinulle.</li>
+<li><strong>Tietojen korjaus:</strong> Palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen. Käyttäjätilisi näyttönimi tallentuu pääsyavaimeesi, eikä sitä voi muuttaa. Käyttäjätilisi näyttönimi näkyy vain sinulle. Voit halutessasi poistaa käyttäjätilisi ja luoda uuden tilin uudella näyttönimellä.</li>
 <li><strong>Tietojen siirto:</strong> Voit ladata merkit itsellesi tiedostoina (JSON-muodossa). Voit tallentaa merkkejä digitaalisina todisteina lompakkoosi ja välittää niitä LinkedIn-profiiliisi.</li>
 <li><strong>Tietojen poisto:</strong> Katso <a href="#poisto">Näin poistat tietosi</a>.</li>
 <li><strong>Tietojen käsittelyn rajoitus tai vastustaminen:</strong> Voit lopettaa palvelun käytön ja <a href="#poisto">poistaa tietosi</a>.</li>
@@ -186,7 +186,7 @@ const COPY = {
         body: `<p>To use the rights below, send a request to ${CONTACT}.</p>
 <ul>
 <li><strong>Access:</strong> You can see your badges on the service’s <a href="/">front page</a> and the collections you saved on the <a href="/my/collections">My collections</a> page. You can ask for a copy of the rest.</li>
-<li><strong>Rectification:</strong> Your name shown in the service and the badge details come from Koski. If the data from Koski has errors, contact your school. Your passkey’s display name is the unique identifier of your user account, and it can’t be changed. If you like, you can delete your account and create a new one with a new display name. Only you can see your account’s display name.</li>
+<li><strong>Rectification:</strong> Your name shown in the service and the badge details come from Koski. If the data from Koski has errors, contact your school. Your account’s display name is stored in your passkey and can’t be changed. Only you can see your account’s display name. If you like, you can delete your account and create a new one with a new display name.</li>
 <li><strong>Portability:</strong> You can download the badges as files (in JSON format). You can save badges as digital credentials in your wallet and add them to your LinkedIn profile.</li>
 <li><strong>Erasure:</strong> See <a href="#deletion">How to delete your data</a>.</li>
 <li><strong>Restriction of or objection to processing:</strong> You can stop using the service and <a href="#deletion">delete your data</a>.</li>
