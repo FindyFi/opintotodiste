@@ -50,5 +50,8 @@ respond to them are in [docs/threat-analysis.md](docs/threat-analysis.md).
 | `OID4VCI_ISSUER_TOKEN` | Must match the issuer's `COORDINATOR_TOKEN`. It is what stops a third party from having arbitrary content signed by your key. |
 
 The app serves over plain HTTP and expects to sit behind TLS termination. Passkeys require a secure
-context, so anything other than `localhost` needs real HTTPS or login will not work at all. It
-applies no rate limiting of its own and expects an ingress that provides it.
+context, so anything other than `localhost` needs real HTTPS or login will not work at all. With
+an `https://` `ORIGIN` the session cookie is `__Host-sid` and `Secure`; the app trusts one proxy hop
+(`X-Forwarded-Proto`, `X-Forwarded-For`), so put exactly one load balancer in front of it. Its own
+rate limits (per client IP and per instance, `src/rate-limit.js`) are a floor against scripts on the
+Koski import, signing, wallet offers and passkey challenges; heavier limits belong in the ingress.

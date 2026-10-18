@@ -4,7 +4,7 @@ What can go wrong in Opintotodiste, how likely it is and how bad it would be, wh
 doesn't happen, and what we do if it happens anyway.
 
 - Written: 2026-10-18, against `main` at 90ea5b7 (release 0.0.4 plus U12, U14, U15) and the
-  development environment in FindyFi/aws-environment.
+  development environment in FindyFi/aws-environment. Updated after H3 (application hardening).
 - Review it when the trust model changes: a new way to import data, a new credential format,
   revocation, identity binding, or a new deployment environment. Otherwise once a year.
 - Reporting a vulnerability: see [SECURITY.md](../SECURITY.md).
@@ -55,22 +55,22 @@ importer to that person. This is the root of the most important threat below (T1
 
 | Id | Threat | Probability | Impact | Risk | Status | Task |
 | --- | --- | --- | --- | --- | --- | --- |
-| [T1](#t1-someone-claims-another-persons-study-records) | Someone claims another person's study records (Bob uses Alice's Koski link) | High | High | **High** | Partly | H3, H5, H6 |
-| [T2](#t2-fake-or-tampered-koski-data) | Fake or tampered Koski data (fake Koski service, look-alike host, redirect) | Low | Critical | Medium | Partly | H3 |
+| [T1](#t1-someone-claims-another-persons-study-records) | Someone claims another person's study records (Bob uses Alice's Koski link) | High | High | **High** | Partly | H5, H6 |
+| [T2](#t2-fake-or-tampered-koski-data) | Fake or tampered Koski data (fake Koski service, look-alike host, redirect) | Low | Critical | Medium | Mitigated | — |
 | [T3](#t3-forged-or-edited-credentials) | Forged or edited credentials shown to an employer | Medium | Medium | Medium | Partly | H5 |
 | [T4](#t4-the-signing-service-signs-for-someone-else) | The signing service or the issuer signs for someone else | Low–Medium | Critical | **High** | Open | H4 |
 | [T5](#t5-a-signing-key-leaks) | A signing key leaks | Low | Critical | Medium | Partly | H5, G7 |
 | [T6](#t6-look-alike-site-or-fake-verification-page) | Look-alike Opintotodiste site or fake verification page | Medium | Medium | Medium | Partly | — |
-| [T7](#t7-a-share-link-reaches-the-wrong-people) | A share link reaches the wrong people | Medium | Medium | Medium | Partly | H3, U9 |
-| [T8](#t8-the-next-person-at-a-shared-computer) | The next person at a shared computer sees or takes the previous person's data | Medium | Medium | Medium | Open | H3 |
-| [T9](#t9-account-or-session-takeover) | Account or session takeover (fixation, XSS, CSRF, clickjacking) | Low | High | Medium | Partly | H3 |
+| [T7](#t7-a-share-link-reaches-the-wrong-people) | A share link reaches the wrong people | Medium | Medium | Medium | Partly | — |
+| [T8](#t8-the-next-person-at-a-shared-computer) | The next person at a shared computer sees or takes the previous person's data | Medium | Medium | Medium | Mitigated | — |
+| [T9](#t9-account-or-session-takeover) | Account or session takeover (fixation, XSS, CSRF, clickjacking) | Low | High | Medium | Partly | — |
 | [T10](#t10-losing-access-to-an-account) | Losing access to an account (lost passkey) | Medium | Low | Low | Accepted | — |
 | [T11](#t11-a-wallet-offer-is-picked-up-by-someone-else) | A wallet offer is picked up by someone else | Low | Medium | Low | Partly | — |
-| [T12](#t12-abuse-and-denial-of-service) | Abuse and denial of service (mass sign-ups, offers, Koski proxying) | Medium | Medium | Medium | Partly | H3 |
+| [T12](#t12-abuse-and-denial-of-service) | Abuse and denial of service (mass sign-ups, offers, Koski proxying) | Medium | Medium | Medium | Partly | aws-environment |
 | [T13](#t13-a-credential-outlives-the-record-it-came-from) | A credential outlives the record it came from | Medium | Medium | Medium | Open | H5 (S1) |
-| [T14](#t14-personal-data-leaks-from-storage-or-logs) | Personal data leaks from the database, backups or logs | Low | High | Medium | Partly | H3 |
+| [T14](#t14-personal-data-leaks-from-storage-or-logs) | Personal data leaks from the database, backups or logs | Low | High | Medium | Partly | — |
 | [T15](#t15-a-dependency-is-compromised) | A dependency or container image is compromised | Low | High | Medium | Partly | — |
-| [T16](#t16-a-deployment-runs-with-development-defaults) | A deployment runs with development defaults | Low | Critical | Medium | Partly | H3 |
+| [T16](#t16-a-deployment-runs-with-development-defaults) | A deployment runs with development defaults | Low | Critical | Medium | Partly | — |
 
 ---
 
@@ -111,8 +111,9 @@ end up in Bob's hands and in Bob's shares; once known, it undermines trust in ev
 - Planned (H6, later, costly): get the data through an authenticated channel instead of a bearer link:
   the learner signs in through Koski's OAuth2 consent flow (Opintopolku / Suomi.fi), and we import only
   that person's own records.
-- Planned: say on `/employer`, the shared pages and `/verify` what a badge proves and what it doesn't
-  ("the record comes from Koski; the holder's identity is not verified"), until H6 exists.
+- In place (H3): `/employer`, the shared pages and `/verify` say what a badge proves and what it
+  doesn't ("the records come from Koski and have not been changed; Opintotodiste does not check that
+  the person presenting it is the holder, so compare the name with an ID"), until H6 exists.
 
 **What we do if it happens anyway.**
 
@@ -149,9 +150,9 @@ credential for an invented qualification, indistinguishable from a genuine one.
     items all use the records the server itself fetched into the session; the client sends only list
     indices.
   - `test/koski.test.js` covers foreign hosts, look-alike hosts, internal addresses and bad paths.
-- Gap (H3): `fetch` follows redirects. If opintopolku.fi ever has an open redirect, a link could make
-  the server fetch an attacker's data (and internal addresses). Use `redirect: 'error'`, plus a
-  timeout and a response size limit.
+  - The fetch refuses redirects (`redirect: 'error'`), so an open redirect on opintopolku.fi cannot
+    send it to an attacker's server or an internal address; it gives up after 15 seconds and on a
+    response over 5 MB (H3).
 
 **What we do if it happens anyway.** Find the affected credentials by their issuance time and the
 source link in the logs, revoke them (S1/H5), delete the stored copies, close the hole, and tell the
@@ -266,8 +267,9 @@ who opened them (deliberately, U9).
   response (from U13); Open Graph previews show only the collection or badge name and the school; the
   owner makes one labelled link per recipient and deletes one without breaking the others (U9), shares
   a single badge without exposing a collection, removes a badge from a collection, deletes the badge,
-  the collection or the whole account (U15).
-- Planned: `Referrer-Policy: no-referrer` on `/c/` and `/i/` (H3); consider an expiry date.
+  the collection or the whole account (U15); and since H3, `Referrer-Policy: no-referrer` on every response, so a token in our URLs (also in
+  `/verify?url=`) never leaves in a `Referer` header (H3).
+- Consider: an expiry date.
 
 **What we do if it happens anyway.** The owner deletes the link that leaked; on request
 we do it for them (info@findy.fi). Copies already downloaded cannot be recalled.
@@ -285,12 +287,15 @@ to clear their data; only signed-in users can sign out.
 **What we do so that it doesn't happen.**
 
 - In place: the session keeps only the Koski fields the converter needs (oppijanumero, names, study
-  rights), not the whole response; signing out deletes the session row.
-- Planned (H3): a "clear my data" button for anonymous sessions, a short idle lifetime (e.g. one hour)
-  for imported Koski data, and a hint on shared computers.
+  rights), not the whole response; signing out deletes the session row. Since H3: imported Koski data
+  leaves the session after an hour without requests; "Tyhjennä tiedot" (*clear my data*) under the
+  list removes it at once (an anonymous session is deleted as a whole), with a hint for shared
+  computers next to it; the main page, which embeds the records, is sent `Cache-Control: no-store`.
+- Residual: within that hour, or for a signed-in user who leaves without signing out, the next person
+  still sees the data.
 
-**What we do if it happens anyway.** As T1 for any badges taken; otherwise the data expires with the
-session.
+**What we do if it happens anyway.** As T1 for any badges taken; otherwise the Koski data expires
+within the hour.
 
 ## T9: Account or session takeover
 
@@ -309,10 +314,14 @@ requests (CSRF), or tricking Alice into clicking "delete account" in a hidden fr
   builds the DOM with `textContent`; state-changing routes take JSON bodies, which a cross-site form
   cannot send without a CORS preflight, and browsers default cookies to `SameSite=Lax`; ownership is
   checked in SQL on every collection route, so a stranger's ids answer 404.
-- Gaps (H3): the session id is not regenerated on sign-in (fixation); the cookie is not explicitly
-  `Secure`/`SameSite` and has no `__Host-` prefix; no Content Security Policy or `frame-ancestors`.
-- Fragile but harmless today: list indices from the URL or body are used as array keys unchecked
-  (`__proto__` reaches `Array.prototype`); H3 makes them integers.
+- In place since H3: a new session id on registration and sign-in (fixation); over HTTPS the
+  cookie is `__Host-sid`, `Secure`, `HttpOnly`, `SameSite=Lax`, so a sibling subdomain cannot set it;
+  `Content-Security-Policy: frame-ancestors 'none'; object-src 'none'; base-uri 'none';
+  form-action 'self'` and `X-Frame-Options: DENY` (clickjacking), `X-Content-Type-Options: nosniff`;
+  list indices must be non-negative integers.
+- Gap: the CSP does not restrict `script-src`, because the pages embed their data in inline scripts.
+  Escaping is the only defence against XSS until the data moves to `<script type="application/json">`
+  or nonces.
 
 **What we do if it happens anyway.** Delete the user's sessions (as account deletion does), ask them to
 check their passkeys and collections, delete and recreate their share links; fix the hole; if collections were read,
@@ -357,9 +366,11 @@ we proxy too many requests, which breaks the service for everyone.
 
 - In place: Express's default 100 kB body limit; imports, signing and offers only work on data the
   session fetched from Koski; offers expire after 10 minutes.
-- Gap (H3): the app has no rate limiting of its own, and SECURITY.md assumes the ingress provides it;
-  that is not confirmed for the opintotodiste load balancer (no WAF found in aws-environment). Add
-  rate limits in the app or confirm a WAF rule.
+- In place since H3: per-client-IP limits in the app (`src/rate-limit.js`, five-minute windows): 60
+  Koski imports, 200 signing or wallet-offer requests, 100 passkey challenges. Generous enough for a
+  classroom behind one address.
+- Gap: the limits are per instance and in memory, and there is no WAF in front of the opintotodiste
+  load balancer (none found in aws-environment). A WAF rate rule is where heavier limits belong.
 
 **What we do if it happens anyway.** Block the source at the load balancer, scale or restart the
 affected service, clean up the junk accounts, and contact Koski's support if we were blocked.
@@ -393,8 +404,9 @@ credentials or a vulnerability.
   oppijanumero and the name, nothing more about the person; passkeys store only public keys); the database is on a private network with its own
   credentials; CloudWatch logs are kept 30 days (development); sessions expire after 24 hours idle;
   account deletion removes everything of the user, including other sessions.
-- Gaps: error messages from signing-service and oid4vci-issuer are logged as received and may contain
-  credential content; check and trim (H3). Database backup retention is not yet documented (U13).
+  Since H3, errors from signing-service and oid4vci-issuer are logged (and shown) by status only,
+  never with the response body, which may echo the credential.
+- Gap: database backup retention is not yet documented (U13).
 
 **What we do if it happens anyway.** Follow Findynet's personal data breach process: contain, assess,
 notify the Data Protection Ombudsman within 72 hours, inform affected users if the risk is high,
@@ -427,8 +439,9 @@ session cookie for any account), the compose `COORDINATOR_TOKEN`, a generated SD
 
 **What we do so that it doesn't happen.** In place: with `NODE_ENV=production` the app refuses to
 start when a required variable is missing (`src/env-check.js`); deployment config lives in
-aws-environment with secrets in the secret store. Gap (H3): a variable that is *set* to a known
-default (`change-me`, `dev-…`) is accepted; reject those in production too.
+aws-environment with secrets in the secret store. Since H3 it also refuses a secret that is still set
+to one of this repository's placeholders (`change-me`, `dev-…`). Gap: a wrong `RP_ID`/`ORIGIN`
+is not detected at startup (passkey sign-in fails instead).
 
 **What we do if it happens anyway.** Set real values and redeploy (which signs everyone out), check
 the logs for unexpected sessions or offers, and handle as T5 or T14 if anything was exploited.
