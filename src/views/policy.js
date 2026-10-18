@@ -27,8 +27,7 @@ const COPY = {
   fi: {
     title: 'Tietosuojaseloste ja käyttöehdot',
     lede: 'Mitä tietoja Opintotodiste käsittelee, mihin ja kuinka kauan, kuka näkee jakamasi linkit, miten poistat tietosi ja millä ehdoilla palvelua käytetään.',
-    updated: `${draft('Päivitetty 18.10.2026.')}`,
-    banner: 'Tämä sivu on luonnos, jota ei ole vielä tarkastettu. Merkityt kohdat odottavat vahvistusta.',
+    updated: `Päivitetty 18.10.2026.`,
     sections: [
       {
         title: 'Lyhyesti',
@@ -49,7 +48,7 @@ const COPY = {
       {
         title: 'Mihin tietojasi käytetään ja kuka niitä käsittelee',
         body: `<p>Sinä itse valitset palveluun tuomasi tiedot ja päätät, mitä tietoja jaat edelleen tai tallennat lompakkoosi.</p>
-<p>Palvelu käyttää sille antamiasi tietoja vain niiden näyttämiseen sinulle, digitaalisten todisteiden muodostamiseen, niiden jakamiseen sinun valitsemallasi tavalla sekä jakamiesi tietojen oikeellisuuden varmistasmiseen.</p>
+<p>Palvelu käyttää sille antamiasi tietoja vain niiden näyttämiseen sinulle, digitaalisten todisteiden muodostamiseen, niiden jakamiseen sinun valitsemallasi tavalla sekä jakamiesi tietojen oikeellisuuden varmistamiseen.</p>
 <p>Palvelun tarjoaja ei käytä tietojasi muihin tarkoituksiin eikä itse välitä niitä muille tahoille. Tietojasi ei käytetä markkinointiin.</p>
 <p>Tietoja palvelun käytöstä tallentuu lokeihin, joita palvelun tarjoaja voi käyttää vikojen selvittämiseen ja palvelun ylläpitoon.</p>
 <p>Palvelu tallentaa tiedot Amazon Web Services -palvelimiin Tukholman alueella (Ruotsi). Niitä ei siirretä EU:n tai Euroopan talousalueen ulkopuolelle.</p>
@@ -57,7 +56,7 @@ const COPY = {
       },
       {
         title: 'Mitä tietoja käsitellään ja mistä ne saadaan',
-        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja tietoja ei tallenneta.</p>
+        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta.</p>
 <p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
 <p><strong>Palvelun käytöstä:</strong> allekirjoitetut osaamismerkit, jakolinkit ja lokittiedot.</p>`,
       },
@@ -89,7 +88,7 @@ const COPY = {
         body: `<p>Voit käyttää alla olevia oikeuksiasi lähettämällä pyynnön osoitteeseen ${CONTACT}.</p>
 <ul>
 <li><strong>Tietojen tarkastus:</strong> näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
-<li><strong>Tietojen korjaus:</strong> palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen.</li>
+<li><strong>Tietojen korjaus:</strong> palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen. Ppääsyavaimesi näyttönimi on käyttäjätilisi yksilöivä tunniste, jota ei voi muuttaa. Voit halutessasi poistaa käyttäjätilisi ja luoda uuden tilin uudella näyttönimellä. Käyttäjätilisi näyttönimi näkyy vain sinulle.</li>
 <li><strong>Tietojen siirto:</strong> voit ladata merkit itsellesi tiedostoina (JSON-muodossa). Voit tallentaa merkkejä digitaalisina todisteina lompakkoosi ja välittää niitä LinkedIn-profiiliisi.</li>
 <li><strong>Tietojen poisto:</strong> katso <a href="#poisto">Näin poistat tietosi</a>.</li>
 <li><strong>Tietojen käsittelyn rajoitus tai vastustaminen</strong>: Voit lopettaa palvelun käytön ja <a href="#poisto">poistaa tietosi</a>.</li>
@@ -112,11 +111,16 @@ const COPY = {
         body: `<p>Opintotodiste tekee Koski-palvelun opintotiedoistasi Open Badges 3.0 -muotoisia osaamismerkkejä ja allekirjoittaa ne sähköisesti. Voit ladata merkit, tallentaa ne digitaaliseen lompakkoon ja jakaa niitä kokoelmina linkillä.</p>
 <ul>
 <li>Palvelun käyttö on maksutonta sekä osaamismerkkien haltijoille että niiden tarkastajille, joille on jaettu jakolinkki tästä palvelusta.</li>
-<li>Käyttäjän vastuulla on käyttää palvelua hyvän tavan mukaisesti. Osaamismerkkien haltijana </li>
+<li>Käyttäjän vastuulla on käyttää palvelua hyvän tavan mukaisesti.
+ <ul>
+  <li>Osaamismerkkien haltijana tuot palveluun vain omia tietojasi.</li>
+  <li>Osaamismerkkien vastaanottajana käytät palvelua vain sinulle jaettujen merkkien aitouden varmistamiseen. Käytät sinulle jaettuja tietoja vain siihen tarkoitukseen, johon ne on sinulle jaettu.</li>
+ </ul>
+</li>
 <li>Palvelun tarjoaja pyrkii vastaamaan palvelun saatavuudesta ja toimivuudesta parhaansa mukaan. Palvelun tarjoaminen voidaan lopettaa koska tahansa ilman ennakkoilmoitusta.</li>
 <li>Palvelun tarjoaja ei vastaa käyttäjän toimista tai käyttäjän tietojen menetyksestä.</li>
-<li>Palvelun tarjoaja ei tarkasta Koski-rekisteristä saatujen tietojen oikeellisuutta. Palvelu varmistaa hyvien tietoturvaperiaatteiden mukaisesti, että palvelun allekirjoittamat digitaaliset todisteet vastaavat Koski-rekisteristä saatua sisältöä. Palvelu ei varmista käyttäjän henkilöllisyyttä muulla tavalla kuin luottamalla Koski-rekisteristä saatavaan nimeen.</li>
-<li>Palvelun tarjoaja varaa oikeuden muuttaa näitä ehtoja milloin tahansa ilman ennakkoilmoitusta.</li>
+<li>Palvelun tarjoaja ei tarkasta Koski-rekisteristä saatujen tietojen oikeellisuutta eikä käyttäjän henkilöllisyyttä. Palvelu varmistaa hyvien tietoturvaperiaatteiden mukaisesti, että palvelun allekirjoittamat digitaaliset todisteet vastaavat Koski-rekisteristä saatua sisältöä, ja että todisteisiin tallennettu nimi vastaa Koski-rekisteristä saatua nimeä.</li>
+<li>Palvelun tarjoaja varaa oikeuden muuttaa näitä ehtoja milloin tahansa ilman ennakkoilmoitusta. Ehtojen muuttamisesta ilmoitetaan käyttäjille palvelun etusivulla.</li>
 <li>Palveluun sovelletaan Suomen lakia.</li>
 </ul>`,
       },
