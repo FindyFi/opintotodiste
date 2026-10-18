@@ -57,7 +57,6 @@ ${STEPS.map(
     </div>
     <div id="tableContainer"></div>
     <div class="clear-data">
-      <p class="muted" lang="fi">Käytätkö yhteistä tietokonetta? Tyhjennä tietosi, kun lopetat. Palvelu poistaa ne itsekin tunnin kuluttua viimeisestä käytöstä.</p>
       <button type="button" id="clearDataBtn"><span lang="fi">Tyhjennä tiedot</span></button>
     </div>
   </section>

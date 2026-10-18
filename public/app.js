@@ -426,9 +426,10 @@ async function fetchCredentials(koskiUrl) {
   }
 }
 
-// "Clear my data", for shared computers: the server forgets the imported
-// records (and an anonymous session altogether), and so does the page.
+// "Clear my data": the server forgets the imported records (and an anonymous
+// session altogether), and so does the page.
 clearDataBtn.addEventListener('click', async () => {
+  if (!confirm('Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.')) return
   clearError()
   try {
     const res = await fetch('/credentials', { method: 'DELETE' })

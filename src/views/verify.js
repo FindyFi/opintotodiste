@@ -66,8 +66,8 @@ ${header({ auth: false, current: 'verify' })}
       ${pair(
         'ul',
         '',
-        '<li>Kuka todisteen esittää. Opintotodiste ei tunnista henkilöä, joka tuo opintotietonsa palveluun, joten varmista hakijan henkilöllisyys tarvittaessa muulla tavoin.</li><li>Onko suoritusta korjattu Koskessa todisteen tekemisen jälkeen.</li>',
-        '<li>Who is presenting the credential. Opintotodiste does not identify the people who bring their study records into the service, so check the applicant\u2019s identity some other way if it matters.</li><li>Whether the record has been corrected in Koski since the credential was made.</li>'
+        '<li>Onko todisteen esittäjä sama henkilö kuin sen haltija. Vertaa todisteessa olevaa nimeä tarvittaessa henkilöllisyystodistukseen.</li><li>Onko suoritusta korjattu Koskessa todisteen tekemisen jälkeen.</li>',
+        '<li>Whether the person presenting the credential is its holder. Compare the name in the credential with an ID if it matters.</li><li>Whether the record has been corrected in Koski since the credential was made.</li>'
       )}
     </div>
     <div class="verify-note">

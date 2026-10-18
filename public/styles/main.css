@@ -154,6 +154,5 @@ body.page-main .panel {
   .selection-bar button:not(.link-btn) { padding: 0 .5rem; font-stretch: 100%; }
 }
 
-/* "Clear my data" under the list, for shared computers. */
-.clear-data { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 24px; }
-.clear-data .muted { flex: 1 1 24em; margin: 0; }
+/* "Clear my data" under the list. */
+.clear-data { display: flex; justify-content: flex-end; margin-top: 24px; }

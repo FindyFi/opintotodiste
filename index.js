@@ -182,7 +182,7 @@ app.post('/credentials', importLimit, async (req, res) => {
   }
 })
 
-// "Clear my data", for shared computers: the imported Koski data goes. An
+// "Clear my data": the imported Koski data goes. An
 // anonymous session has nothing else, so it goes as a whole; a signed-in user
 // stays signed in.
 app.delete('/credentials', (req, res) => {

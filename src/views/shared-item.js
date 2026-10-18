@@ -59,7 +59,7 @@ ${header({ auth: false })}
   <aside class="recipient-aside recipient-sheet">
     <h2 lang="fi">Mikä on osaamismerkki?</h2>
     <p lang="fi">Osaamismerkki kuvaa yhden suorituksen. Sen allekirjoituksesta näkee, kuka sen myönsi ja ettei sitä ole muutettu.</p>
-    <p lang="fi">Merkki osoittaa, että tiedot ovat peräisin Koskesta eikä niitä ole muutettu. Se ei osoita, kuka merkin esittää: Opintotodiste ei tunnista merkin haltijaa.</p>
+    <p lang="fi">Merkki osoittaa, että tiedot ovat peräisin Koskesta eikä niitä ole muutettu. Se ei osoita, että merkin esittäjä on sen haltija: vertaa nimeä tarvittaessa henkilöllisyystodistukseen.</p>
     <a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a>
   </aside>
 </main>

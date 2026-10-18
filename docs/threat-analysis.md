@@ -289,8 +289,7 @@ to clear their data; only signed-in users can sign out.
 - In place: the session keeps only the Koski fields the converter needs (oppijanumero, names, study
   rights), not the whole response; signing out deletes the session row. Since H3: imported Koski data
   leaves the session after an hour without requests; "Tyhjennä tiedot" (*clear my data*) under the
-  list removes it at once (an anonymous session is deleted as a whole), with a hint for shared
-  computers next to it; the main page, which embeds the records, is sent `Cache-Control: no-store`.
+  list removes it at once after a confirmation (an anonymous session is deleted as a whole); the main page, which embeds the records, is sent `Cache-Control: no-store`.
 - Residual: within that hour, or for a signed-in user who leaves without signing out, the next person
   still sees the data.
 

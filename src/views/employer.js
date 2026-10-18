@@ -18,7 +18,7 @@ const COPY = {
     what: [
       'Osaamismerkki eli Open Badge kuvaa yhden suorituksen: tutkinnon, kurssin tai kokeen. Opintotodisteen merkit ovat Open Badges 3.0 -muotoisia, ja ne tehdään Koski-palvelun opintotiedoista, joihin oppilaitokset kirjaavat opiskelijoiden suoritukset.',
       'Opintotodiste hakee tiedot suoraan Koskesta, joten hakija ei voi muokata niitä. Jokainen merkki on sähköisesti allekirjoitettu: allekirjoituksesta näkee, kuka merkin myönsi ja ettei sitä ole muutettu jälkikäteen. Merkissä näkyy myös oppilaitos, joka suorituksen kirjasi.',
-      'Merkki ei kuitenkaan osoita, että linkin lähettäjä on sama henkilö, jonka opinnoista on kyse: Opintotodiste ei tunnista henkilöä, joka tuo opintotietonsa palveluun. Varmista hakijan henkilöllisyys tarvittaessa muulla tavoin.',
+      'Merkissä on haltijan nimi Koskesta. Opintotodiste ei kuitenkaan varmista, että linkin lähettäjä on sama henkilö, joten vertaa nimeä tarvittaessa hakijan henkilöllisyystodistukseen.',
     ],
     whyTitle: 'Taidot näkyviin tutkintojen takaa',
     why: [
@@ -47,7 +47,7 @@ const COPY = {
     what: [
       'A badge, or Open Badge, describes one achievement: a degree, a course or an exam. Opintotodiste badges follow the Open Badges 3.0 standard and are made from the study records in Koski, the Finnish national register where schools record their students’ achievements.',
       'Opintotodiste fetches the records straight from Koski, so the applicant cannot edit them. Every badge is digitally signed: the signature shows who issued it and that it has not been changed since. The badge also names the school that recorded the achievement.',
-      'A badge does not show, however, that whoever sent you the link is the person whose studies it describes: Opintotodiste does not identify the people who bring their study records into the service. Check the applicant\u2019s identity some other way if it matters.',
+      'The badge carries the holder\u2019s name from Koski. Opintotodiste does not, however, make sure that whoever sent you the link is that person, so compare the name with the applicant\u2019s ID if it matters.',
     ],
     whyTitle: 'See the skills behind the degree',
     why: [

@@ -30,7 +30,7 @@ version to pin.
   an hour idle, and "Tyhjennä tiedot" clears it at once. Per-IP rate limits on imports, signing,
   wallet offers and passkey challenges. A production start refuses placeholder secrets
   (`change-me`, `dev-…`). Upstream error bodies are no longer logged or shown. `/employer`, the
-  shared pages and `/verify` say that a badge does not identify its holder.
+  shared pages and `/verify` say that a badge does not prove the presenter is its holder.
 
 ## [0.0.4] - 2026-10-18
 
