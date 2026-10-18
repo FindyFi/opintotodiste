@@ -34,6 +34,7 @@ describe('createOffer', () => {
       assert.equal(request.body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
       assert.deepEqual(request.body.unsignedCredential, UNSIGNED_CREDENTIAL)
       assert.equal(request.body.txCode, true)
+      assert.equal('disclosable' in request.body, false)
       assert.deepEqual(offer, OFFER_RESPONSE)
     } finally {
       await issuer.stop()
@@ -55,6 +56,16 @@ describe('createOffer', () => {
     try {
       await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', credentialConfigurationId: 'Other' })
       assert.equal(issuer.requests[0].body.credentialConfigurationId, 'Other')
+    } finally {
+      await issuer.stop()
+    }
+  })
+
+  test('sends the disclosable claims', async () => {
+    const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
+    try {
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', disclosable: ['sub', 'identifier'] })
+      assert.deepEqual(issuer.requests[0].body.disclosable, ['sub', 'identifier'])
     } finally {
       await issuer.stop()
     }

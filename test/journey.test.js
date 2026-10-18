@@ -162,6 +162,7 @@ describe('the Koski journey', needsPostgres, () => {
     assert.equal(vc.issuer.id, 'https://issuer.example')
     assert.ok(vc.validFrom)
     assert.equal(vc.issuanceDate, undefined)
+    assert.equal('disclosable' in sent.body, false, 'vc+sd-jwt has no disclosures')
   })
 
   test('re-translates already-loaded records without calling Koski again', async () => {
@@ -386,8 +387,10 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
     const offer = await client.json('/credentials/0/offer', { method: 'POST' })
     assert.equal(offer.status, 200, JSON.stringify(offer.body))
 
-    const { credentialConfigurationId, unsignedCredential: claims } = issuer.requests.at(-1).body
+    const { credentialConfigurationId, unsignedCredential: claims, disclosable } = issuer.requests.at(-1).body
     assert.equal(credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
+    assert.deepEqual(disclosable, ['sub', 'identifier'].filter((claim) => claim in claims))
+    assert.ok(disclosable.includes('identifier'), 'the holder name is disclosable')
     assert.equal(claims.vct, VCT)
     assert.ok(claims.achievement?.name)
     assert.ok(!Number.isNaN(Date.parse(claims.awardedDate)))
