@@ -61,7 +61,7 @@ const COPY = {
         body: `<ul>
 <li><strong>Istunto:</strong> 24 tuntia viimeisestä sivunlatauksestasi tai kunnes kirjaudut ulos. Istuntoon kuuluvat jakolinkki, Koskesta saadut tiedot, niistä tehdyt merkit ja kielivalinta. Istunto on palvelun tietokannassa, ja selaimesi tunnistetaan siihen evästeellä. Eväste poistuu yleensä, kun suljet selaimen, mutta palvelimella olevat tiedot säilyvät silti 24 tuntia. Koskesta saadut tiedot ja niistä tehdyt merkit poistetaan istunnosta kuitenkin jo tunnin kuluttua viimeisestä sivunlatauksestasi.</li>
 <li><strong>Tili ja pääsyavaimet:</strong> Kunnes tili poistetaan. Yli 6 kk käyttämättä olleet tilit voidaan poistaa.</li>
-<li><strong>Osaamismerkit ja kokoelmat:</strong> Tallentamasi merkit säilyvät, kunnes poistat merkin tai tilisi, ja kokoelmat ja jakolinkit, kunnes poistat ne tai tilisi. Kokoelman poistaminen ei poista siinä olleita merkkejä.</li>
+<li><strong>Osaamismerkit ja kokoelmat:</strong> Kun olet kirjautunut, merkki tallentuu tiliisi, kun lataat tai jaat sen, lähetät sen lompakkoon tai lisäät sen kokoelmaan. Tallentuneet merkit säilyvät, kunnes poistat merkin tai tilisi, ja kokoelmat ja jakolinkit, kunnes poistat ne tai tilisi. Kokoelman poistaminen ei poista siinä olleita merkkejä.</li>
 <li><strong>Lokit:</strong> 30 päivää. Sovelluksen käytöstä tallentuu tietoa virhetilanteiden selvittämistä ja palvelun ylläpitoa varten.</li>
 <li><strong>Varmuuskopiot:</strong> Tietosi voivat säilyä varmuuskopioissa korkeintaan vuoden ajan.</li>
 </ul>`,
@@ -95,7 +95,7 @@ const COPY = {
         id: 'poisto',
         title: 'Näin poistat tietosi',
         body: `<ul>
-<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä merkkejä, kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
+<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisen merkin voit poistaa sen tietoikkunasta (valitse merkin nimi etusivulla tai Kokoelmani-sivulla), kokoelmia ja jakolinkkejä <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
 <li><strong>Istunto:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta (kun et ole kirjautunut sisään) tai ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten Koskesta saadut tiedot poistuvat tunnin ja muut istunnon tiedot 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li><strong>Lompakkoon tallentamasi merkit:</strong> Poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> Poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
@@ -163,7 +163,7 @@ const COPY = {
         body: `<ul>
 <li><strong>Session:</strong> 24 hours after your last page load or until you sign out. The session holds the share link, the data from Koski, the badges made from it and your language. The session is stored in the service’s database, and a cookie connects your browser to it. The cookie usually goes away when you close the browser, but the data on the server is still kept for those 24 hours. The data from Koski and the badges made from it are removed from the session sooner, an hour after your last page load.</li>
 <li><strong>Account and passkeys:</strong> Until the account is deleted. Accounts that have not been used for more than 6 months may be deleted.</li>
-<li><strong>Badges and collections:</strong> The badges you save are kept until you delete the badge or your account, and collections and share links until you delete them or your account. Deleting a collection doesn’t delete the badges in it.</li>
+<li><strong>Badges and collections:</strong> While you are signed in, a badge is saved to your account when you download or share it, send it to a wallet or add it to a collection. Saved badges are kept until you delete the badge or your account, and collections and share links until you delete them or your account. Deleting a collection doesn’t delete the badges in it.</li>
 <li><strong>Logs:</strong> 30 days. Data about the use of the app is recorded to investigate errors and to maintain the service.</li>
 <li><strong>Backups:</strong> Your data may remain in backups for at most one year.</li>
 </ul>`,
@@ -197,7 +197,7 @@ const COPY = {
         id: 'deletion',
         title: 'How to delete your data',
         body: `<ul>
-<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single badges, collections and share links on the <a href="/my/collections">My collections</a> page.</li>
+<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete a single badge in its details dialog (choose the badge’s name on the front page or the My collections page), and collections and share links on the <a href="/my/collections">My collections</a> page.</li>
 <li><strong>Session:</strong> Choose ${ui('Clear my data')} below your fetched achievements (when you are not signed in), or ${ui('Sign out')}, and the session data is deleted at once. Otherwise the data from Koski is deleted an hour, and the rest of the session data 24 hours, after your last visit.</li>
 <li><strong>Badges you saved in a wallet:</strong> Delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> Delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
