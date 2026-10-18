@@ -6,10 +6,9 @@ import { esc } from './layout.js'
 // chosen on the server from ?lang= (the parameter translate-element uses too),
 // and a link without it previews in Finnish.
 
-// The preview image, shown in LinkedIn, Teams, Slack. null leaves og:image out.
-// To switch it on, add U12's 1200×630 PNG under public/ and set the path:
-//   { path: '/icons/og-image.png', width: 1200, height: 630 }
-export const OG_IMAGE = null
+// The preview image, shown in LinkedIn, Teams, Slack. Set it to null to leave
+// og:image out. Built from public/icons/og-image.svg by scripts/build-icons.sh.
+export const OG_IMAGE = { path: '/icons/og-image.png', width: 1200, height: 630 }
 const OG_IMAGE_ALT = { fi: 'Opintotodiste', en: 'Study credential' }
 
 const SITE_NAME = 'Opintotodiste'

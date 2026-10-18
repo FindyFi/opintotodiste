@@ -39,10 +39,12 @@ describe('Open Graph tags', () => {
     }
   })
 
-  test('og:image stays out until OG_IMAGE is set', () => {
+  test('og:image points at the 1200x630 PNG, absolute from ORIGIN', () => {
     const html = views.page()
-    assert.equal(tag(html, 'og:image'), undefined)
-    assert.equal(tag(html, 'twitter:card'), 'summary')
+    assert.equal(tag(html, 'og:image'), 'https://todiste.example/icons/og-image.png')
+    assert.equal(tag(html, 'og:image:width'), '1200')
+    assert.equal(tag(html, 'og:image:height'), '630')
+    assert.equal(tag(html, 'twitter:card'), 'summary_large_image')
   })
 
   test('the private collections page gets only the generic site tags', () => {
