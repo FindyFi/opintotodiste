@@ -36,6 +36,8 @@
 
 
 .share-subject { margin-top: -.5rem; font-weight: 600; }
+.share-new-form { display: flex; flex-direction: column; gap: 6px; }
+.share-new-form label { font-weight: 700; color: var(--heading); }
 .share-new input { flex: 1; min-width: 12rem; }
 .share-links { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
 .share-link-item { display: grid; gap: 8px; }

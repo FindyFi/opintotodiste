@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { InvalidKoskiUrlError, fetchKoskiData, toApiUrl } from '../src/koski.js'
+import { InvalidKoskiUrlError, fetchKoskiData, mergeKoskiData, mergedImport, toApiUrl } from '../src/koski.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 describe('toApiUrl', () => {
@@ -131,5 +131,45 @@ describe('fetchKoskiData', () => {
     } finally {
       await koski.stop()
     }
+  })
+})
+
+describe('merging imports', () => {
+  const person = { oid: '1.2.246.562.24.1', kutsumanimi: 'Tapaus', sukunimi: 'Opiskelija' }
+  const studyRight = (oid, name) => ({ oid, oppilaitos: { nimi: { fi: name } } })
+
+  test('keeps the study rights of both, the newer one where both have it', () => {
+    const before = { henkilö: person, opiskeluoikeudet: [studyRight('a', 'old A'), studyRight('b', 'B')] }
+    const after = { henkilö: person, opiskeluoikeudet: [studyRight('a', 'new A'), studyRight('c', 'C')] }
+    const { data, replaced } = mergeKoskiData(before, after)
+    assert.equal(replaced, false)
+    assert.deepEqual(data.opiskeluoikeudet.map((oo) => oo.oppilaitos.nimi.fi), ['new A', 'B', 'C'])
+  })
+
+  test('replaces another person’s data instead of mixing it in', () => {
+    const before = { henkilö: person, opiskeluoikeudet: [studyRight('a', 'A')] }
+    const other = { henkilö: { ...person, oid: '1.2.246.562.24.2' }, opiskeluoikeudet: [studyRight('x', 'X')] }
+    assert.deepEqual(mergeKoskiData(before, other), { data: other, replaced: true })
+  })
+
+  test('without learner numbers, the same names count as the same person', () => {
+    const noOid = { kutsumanimi: 'Tapaus', sukunimi: 'Opiskelija' }
+    const merged = mergeKoskiData({ henkilö: noOid, opiskeluoikeudet: [studyRight('a', 'A')] }, { henkilö: noOid, opiskeluoikeudet: [studyRight('b', 'B')] })
+    assert.equal(merged.data.opiskeluoikeudet.length, 2)
+    assert.equal(mergeKoskiData({ henkilö: noOid, opiskeluoikeudet: [] }, { henkilö: { ...noOid, sukunimi: 'Muu' }, opiskeluoikeudet: [] }).replaced, true)
+  })
+
+  test('a study right without an oid is kept once', () => {
+    const data = { henkilö: person, opiskeluoikeudet: [{ oppilaitos: { nimi: { fi: 'no oid' } } }] }
+    assert.equal(mergeKoskiData(data, structuredClone(data)).data.opiskeluoikeudet.length, 1)
+  })
+
+  test('brings the new import’s records back onto the list, and forgets removals on another person', () => {
+    const data = { henkilö: person, opiskeluoikeudet: [] }
+    const previous = { data, removed: ['r1', 'r2'] }
+    assert.deepEqual(mergedImport(previous, { koskiUrl: 'u', data, refs: ['r2'] }).removed, ['r1'])
+    assert.deepEqual(mergedImport(previous, { koskiUrl: 'u', data, removed: ['r3'] }).removed, ['r1', 'r2', 'r3'])
+    const other = { henkilö: { ...person, oid: '1.2.246.562.24.2' }, opiskeluoikeudet: [] }
+    assert.deepEqual(mergedImport(previous, { koskiUrl: 'u', data: other }).removed, [])
   })
 })

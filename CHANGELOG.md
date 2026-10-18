@@ -24,6 +24,29 @@ version to pin.
   holder before presenting them. Needs an oid4vci-issuer with `disclosable` support; an older one
   ignores the field and keeps them always disclosed.
 
+### Changed
+
+- One list of credentials (U18). A signed-in user's Koski data is kept in their account (new
+  table `koski_imports`), not in the session: the list is there the next day, in whichever
+  language the page is in. Later imports are merged in by study right; another person's data
+  replaces it. Signing in keeps what was imported before it. Credentials are signed only when one
+  is needed (download, share, collection, wallet), once, and that copy is reused
+  (`saved_credentials.record_ref`). Records are addressed by a ref derived from the achievement
+  instead of a list position (`/credentials/:ref/...`, `refs` in request bodies). There is no
+  "save" step. The detail dialog has Lataa, Jaa, Lisää lompakkoon and Poista, on the main page and
+  on /my/collections. Poista takes a record off the list until an import brings it back, and
+  deletes its signed copy, links included. "Tyhjennä tiedot" is back for signed-in users: it deletes the
+  account's Koski data and keeps the credentials already signed (shared, in a collection). /my/collections lists "Jaetut todisteet" (each shared credential or collection
+  with its recipients) instead of "Tallennetut todisteet". Anonymous use is unchanged, apart from
+  Lataa in the dialog. /policy says when a badge is stored and where to delete one.
+
+### Fixed
+
+- Creating a share link and naming a new collection (in the "Lisää kokoelmaan" dialog and on
+  /my/collections) works again. translate-element cloned the inputs to translate their
+  placeholders, and the hidden, empty copy blocked the form or was the one the page read. The
+  inputs now have labels and no `lang` of their own; a test keeps it that way.
+
 ### Security
 
 - Application hardening (H3, see docs/threat-analysis.md). Koski fetches refuse redirects, time

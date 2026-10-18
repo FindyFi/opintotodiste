@@ -27,30 +27,56 @@ function toItem(row) {
 // --- Saved credentials -------------------------------------------------------
 
 // credential is an immutable snapshot (the signed VC) - see src/schema.sql.
-// Saving the same achievement again returns the copy already saved, so a user
-// who reloads their Koski data (which signs afresh, with a new VC id) doesn't
-// end up with duplicates, and links to the saved copy keep working.
-export async function saveCredential(ownerId, credential) {
-  const { rows: existing } = await pool.query(
-    `SELECT id, added_at FROM saved_credentials
-     WHERE owner_id = $1 AND credential->'credentialSubject' = $2::jsonb
-       AND credential->>'issuanceDate' IS NOT DISTINCT FROM $3`,
-    [ownerId, JSON.stringify(credential.credentialSubject ?? null), credential.issuanceDate ?? null]
-  )
-  if (existing[0]) return { id: existing[0].id, addedAt: existing[0].added_at }
+// Saving the same achievement again returns the copy already saved: the one
+// signed from the same Koski record (`recordRef`), or one saved before records
+// had refs with the same achievement (credentialKey in src/badges.js), which
+// then gets the ref. So links to the saved copy keep working however often the
+// record is signed.
+export async function saveCredential(ownerId, credential, recordRef = null) {
+  const existing = (recordRef && (await findSavedByRef(ownerId, recordRef))) || (await findSavedLike(ownerId, credential))
+  if (existing) {
+    if (recordRef && !existing.recordRef) {
+      await pool.query('UPDATE saved_credentials SET record_ref = $2 WHERE id = $1', [existing.id, recordRef])
+    }
+    return { id: existing.id, addedAt: existing.addedAt }
+  }
   const { rows } = await pool.query(
-    'INSERT INTO saved_credentials (owner_id, credential) VALUES ($1, $2) RETURNING id, added_at',
-    [ownerId, credential]
+    'INSERT INTO saved_credentials (owner_id, credential, record_ref) VALUES ($1, $2, $3) RETURNING id, added_at',
+    [ownerId, credential, recordRef]
   )
   return { id: rows[0].id, addedAt: rows[0].added_at }
 }
 
+export async function findSavedByRef(ownerId, recordRef) {
+  const { rows } = await pool.query(
+    `SELECT id, credential, added_at, record_ref FROM saved_credentials WHERE owner_id = $1 AND record_ref = $2
+     ORDER BY added_at, id LIMIT 1`,
+    [ownerId, recordRef]
+  )
+  return rows[0] ? { id: rows[0].id, credential: rows[0].credential, addedAt: rows[0].added_at, recordRef: rows[0].record_ref } : null
+}
+
+async function findSavedLike(ownerId, credential) {
+  const subject = credential.credentialSubject ?? null
+  const achievementId = subject?.achievement?.id ?? null
+  const { rows } = await pool.query(
+    `SELECT id, added_at, record_ref FROM saved_credentials
+     WHERE owner_id = $1 AND credential->>'issuanceDate' IS NOT DISTINCT FROM $3
+       AND CASE WHEN $4::text IS NULL THEN credential->'credentialSubject' = $2::jsonb
+           ELSE credential->'credentialSubject'->'achievement'->>'id' = $4
+             AND credential->'credentialSubject'->>'id' IS NOT DISTINCT FROM $5 END
+     ORDER BY added_at, id LIMIT 1`,
+    [ownerId, JSON.stringify(subject), credential.issuanceDate ?? null, achievementId, subject?.id ?? null]
+  )
+  return rows[0] ? { id: rows[0].id, addedAt: rows[0].added_at, recordRef: rows[0].record_ref } : null
+}
+
 export async function listSavedCredentials(ownerId) {
   const { rows } = await pool.query(
-    'SELECT id, credential, added_at FROM saved_credentials WHERE owner_id = $1 ORDER BY added_at DESC, id',
+    'SELECT id, credential, added_at, record_ref FROM saved_credentials WHERE owner_id = $1 ORDER BY added_at DESC, id',
     [ownerId]
   )
-  return rows.map(toItem)
+  return rows.map((row) => ({ ...toItem(row), recordRef: row.record_ref }))
 }
 
 // The stored credential, or null unless ownerId saved it - callers answer 404
@@ -198,6 +224,26 @@ export async function listShareLinks(ownerId, target) {
     [target.collectionId ?? target.credentialId]
   )
   return rows.map(toShareLink)
+}
+
+// Every link the owner has made, with what it points to: for the "Jaetut
+// todisteet" list on /my/collections.
+export async function listAllShareLinks(ownerId) {
+  const { rows } = await pool.query(
+    `SELECT l.id, l.token, l.label, l.collection_id, l.credential_id, l.created_at,
+            COALESCE(c.name, s.credential->'credentialSubject'->'achievement'->>'name') AS target_name
+     FROM share_links l
+     LEFT JOIN collections c ON c.id = l.collection_id
+     LEFT JOIN saved_credentials s ON s.id = l.credential_id
+     WHERE c.owner_id = $1 OR s.owner_id = $1
+     ORDER BY l.created_at DESC, l.id`,
+    [ownerId]
+  )
+  return rows.map((row) => ({
+    ...toShareLink(row),
+    target: row.collection_id ? { collectionId: row.collection_id } : { credentialId: row.credential_id },
+    targetName: row.target_name ?? '',
+  }))
 }
 
 export async function createShareLink(ownerId, target, label) {

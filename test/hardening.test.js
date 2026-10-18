@@ -6,7 +6,7 @@ import pg from 'pg'
 import { createAuthenticator } from './helpers/authenticator.js'
 import { createClient, databaseUrl, postgresUnavailable, startApp } from './helpers/app.js'
 
-// H3 (docs/threat-analysis.md T8, T9, T12): headers, list indices, session
+// H3 (docs/threat-analysis.md T8, T9, T12): headers, record refs, session
 // ids on sign-in, the session cookie, "clear my data", the idle lifetime of
 // imported Koski data, and rate limits.
 const skipReason = await postgresUnavailable()
@@ -72,10 +72,13 @@ describe('hardening', needsPostgres, () => {
     assert.equal(res.headers.get('cache-control'), 'no-store')
   })
 
-  test('accepts only plain non-negative integers as list positions', async () => {
+  // Records are addressed by ref (U18); before, by position, where `__proto__`
+  // reached Array.prototype. Neither kind of lookup may reach an object's
+  // properties, and a well-formed ref that isn't one of the records is no record.
+  test('accepts only the refs of the imported records', async () => {
     const client = createClient(app.baseUrl)
     await load(client)
-    for (const index of ['__proto__', 'constructor', 'length', '-1', '1.5', '0x0', '1e0']) {
+    for (const index of ['__proto__', 'constructor', 'length', '0', '-1', '1.5', '0x0', '1e0', 'A'.repeat(22)]) {
       for (const action of ['sign', 'offer']) {
         const res = await client.json(`/credentials/${index}/${action}`, { method: 'POST' })
         assert.equal(res.status, 404, `${action} ${index}`)
@@ -125,7 +128,7 @@ describe('hardening', needsPostgres, () => {
     assert.equal(cleared.status, 200)
     assert.match(sessionCookie(cleared) ?? '', /Expires=Thu, 01 Jan 1970/)
 
-    assert.equal((await client.json('/credentials/lang', { method: 'POST', body: { lang: 'fi' } })).status, 404)
+    assert.deepEqual((await client.json('/credentials')).body.credentials, [])
     assert.match(await (await client.request('/')).text(), /__INITIAL_DATA__ = null/)
     const rows = await withDb((db) => db.query(`SELECT 1 FROM session WHERE sess->>'koskiUrl' = $1`, [koskiUrl]))
     assert.equal(rows.rowCount, 0)
@@ -134,14 +137,26 @@ describe('hardening', needsPostgres, () => {
   test('"clear my data" keeps a signed-in user signed in', async () => {
     const client = createClient(app.baseUrl)
     const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
-    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: 'Clearer' } })
+    const displayName = `Clearer ${randomUUID()}`
+    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName } })
     await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
     await load(client)
+    // A credential already signed and saved (shared, say); signing needs no signer here.
+    const { rows: saved } = await withDb((db) =>
+      db.query(
+        `INSERT INTO saved_credentials (owner_id, credential) SELECT id, $2 FROM users WHERE display_name = $1 RETURNING id`,
+        [displayName, { credentialSubject: { achievement: { name: 'Jaettu' } } }]
+      )
+    )
 
-    // The page hides the button from signed-in users; the route still works.
     assert.match(await (await client.request('/')).text(), /<html lang="fi" data-auth="in">/)
     assert.equal((await client.json('/credentials', { method: 'DELETE' })).status, 200)
-    assert.equal((await client.json('/credentials/lang', { method: 'POST', body: { lang: 'fi' } })).status, 404)
+    // The account's Koski data goes (U18); its saved credentials stay.
+    assert.deepEqual((await client.json('/credentials')).body.credentials.map((e) => e.credentialId), [saved[0].id])
+    const rows = await withDb((db) =>
+      db.query(`SELECT 1 FROM koski_imports i JOIN users u ON u.id = i.owner_id WHERE u.display_name = $1`, [displayName])
+    )
+    assert.equal(rows.rowCount, 0)
     assert.equal((await client.json('/auth/me')).body.loggedIn, true)
   })
 
@@ -149,7 +164,7 @@ describe('hardening', needsPostgres, () => {
     const koskiUrl = `https://opintopolku.fi/koski/opinnot/idle-${randomUUID()}`
     const client = createClient(app.baseUrl)
     await load(client, koskiUrl)
-    assert.equal((await client.json('/credentials/lang', { method: 'POST', body: { lang: 'en' } })).status, 200)
+    assert.ok((await client.json('/credentials')).body.credentials.length > 0)
 
     const twoHoursAgo = Date.now() - 2 * 60 * 60 * 1000
     await withDb((db) =>
@@ -159,7 +174,7 @@ describe('hardening', needsPostgres, () => {
       ])
     )
 
-    assert.equal((await client.json('/credentials/lang', { method: 'POST', body: { lang: 'fi' } })).status, 404)
+    assert.deepEqual((await client.json('/credentials')).body.credentials, [])
     const rows = await withDb((db) => db.query(`SELECT 1 FROM session WHERE sess->>'koskiUrl' = $1`, [koskiUrl]))
     assert.equal(rows.rowCount, 0)
   })

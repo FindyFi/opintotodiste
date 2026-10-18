@@ -22,6 +22,10 @@ const COLUMNS = [
   { key: 'awarded', label: 'Myönnetty' },
 ]
 
+// The page's one list (see credentialsResponse in index.js): each entry is a
+// record converted from the Koski data (`ref`), with its saved copy's
+// `credentialId` once it has been signed for a signed-in user, or a saved
+// credential no record matches (`credentialId` only).
 let credentials = []
 const sortState = { key: null, direction: 1 }
 const selectedIndices = new Set()
@@ -96,14 +100,9 @@ function svgIcon(shapes, size = 24, strokeWidth = 2) {
 
 const checkIcon = () => svgIcon([['path', { d: 'M5 12.5 10 17l9-10' }]], 16, 2.4)
 
-// Koski dates are ISO (YYYY-MM-DD); shown in the UI language's own format,
-// while sorting keeps using the raw ISO string.
-function formatDate(iso) {
-  if (!iso) return ''
-  const date = new Date(`${iso}T00:00:00`)
-  if (Number.isNaN(date.getTime())) return iso
-  return date.toLocaleDateString(currentLang() === 'en' ? 'en-GB' : 'fi-FI', { day: 'numeric', month: 'numeric', year: 'numeric' })
-}
+// Koski dates (YYYY-MM-DD) and stored credentials' timestamps are shown in the
+// UI language's own format, while sorting keeps using the raw ISO string.
+const formatDate = (iso) => Detail.formatDate(iso)
 
 function columnValue(record, key) {
   const achievement = record.credentialSubject.achievement
@@ -183,7 +182,7 @@ function renderTable() {
 function buildRow(record, index) {
   const achievement = record.credentialSubject.achievement
   const nameBtn = el('button', { class: 'credential-name', type: 'button' }, achievement.name)
-  nameBtn.addEventListener('click', () => Detail.open(record))
+  nameBtn.addEventListener('click', () => Detail.open(record, detailActions(record)))
 
   const rowCb = el('input', { type: 'checkbox', 'aria-label': achievement.name ?? '' })
   rowCb.checked = selectedIndices.has(index)
@@ -199,16 +198,114 @@ function buildRow(record, index) {
     rowCb,
     Detail.badgeIcon(Detail.isMajor(achievement)),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
-    el('div', { class: 'credential-status' }, buildStatusCell(record, index)),
+    el('div', { class: 'credential-status' }, buildStatusCell(record)),
   ])
 }
 
-function buildStatusCell(record, index) {
+function buildStatusCell(record) {
   if (!record.signed) return []
   return [
     el('span', { class: 'badge signed' }, [checkIcon(), el('span', { lang: 'fi' }, 'Allekirjoitettu')]),
-    el('a', { href: `/credentials/${index}/download`, lang: 'fi' }, 'Lataa'),
+    el('a', { href: downloadUrl(record), lang: 'fi' }, 'Lataa'),
   ]
+}
+
+const downloadUrl = (entry) =>
+  entry.credentialId ? `/saved-credentials/${entry.credentialId}/download` : `/credentials/${entry.ref}/download`
+
+const entryName = (entry) => columnValue(entry, 'name')
+
+// Reloads the list from the server, e.g. once an action has stored a record
+// (its row now carries the stored copy's id) or after signing in or out.
+async function reloadList() {
+  const res = await fetch('/credentials')
+  const data = await res.json()
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  showList(data)
+}
+
+function showList(data) {
+  credentials = data.credentials ?? []
+  selectedIndices.clear()
+  setMeta(data.personName, data.koskiUrl)
+  if (credentials.length || data.koskiUrl) renderTable()
+  else {
+    resultsPanel.hidden = true
+    updateBulkBar()
+  }
+}
+
+// The detail dialog's actions for one entry. Each stores a signed-in user's
+// record behind the scenes.
+function detailActions(entry) {
+  return [
+    { label: 'Lataa', run: () => download(entry) },
+    { label: 'Jaa', run: () => shareOne(entry) },
+    { label: 'Lisää lompakkoon', run: () => walletOne(entry), primary: true },
+    { label: 'Poista', run: () => deleteEntry(entry), danger: true },
+  ]
+}
+
+async function download(entry) {
+  let url = downloadUrl(entry)
+  if (!entry.credentialId) {
+    const data = await postJson(`/credentials/${entry.ref}/sign`)
+    if (data.credentialId) url = downloadUrl({ credentialId: data.credentialId })
+  }
+  el('a', { href: url, download: '' }).click()
+  await reloadList()
+}
+
+// Shares one credential on its own, storing it first if needed.
+async function shareOne(entry) {
+  await Auth.ensureLoggedIn()
+  let credentialId = entry.credentialId
+  if (!credentialId) {
+    const [result] = (await postJson('/saved-credentials', { refs: [entry.ref] })).results
+    if (result.error) throw new Error(result.error)
+    credentialId = result.credentialId
+  }
+  await reloadList()
+  await Share.open({ credentialId })
+}
+
+const requestOffer = (entry) =>
+  postJson(entry.credentialId ? `/saved-credentials/${entry.credentialId}/offer` : `/credentials/${entry.ref}/offer`)
+
+async function walletOne(entry) {
+  const offer = await requestOffer(entry)
+  WalletOffer.show([{ name: entryName(entry), ...offer }])
+  if (offer.credentialId) await reloadList()
+}
+
+async function deleteRequest(url) {
+  const res = await fetch(url, { method: 'DELETE' })
+  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
+}
+
+// A saved copy is deleted everywhere, links included; the record leaves the
+// list, and the next import brings it back.
+async function deleteEntry(entry) {
+  const name = entryName(entry)
+  const question = entry.credentialId
+    ? `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`
+    : `Poistetaanko "${name}" listalta? Se palaa, kun haet Koski-tiedot uudelleen.`
+  if (!confirm(question)) return
+  if (entry.credentialId) await deleteRequest(`/saved-credentials/${entry.credentialId}`)
+  if (entry.ref) await deleteRequest(`/credentials/${entry.ref}`)
+  detailDialog.close()
+  await reloadList()
+}
+
+// The selected entries as request fields: saved credentials by id, records
+// not signed yet by ref.
+function selectedRefs() {
+  const entries = [...selectedIndices].sort((a, b) => a - b).map((i) => credentials[i])
+  return {
+    entries,
+    refs: entries.filter((e) => !e.credentialId).map((e) => e.ref),
+    credentialIds: entries.filter((e) => e.credentialId).map((e) => e.credentialId),
+  }
 }
 
 // The selection bar is only there while something is selected (the buttons
@@ -228,26 +325,22 @@ bulkClearBtn.addEventListener('click', () => {
 })
 
 async function bulkAddToWallet() {
-  const indices = [...selectedIndices].sort((a, b) => a - b)
-  if (!indices.length) return
+  const { entries } = selectedRefs()
+  if (!entries.length) return
 
   bulkWalletBtn.disabled = true
   bulkWalletBtn.classList.add('busy')
   const results = []
-  for (const index of indices) {
-    const name = columnValue(credentials[index], 'name')
+  for (const entry of entries) {
+    const name = entryName(entry)
     try {
-      const offerRes = await fetch(`/credentials/${index}/offer`, { method: 'POST' })
-      const offerData = await offerRes.json()
-      if (!offerRes.ok) throw new Error(offerData.error || 'Could not create the wallet offer')
-      results.push({ name, ...offerData })
+      results.push({ name, ...(await requestOffer(entry)) })
     } catch (err) {
       results.push({ name, error: err.message })
     }
   }
   bulkWalletBtn.classList.remove('busy')
-  selectedIndices.clear()
-  renderTable()
+  await reloadList().catch((err) => showError(err.message))
   WalletOffer.show(results)
 }
 
@@ -284,10 +377,12 @@ function pickOrCreateCollection() {
       if (i === 0) input.checked = true
       choices.append(el('p', {}, el('label', {}, [input, c.name, el('span', { class: 'muted' }, `(${c.itemCount})`)])))
     })
-    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma', lang: 'fi' })
+    // Typing a name chooses "new collection".
+    const newInput = el('input', { type: 'text' })
     const newRadio = el('input', { type: 'radio', name: 'collectionChoice', value: '__new__' })
     if (!collections.length) newRadio.checked = true
-    choices.append(el('p', {}, el('label', {}, [newRadio, newInput])))
+    newInput.addEventListener('focus', () => (newRadio.checked = true))
+    choices.append(el('p', {}, el('label', {}, [newRadio, el('span', { lang: 'fi' }, 'Uusi kokoelma:'), newInput])))
 
     const confirmBtn = el('button', { type: 'button', class: 'primary' }, el('span', { lang: 'fi' }, 'Lisää'))
     confirmBtn.addEventListener('click', async () => {
@@ -337,10 +432,7 @@ function showCollectionResults(results) {
   detailDialog.showModal()
 }
 
-// "Jaa" needs no choice from the user. One credential is saved to the user's
-// credentials and shared on its own; several make a new collection named after
-// the date, which can be renamed on the collections page.
-async function postJson(url, body) {
+async function postJson(url, body = {}) {
   const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -354,33 +446,34 @@ async function postJson(url, body) {
 const createCollectionFor = () =>
   postJson('/collections', { name: `Jaettu ${new Date().toLocaleDateString('fi-FI')}` }).then((data) => data.id)
 
-// Signs and saves the selection: to a collection the user picks or creates, or
-// with `share`, straight into the share dialog (one credential on its own,
-// several in a new collection). Failed items show in the results instead.
+// Puts the selection (stored first where needed) into a collection the user
+// picks or creates, or with `share`, straight into the share dialog. "Jaa"
+// needs no choice from the user: one credential is shared on its own, several
+// make a new collection named after the date, which can be renamed on the
+// collections page. Failed items show in the results instead.
 async function bulkAddToCollection({ share = false } = {}) {
-  const indices = [...selectedIndices].sort((a, b) => a - b)
-  if (!indices.length) return
+  const { entries, refs, credentialIds } = selectedRefs()
+  if (!entries.length) return
 
   const button = share ? bulkShareBtn : bulkCollectionBtn
   button.disabled = true
   button.classList.add('busy')
   try {
     await Auth.ensureLoggedIn()
-    const single = share && indices.length === 1
-    const collectionId = single ? null : share ? await createCollectionFor() : await pickOrCreateCollection()
-    if (!single && !collectionId) return
+    if (share && entries.length === 1) {
+      await shareOne(entries[0])
+      return
+    }
+    const collectionId = share ? await createCollectionFor() : await pickOrCreateCollection()
+    if (!collectionId) return
 
-    const data = await postJson(single ? '/saved-credentials' : `/collections/${collectionId}/items`, { indices })
+    const data = await postJson(`/collections/${collectionId}/items`, { refs, credentialIds })
+    const nameOf = (r) => entryName(entries.find((e) => (r.credentialId && e.credentialId === r.credentialId) || (r.ref && e.ref === r.ref)) ?? {})
+    const results = data.results.map((r) => ({ ...r, name: r.name || nameOf(r) }))
 
-    data.results.forEach((r) => {
-      if (r.signed) credentials[r.index].signed = r.signed
-    })
-    selectedIndices.clear()
-    renderTable()
-    if (single && data.results[0].error) showError(data.results[0].error)
-    else if (single) await Share.open({ credentialId: data.results[0].credentialId })
-    else if (share && data.results.every((r) => !r.error)) await Share.open({ collectionId })
-    else showCollectionResults(data.results)
+    await reloadList()
+    if (share && results.every((r) => !r.error)) await Share.open({ collectionId })
+    else showCollectionResults(results)
   } catch (err) {
     if (err.message !== 'cancelled') showError(err.message)
   } finally {
@@ -409,16 +502,11 @@ async function fetchCredentials(koskiUrl) {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Request failed')
 
-    credentials = data.credentials
     sortState.key = null
-    selectedIndices.clear()
     syncedLang = currentLang()
-    setMeta(data.personName, data.koskiUrl)
-    renderTable()
+    showList(data)
   } catch (err) {
-    credentials = []
-    setMeta(null, null)
-    renderTable()
+    // A failed import leaves the session as it was, and so the list.
     showError(err.message)
   } finally {
     submitBtn.disabled = false
@@ -428,8 +516,14 @@ async function fetchCredentials(koskiUrl) {
 
 // "Clear my data": the server forgets the imported records (and an anonymous
 // session altogether), and so does the page.
+// For a signed-in user the account's Koski data goes, and what has been shared
+// or put in a collection stays on the list.
 clearDataBtn.addEventListener('click', async () => {
-  if (!confirm('Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.')) return
+  const signedIn = document.documentElement.dataset.auth === 'in'
+  const question = signedIn
+    ? 'Poistetaanko Koskesta haetut tiedot? Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät.'
+    : 'Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.'
+  if (!confirm(question)) return
   clearError()
   try {
     const res = await fetch('/credentials', { method: 'DELETE' })
@@ -438,11 +532,15 @@ clearDataBtn.addEventListener('click', async () => {
     showError(err.message)
     return
   }
+  if (detailDialog.open) detailDialog.close()
+  koskiUrlInput.value = ''
+  if (signedIn) {
+    await reloadList().catch((err) => showError(err.message))
+    return
+  }
   credentials = []
   selectedIndices.clear()
-  if (detailDialog.open) detailDialog.close()
   setMeta(null, null)
-  koskiUrlInput.value = ''
   updateBulkBar()
   resultsPanel.hidden = true
 })
@@ -453,8 +551,8 @@ form.addEventListener('submit', (e) => {
 })
 
 // The Koski content (achievement names/descriptions/etc.) is converted
-// server-side once, in whatever language was current at the time, and cached
-// in the session - it doesn't automatically follow later UI language
+// server-side, in the language last sent to /credentials/lang - it doesn't
+// automatically follow later UI language
 // switches the way the app's own chrome does via translate-element. Watching
 // <html lang> (which translate-element updates on every switch) lets us
 // re-request the same already-fetched Koski data in the new language,
@@ -462,7 +560,7 @@ form.addEventListener('submit', (e) => {
 let syncedLang = currentLang()
 
 async function syncLanguage(lang) {
-  if (!credentials.length) {
+  if (!credentials.some((entry) => entry.ref)) {
     syncedLang = lang
     return
   }
@@ -475,10 +573,8 @@ async function syncLanguage(lang) {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Request failed')
 
-    credentials = data.credentials
     if (detailDialog.open) detailDialog.close()
-    setMeta(data.personName, data.koskiUrl)
-    renderTable()
+    showList(data)
     syncedLang = lang
   } catch (err) {
     console.warn('Could not re-translate Koski content:', err.message)
@@ -492,9 +588,13 @@ new MutationObserver(() => {
   }
 }).observe(document.documentElement, { attributes: true, attributeFilter: ['lang'] })
 
+// Signing in brings the user's stored credentials into the list; signing out
+// (which ends the session) empties it.
+// public/auth.js sets the attribute on every render, so only a change counts.
+new MutationObserver((mutations) => {
+  if (mutations.every((m) => m.oldValue === document.documentElement.dataset.auth)) return
+  reloadList().catch((err) => showError(err.message))
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-auth'], attributeOldValue: true })
+
 const initial = window.__INITIAL_DATA__
-if (initial?.credentials?.length) {
-  credentials = initial.credentials
-  setMeta(initial.personName, initial.koskiUrl)
-  renderTable()
-}
+if (initial?.credentials?.length) showList(initial)

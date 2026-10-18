@@ -23,15 +23,13 @@ const COPY = {
   fi: {
     title: 'Tietosuojaseloste ja käyttöehdot',
     lede: 'Mitä tietoja Opintotodiste käsittelee, mihin ja kuinka kauan, kuka näkee jakamasi linkit, miten poistat tietosi ja millä ehdoilla palvelua käytetään.',
-    updated: `Päivitetty 18.10.2026.`,
+    updated: `Versio 2. Päivitetty 18.10.2026.`,
     sections: [
       {
         title: 'Lyhyesti',
         body: `<ul>
 <li>Opintotodisteen rekisterinpitäjä on Findynet Osuuskunta. Yhteystiedot ovat alla.</li>
 <li>Palvelu tekee Koski-palvelun opintotiedoistasi osaamismerkkejä, jotka voit ladata, tallentaa lompakkoon tai jakaa linkillä.</li>
-<li>Koskesta haetut opintotietosi poistetaan palvelimelta tunnin kuluttua viimeisestä käynnistäsi, tai heti, kun valitset ${ui('Tyhjennä tiedot')} tai ${ui('Kirjaudu ulos')}. Jos käytät palvelua kirjautumatta sisään, muutkin tietosi poistetaan viimeistään 24 tunnin kuluttua.</li>
-<li>Jos kirjaudut palveluun, käyttäjätilisi ja kokoelmasi säilyvät, kunnes poistat ne.</li>
 <li>Voit itse päättää, mitä palveluun tallennettuja tietoja jaat muille jakolinkkien avulla. Huomaa, että kuka tahansa jakolinkin saanut näkee kokoelman tai merkin, johon linkki johtaa.</li>
 <li>Voit tarkastaa ja poistaa tietosi. Katso <a href="#oikeudet">Oikeutesi</a>.</li>
 <li>Palvelussa ei ole analytiikkaa, mainoksia eikä seurantaevästeitä.</li>
@@ -52,17 +50,17 @@ const COPY = {
       },
       {
         title: 'Mitä tietoja käsitellään ja mistä ne saadaan',
-        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta.</p>
+        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta.</p>
 <p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet ja jakolinkeille antamasi vastaanottajien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
 <p><strong>Palvelun käytöstä:</strong> Allekirjoitetut osaamismerkit, jakolinkit ja lokittiedot.</p>`,
       },
       {
         title: 'Kuinka kauan tietoja säilytetään',
         body: `<ul>
-<li><strong>Istunto:</strong> 24 tuntia viimeisestä sivunlatauksestasi tai kunnes kirjaudut ulos. Istuntoon kuuluvat jakolinkki, Koskesta saadut tiedot, niistä tehdyt merkit ja kielivalinta. Istunto on palvelun tietokannassa, ja selaimesi tunnistetaan siihen evästeellä. Eväste poistuu yleensä, kun suljet selaimen, mutta palvelimella olevat tiedot säilyvät silti 24 tuntia. Koskesta saadut tiedot ja niistä tehdyt merkit poistetaan istunnosta kuitenkin jo tunnin kuluttua viimeisestä sivunlatauksestasi.</li>
-<li><strong>Tili ja pääsyavaimet:</strong> Kunnes tili poistetaan. Yli 6 kk käyttämättä olleet tilit voidaan poistaa.</li>
-<li><strong>Osaamismerkit ja kokoelmat:</strong> Tallentamasi merkit säilyvät, kunnes poistat merkin tai tilisi, ja kokoelmat ja jakolinkit, kunnes poistat ne tai tilisi. Kokoelman poistaminen ei poista siinä olleita merkkejä.</li>
-<li><strong>Lokit:</strong> 30 päivää. Sovelluksen käytöstä tallentuu tietoa virhetilanteiden selvittämistä ja palvelun ylläpitoa varten.</li>
+<li><strong>Tili ja pääsyavaimet:</strong> Kunnes tili <a href="#poisto">poistetaan</a>. Yli 6 kk käyttämättä olleet tilit ja niiden tiedot poistetaan automaattisesti.</li>
+<li><strong>Osaamismerkit, kokoelmat ja jakolinkit:</strong> Kunnes <a href="#poisto">poistat</a> ne itse tai tilisi poistetaan.</li>
+<li><strong>Istunnon tiedot:</strong> 24 tuntia viimeisestä sivunlatauksestasi tai kunnes kirjaudut ulos. Jos et ole kirjautunut, Koskesta saadut tiedot ja niistä tehdyt merkit poistetaan istunnosta kuitenkin jo tunnin kuluttua viimeisestä sivunlatauksestasi.</li>
+<li><strong>Lokitiedot:</strong> 30 päivää. Sovelluksen käytöstä tallentuu tietoa virhetilanteiden selvittämistä ja palvelun ylläpitoa varten.</li>
 <li><strong>Varmuuskopiot:</strong> Tietosi voivat säilyä varmuuskopioissa korkeintaan vuoden ajan.</li>
 </ul>`,
       },
@@ -95,8 +93,8 @@ const COPY = {
         id: 'poisto',
         title: 'Näin poistat tietosi',
         body: `<ul>
-<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä merkkejä, kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
-<li><strong>Istunto:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta (kun et ole kirjautunut sisään) tai ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten Koskesta saadut tiedot poistuvat tunnin ja muut istunnon tiedot 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
+<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisen merkin voit poistaa sen tietoikkunasta (valitse merkin nimi etusivulla tai Kokoelmani-sivulla), kokoelmia ja jakolinkkejä <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
+<li><strong>Koskesta haetut tiedot:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta, niin tiedot poistetaan heti. Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät. Jos et ole kirjautunut, tiedot poistuvat muutenkin tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li><strong>Lompakkoon tallentamasi merkit:</strong> Poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> Poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
 </ul>`,
@@ -125,15 +123,13 @@ const COPY = {
   en: {
     title: 'Privacy notice and terms of use',
     lede: 'What data Opintotodiste processes, why and for how long, who can see the links you share, how to delete your data and the terms for using the service.',
-    updated: `Updated 18 October 2026.`,
+    updated: `Version 2. Updated 18 October 2026.`,
     sections: [
       {
         title: 'In short',
         body: `<ul>
 <li>The controller of Opintotodiste is Findynet Osuuskunta (Findynet Cooperative). Contact details are below.</li>
 <li>The service turns your study records from the Koski service into badges that you can download, save in a wallet or share with a link.</li>
-<li>Your study records fetched from Koski are deleted from the server an hour after your last visit, or at once when you choose ${ui('Clear my data')} or ${ui('Sign out')}. If you use the service without signing in, the rest of your data is deleted at most 24 hours after your last visit.</li>
-<li>If you sign in, your user account and your collections are kept until you delete them.</li>
 <li>You decide which of the data saved in the service you share with others through share links. Note that anyone who gets a share link can see the collection or the badge it leads to.</li>
 <li>You can check and delete your data. See <a href="#rights">Your rights</a>.</li>
 <li>There is no analytics, advertising or tracking cookies.</li>
@@ -154,17 +150,17 @@ const COPY = {
       },
       {
         title: 'What data is processed and where it comes from',
-        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, opintopolku.fi), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. No other personal data shared through the share link is stored.</p>
+        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. No other personal data shared through the share link is stored.</p>
 <p><strong>From you:</strong> The public data of the passkey you sign in with, and data you create while using the service, such as the names of your collections and the recipient names you give your share links. Signing in uses no username, password or email address. The service stores your passkey’s public key so that only the private key you hold can sign in to the service.</p>
 <p><strong>From using the service:</strong> Signed badges, share links and log data.</p>`,
       },
       {
         title: 'How long data is kept',
         body: `<ul>
-<li><strong>Session:</strong> 24 hours after your last page load or until you sign out. The session holds the share link, the data from Koski, the badges made from it and your language. The session is stored in the service’s database, and a cookie connects your browser to it. The cookie usually goes away when you close the browser, but the data on the server is still kept for those 24 hours. The data from Koski and the badges made from it are removed from the session sooner, an hour after your last page load.</li>
-<li><strong>Account and passkeys:</strong> Until the account is deleted. Accounts that have not been used for more than 6 months may be deleted.</li>
-<li><strong>Badges and collections:</strong> The badges you save are kept until you delete the badge or your account, and collections and share links until you delete them or your account. Deleting a collection doesn’t delete the badges in it.</li>
-<li><strong>Logs:</strong> 30 days. Data about the use of the app is recorded to investigate errors and to maintain the service.</li>
+<li><strong>Account and passkeys:</strong> Until the account is <a href="#deletion">deleted</a>. Accounts that have not been used for more than 6 months are deleted automatically, with their data.</li>
+<li><strong>Badges, collections and share links:</strong> Until you <a href="#deletion">delete</a> them yourself or your account is deleted.</li>
+<li><strong>Session data:</strong> 24 hours after your last page load or until you sign out. If you are not signed in, the data from Koski and the badges made from it are removed from the session sooner, an hour after your last page load.</li>
+<li><strong>Log data:</strong> 30 days. Data about the use of the app is recorded to investigate errors and to maintain the service.</li>
 <li><strong>Backups:</strong> Your data may remain in backups for at most one year.</li>
 </ul>`,
       },
@@ -197,8 +193,8 @@ const COPY = {
         id: 'deletion',
         title: 'How to delete your data',
         body: `<ul>
-<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single badges, collections and share links on the <a href="/my/collections">My collections</a> page.</li>
-<li><strong>Session:</strong> Choose ${ui('Clear my data')} below your fetched achievements (when you are not signed in), or ${ui('Sign out')}, and the session data is deleted at once. Otherwise the data from Koski is deleted an hour, and the rest of the session data 24 hours, after your last visit.</li>
+<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete a single badge in its details dialog (choose the badge’s name on the front page or the My collections page), and collections and share links on the <a href="/my/collections">My collections</a> page.</li>
+<li><strong>Data fetched from Koski:</strong> Choose ${ui('Clear my data')} below your fetched achievements, and the data is deleted at once. Credentials you have shared or added to collections are kept. If you are not signed in, the data is deleted anyway an hour after your last visit.</li>
 <li><strong>Badges you saved in a wallet:</strong> Delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> Delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
 </ul>`,

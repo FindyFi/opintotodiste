@@ -19,7 +19,8 @@
 .collections-hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.08; letter-spacing: -.02em; }
 .collections-hero .lede { max-width: 40rem; font-size: 1.15rem; }
 
-.new-collection { max-width: 40rem; }
+.new-collection { display: flex; flex-direction: column; gap: 10px; max-width: 40rem; }
+.new-collection label { font-weight: 700; color: var(--heading); }
 .new-collection[hidden] { display: none; }
 .login-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .login-prompt[hidden] { display: none; }
@@ -57,17 +58,17 @@ body.page-collections .panel {
 .collection-items { list-style: none; margin: 0; padding: 0; }
 .collection-items .credential:last-child { border-bottom: 0; }
 
-/* All saved credentials, below the collections, in the same card. */
-.saved-credentials {
+/* The live share links, below the collections, in the same card. */
+.shared-links {
   margin-top: 48px;
   padding: 24px clamp(16px, 3vw, 32px) 8px;
   border: 1px solid var(--line);
   border-radius: 32px;
   background: var(--surface);
 }
-.saved-credentials[hidden] { display: none; }
-.saved-credentials h2 { font-size: 1.4rem; }
-.saved-credentials > .muted { padding-bottom: 16px; border-bottom: 2px solid var(--line-strong); }
+.shared-links[hidden] { display: none; }
+.shared-links h2 { font-size: 1.4rem; }
+.shared-links > .muted { padding-bottom: 16px; border-bottom: 2px solid var(--line-strong); }
 
 /* ---------- small screens ---------- */
 

@@ -17,18 +17,21 @@ ${header()}
     <span lang="fi">Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.</span>
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
-  <form class="new-collection field-row" id="newCollectionForm" hidden>
-    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" lang="fi" aria-label="Kokoelman nimi" required>
-    <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
+  <form class="new-collection" id="newCollectionForm" hidden>
+    <label for="newCollectionName" lang="fi">Kokoelman nimi</label>
+    <div class="field-row">
+      <input type="text" id="newCollectionName" required>
+      <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
+    </div>
   </form>
 </section>
 
 <main class="panel">
   <div id="collectionsContainer"></div>
-  <section id="savedSection" class="saved-credentials" hidden>
-    <h2 lang="fi">Tallennetut todisteet</h2>
-    <p class="muted" lang="fi">Kaikki tallentamasi todisteet, myös ne, jotka eivät ole missään kokoelmassa. Voit jakaa todisteen yksinään.</p>
-    <div id="savedContainer"></div>
+  <section id="sharedSection" class="shared-links" hidden>
+    <h2 lang="fi">Jaetut todisteet</h2>
+    <p class="muted" lang="fi">Todisteet ja kokoelmat, joihin on voimassa oleva jakolinkki, ja keille linkit on tehty. Jaa-painikkeesta voit lisätä ja poistaa linkkejä.</p>
+    <div id="sharedContainer"></div>
   </section>
 </main>
 
