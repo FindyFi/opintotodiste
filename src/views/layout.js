@@ -78,7 +78,7 @@ export function header({ auth = true, current = '' } = {}) {
 
 // Rendered at the end of every page's <body>. `current` marks the link of the
 // page being shown, as in header().
-const FOOTER_LINKS = [{ id: 'policy', href: '/policy', text: 'Tietosuoja' }]
+const FOOTER_LINKS = [{ id: 'policy', href: '/policy', text: 'Tietosuoja ja käyttöehdot' }]
 
 export function footer({ current = '' } = {}) {
   return `<footer class="site-footer">
