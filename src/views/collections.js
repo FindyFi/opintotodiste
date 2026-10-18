@@ -11,7 +11,7 @@ ${header()}
 
 <section class="collections-hero">
   <h1 lang="fi">Kokoelmani</h1>
-  <p class="lede" lang="fi">Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä.</p>
+  <p class="lede" lang="fi">Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä. Jokainen vastaanottaja saa oman linkin, jonka voit poistaa koska tahansa.</p>
   <div id="errorBox" class="error" role="alert" hidden></div>
   <p id="loginPrompt" class="login-prompt" hidden>
     <span lang="fi">Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.</span>
@@ -25,6 +25,11 @@ ${header()}
 
 <main class="panel">
   <div id="collectionsContainer"></div>
+  <section id="savedSection" class="saved-credentials" hidden>
+    <h2 lang="fi">Tallennetut todisteet</h2>
+    <p class="muted" lang="fi">Kaikki tallentamasi todisteet, myös ne, jotka eivät ole missään kokoelmassa. Voit jakaa todisteen yksinään.</p>
+    <div id="savedContainer"></div>
+  </section>
 </main>
 
 <dialog id="detailDialog">

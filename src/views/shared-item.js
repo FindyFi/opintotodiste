@@ -1,9 +1,11 @@
 import { head, header, footer, esc, BADGE_ICON, SHARE_ICON } from './layout.js'
 import { formatDate } from './shared-collection.js'
 
-// The public page for one credential (/c/:token/items/:itemId). It doesn't link
+// The public page for one credential: /i/:token (a link to that credential
+// alone) or /c/:token/items/:itemId (one item of a shared collection). `path` is
+// the page's own path; the download sits at `${path}/download`. It doesn't link
 // to the collection: whoever shared one credential may not mean to share the rest.
-export function sharedItemPage({ token, itemId, credential }) {
+export function sharedItemPage({ path, credential }) {
   const achievement = credential?.credentialSubject?.achievement || {}
   const awarded = formatDate((credential?.issuanceDate ?? credential?.validFrom)?.slice(0, 10))
   const details = [
@@ -21,7 +23,7 @@ export function sharedItemPage({ token, itemId, credential }) {
 <html lang="fi">
 <head>
 ${head(`<title>${esc(achievement.name)} – Opintotodiste</title>`, ['credentials', 'recipient'], {
-  path: `/c/${token}/items/${itemId}`,
+  path,
   title: { fi: `${achievement.name} – Opintotodiste`, en: `${achievement.name} – Study credential` },
   description: {
     fi: ['Osaamismerkki', achievement.creator?.name && `myöntäjä ${achievement.creator.name}`].filter(Boolean).join(', ') + '. Tarkasta merkin aitous Opintotodisteessa.',
@@ -41,8 +43,8 @@ ${header({ auth: false })}
       <h1>${esc(achievement.name)}</h1>
       <p class="lede" lang="fi">Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.</p>
       <p class="recipient-actions">
-        <a class="button primary" href="/verify?url=${esc(encodeURIComponent(`/c/${token}/items/${itemId}/download`))}" lang="fi">Tarkasta todiste</a>
-        <a class="button" href="/c/${esc(token)}/items/${esc(itemId)}/download" lang="fi">Lataa todiste</a>
+        <a class="button primary" href="/verify?url=${esc(encodeURIComponent(`${path}/download`))}" lang="fi">Tarkasta todiste</a>
+        <a class="button" href="${esc(path)}/download" lang="fi">Lataa todiste</a>
       </p>
     </div>
   </div>

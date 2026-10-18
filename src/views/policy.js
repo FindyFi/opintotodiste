@@ -32,7 +32,7 @@ const COPY = {
 <li>Palvelu tekee Koski-palvelun opintotiedoistasi osaamismerkkejä, jotka voit ladata, tallentaa lompakkoon tai jakaa linkillä.</li>
 <li>Jos käytät palvelua kirjautumatta sisään, tietosi poistetaan palvelimelta viimeistään 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li>Jos kirjaudut palveluun, käyttäjätilisi ja kokoelmasi säilyvät, kunnes poistat ne.</li>
-<li>Voit itse päättää, mitä palveluun tallennettuja tietoja jaat muille jakolinkkien avulla. Huomaa, että kuka tahansa jakolinkin saanut näkee kokoelman merkit.</li>
+<li>Voit itse päättää, mitä palveluun tallennettuja tietoja jaat muille jakolinkkien avulla. Huomaa, että kuka tahansa jakolinkin saanut näkee kokoelman tai merkin, johon linkki johtaa.</li>
 <li>Voit tarkastaa ja poistaa tietosi. Katso <a href="#oikeudet">Oikeutesi</a>.</li>
 <li>Palvelussa ei ole analytiikkaa, mainoksia eikä seurantaevästeitä.</li>
 </ul>`,
@@ -53,7 +53,7 @@ const COPY = {
       {
         title: 'Mitä tietoja käsitellään ja mistä ne saadaan',
         body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta.</p>
-<p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
+<p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet ja jakolinkeille antamasi vastaanottajien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
 <p><strong>Palvelun käytöstä:</strong> Allekirjoitetut osaamismerkit, jakolinkit ja lokittiedot.</p>`,
       },
       {
@@ -61,7 +61,7 @@ const COPY = {
         body: `<ul>
 <li><strong>Istunto:</strong> 24 tuntia viimeisestä sivunlatauksestasi tai kunnes kirjaudut ulos. Istuntoon kuuluvat jakolinkki, Koskesta saadut tiedot, niistä tehdyt merkit ja kielivalinta. Istunto on palvelun tietokannassa, ja selaimesi tunnistetaan siihen evästeellä. Eväste poistuu yleensä, kun suljet selaimen, mutta palvelimella olevat tiedot säilyvät silti 24 tuntia.</li>
 <li><strong>Tili ja pääsyavaimet:</strong> Kunnes tili poistetaan. Yli 6 kk käyttämättä olleet tilit voidaan poistaa.</li>
-<li><strong>Osaamismerkit ja kokoelmat:</strong> Kunnes poistat kokoelman tai tilisi.</li>
+<li><strong>Osaamismerkit ja kokoelmat:</strong> Tallentamasi merkit säilyvät, kunnes poistat merkin tai tilisi, ja kokoelmat ja jakolinkit, kunnes poistat ne tai tilisi. Kokoelman poistaminen ei poista siinä olleita merkkejä.</li>
 <li><strong>Lokit:</strong> 30 päivää. Sovelluksen käytöstä tallentuu tietoa virhetilanteiden selvittämistä ja palvelun ylläpitoa varten.</li>
 <li><strong>Varmuuskopiot:</strong> Tietosi voivat säilyä varmuuskopioissa korkeintaan vuoden ajan.</li>
 </ul>`,
@@ -95,7 +95,7 @@ const COPY = {
         id: 'poisto',
         title: 'Näin poistat tietosi',
         body: `<ul>
-<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
+<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä merkkejä, kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
 <li><strong>Istunto:</strong> Valitse ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten ne poistuvat 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li><strong>Lompakkoon tallentamasi merkit:</strong> Poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> Poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
@@ -104,7 +104,7 @@ const COPY = {
       {
         id: 'kayttoehdot',
         title: 'Käyttöehdot',
-        body: `<p>Opintotodiste tekee Koski-palvelun opintotiedoistasi Open Badges 3.0 -muotoisia osaamismerkkejä ja allekirjoittaa ne sähköisesti. Voit ladata merkit, tallentaa ne digitaaliseen lompakkoon ja jakaa niitä kokoelmina linkillä.</p>
+        body: `<p>Opintotodiste tekee Koski-palvelun opintotiedoistasi Open Badges 3.0 -muotoisia osaamismerkkejä ja allekirjoittaa ne sähköisesti. Voit ladata merkit, tallentaa ne digitaaliseen lompakkoon ja jakaa niitä linkillä yksittäin tai kokoelmina.</p>
 <ul>
 <li>Palvelun käyttö on maksutonta sekä osaamismerkkien haltijoille että niiden tarkastajille, joille on jaettu jakolinkki tästä palvelusta.</li>
 <li>Käyttäjän vastuulla on käyttää palvelua hyvän tavan mukaisesti.
@@ -134,7 +134,7 @@ const COPY = {
 <li>The service turns your study records from the Koski service into badges that you can download, save in a wallet or share with a link.</li>
 <li>If you use the service without signing in, your data is deleted from the server at most 24 hours after your last visit.</li>
 <li>If you sign in, your user account and your collections are kept until you delete them.</li>
-<li>You decide which of the data saved in the service you share with others through share links. Note that anyone who gets a share link can see the collection’s badges.</li>
+<li>You decide which of the data saved in the service you share with others through share links. Note that anyone who gets a share link can see the collection or the badge it leads to.</li>
 <li>You can check and delete your data. See <a href="#rights">Your rights</a>.</li>
 <li>There is no analytics, advertising or tracking cookies.</li>
 </ul>`,
@@ -155,7 +155,7 @@ const COPY = {
       {
         title: 'What data is processed and where it comes from',
         body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, opintopolku.fi), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. No other personal data shared through the share link is stored.</p>
-<p><strong>From you:</strong> The public data of the passkey you sign in with, and data you create while using the service, such as the names of your collections. Signing in uses no username, password or email address. The service stores your passkey’s public key so that only the private key you hold can sign in to the service.</p>
+<p><strong>From you:</strong> The public data of the passkey you sign in with, and data you create while using the service, such as the names of your collections and the recipient names you give your share links. Signing in uses no username, password or email address. The service stores your passkey’s public key so that only the private key you hold can sign in to the service.</p>
 <p><strong>From using the service:</strong> Signed badges, share links and log data.</p>`,
       },
       {
@@ -163,7 +163,7 @@ const COPY = {
         body: `<ul>
 <li><strong>Session:</strong> 24 hours after your last page load or until you sign out. The session holds the share link, the data from Koski, the badges made from it and your language. The session is stored in the service’s database, and a cookie connects your browser to it. The cookie usually goes away when you close the browser, but the data on the server is still kept for those 24 hours.</li>
 <li><strong>Account and passkeys:</strong> Until the account is deleted. Accounts that have not been used for more than 6 months may be deleted.</li>
-<li><strong>Badges and collections:</strong> Until you delete the collection or your account.</li>
+<li><strong>Badges and collections:</strong> The badges you save are kept until you delete the badge or your account, and collections and share links until you delete them or your account. Deleting a collection doesn’t delete the badges in it.</li>
 <li><strong>Logs:</strong> 30 days. Data about the use of the app is recorded to investigate errors and to maintain the service.</li>
 <li><strong>Backups:</strong> Your data may remain in backups for at most one year.</li>
 </ul>`,
@@ -197,7 +197,7 @@ const COPY = {
         id: 'deletion',
         title: 'How to delete your data',
         body: `<ul>
-<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single collections and share links on the <a href="/my/collections">My collections</a> page.</li>
+<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single badges, collections and share links on the <a href="/my/collections">My collections</a> page.</li>
 <li><strong>Session:</strong> Choose ${ui('Sign out')} and the session data is deleted at once. Otherwise it is deleted 24 hours after your last visit.</li>
 <li><strong>Badges you saved in a wallet:</strong> Delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> Delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
@@ -206,7 +206,7 @@ const COPY = {
       {
         id: 'terms',
         title: 'Terms of use',
-        body: `<p>Opintotodiste turns your study records from the Koski service into Open Badges 3.0 badges and signs them electronically. You can download the badges, save them in a digital wallet and share them as collections with a link.</p>
+        body: `<p>Opintotodiste turns your study records from the Koski service into Open Badges 3.0 badges and signs them electronically. You can download the badges, save them in a digital wallet and share them with a link, one at a time or as collections.</p>
 <ul>
 <li>Using the service is free of charge both for badge holders and for the verifiers who have been sent a share link from this service.</li>
 <li>Users are responsible for using the service in accordance with good practice.

@@ -16,8 +16,8 @@ The app fetches the study records from Koski's API, keeps them in the server-sid
 them into Open Badges 3.0. The person can then download a badge as a Data Integrity–signed JSON file
 (`ldp_vc`, signed by signing-service with a `did:key`), send it to a wallet over OID4VCI (an SD-JWT VC
 signed by oid4vci-issuer with its own key and bound to the wallet's key), or, after signing in with a
-passkey, put signed badges into collections and share a collection or one badge with a bearer link
-(`/c/<token>`). Employers open the link, and can check a badge on `/verify`, which trusts only our
+passkey, save signed badges, group them into collections and share a collection or one badge with
+bearer links, one per recipient (`/c/<token>`, `/i/<token>`). Employers open the link, and can check a badge on `/verify`, which trusts only our
 signing DID.
 
 ### Trust boundaries
@@ -29,7 +29,7 @@ signing DID.
 | App → signing-service | An unsigned credential | Private network only; **signing-service has no authentication** |
 | App → oid4vci-issuer | An unsigned credential + coordinator token | `OID4VCI_ISSUER_TOKEN` = issuer's `COORDINATOR_TOKEN` |
 | Wallet → oid4vci-issuer | Pre-authorized code, tx code, proof of key | Single-use code, 10-minute offer lifetime |
-| Anyone → `/c/<token>` | Nothing but the token | 24 random bytes per collection; whoever has the link sees the collection |
+| Anyone → `/c/<token>`, `/i/<token>` | Nothing but the token | 24 random bytes per link; whoever has the link sees the collection or the badge |
 
 ### What the credentials say, and what they don't
 
@@ -254,8 +254,8 @@ their Koski link (giving Bob the data, see T1).
 
 **What may happen.** A collection link meant for one employer is forwarded, posted, indexed by a
 search engine, kept in a recruitment system long after the process, or leaks in a `Referer` header.
-Whoever has it sees the badges and the oppijanumero in them. There is one link per collection, with
-no expiry and no record of who opened it.
+Whoever has it sees the badges and the oppijanumero in them. Links have no expiry and no record of
+who opened them (deliberately, U9).
 
 **Probability: Medium.** **Impact: Medium** (study records and a personal identifier of one person).
 
@@ -263,12 +263,12 @@ no expiry and no record of who opened it.
 
 - In place: 192-bit random tokens (unguessable); `X-Robots-Tag: noindex, nofollow` on every `/c/`
   response (from U13); Open Graph previews show only the collection or badge name and the school; the
-  owner can rotate the token ("Uusi jakolinkki"), remove a single badge, delete the collection or the
-  whole account (U15), and every link stops working at once.
-- Planned: `Referrer-Policy: no-referrer` on `/c/` (H3); per-recipient links with labels and
-  revocation (U9); consider an expiry date.
+  owner makes one labelled link per recipient and deletes one without breaking the others (U9), shares
+  a single badge without exposing a collection, removes a badge from a collection, deletes the badge,
+  the collection or the whole account (U15).
+- Planned: `Referrer-Policy: no-referrer` on `/c/` and `/i/` (H3); consider an expiry date.
 
-**What we do if it happens anyway.** The owner rotates the link or deletes the collection; on request
+**What we do if it happens anyway.** The owner deletes the link that leaked; on request
 we do it for them (info@findy.fi). Copies already downloaded cannot be recalled.
 
 ## T8: The next person at a shared computer
@@ -314,7 +314,7 @@ requests (CSRF), or tricking Alice into clicking "delete account" in a hidden fr
   (`__proto__` reaches `Array.prototype`); H3 makes them integers.
 
 **What we do if it happens anyway.** Delete the user's sessions (as account deletion does), ask them to
-check their passkeys and collections, rotate their share links; fix the hole; if collections were read,
+check their passkeys and collections, delete and recreate their share links; fix the hole; if collections were read,
 handle it as a personal data breach (T14).
 
 ## T10: Losing access to an account

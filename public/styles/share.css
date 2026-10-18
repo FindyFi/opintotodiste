@@ -34,3 +34,20 @@
   resize: vertical;
 }
 
+
+.share-subject { margin-top: -.5rem; font-weight: 600; }
+.share-new input { flex: 1; min-width: 12rem; }
+.share-links { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.share-link-item { display: grid; gap: 8px; }
+.share-link-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; }
+.share-link-head .muted { margin-right: auto; font-size: .85rem; }
+.share-link-label {
+  min-height: 36px;
+  padding: 0 .9rem;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--heading);
+  font-weight: 600;
+}
+.share-link-label[aria-pressed=false]:hover { background: var(--surface-soft); }
+.share-link-label[aria-pressed=true] { background: var(--heading); color: var(--bg); }

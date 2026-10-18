@@ -68,13 +68,13 @@ const SHARING_STEPS = {
   fi: [
     { title: 'Kirjaudu pääsyavaimella', body: `Kokoelmat tallentuvat tiliisi. Valitse yläpalkista ${ui('Kirjaudu sisään')}. Jos sinulla ei vielä ole pääsyavainta, voit rekisteröidä sen samasta ikkunasta. Salasanaa ei tarvita: pääsyavain avataan samalla tavalla kuin puhelimesi tai tietokoneesi, esimerkiksi sormenjäljellä.` },
     { title: 'Lisää merkit kokoelmaan', body: `Rastita merkit etusivun listasta ja valitse alapalkista ${ui('Lisää kokoelmaan')}. Valitse kokoelma tai luo uusi. Nimeä se esimerkiksi haettavan työpaikan mukaan.` },
-    { title: 'Avaa jakoikkuna', body: `Valitse <a href="/my/collections">Kokoelmani</a>-sivulla kokoelman kohdalta ${ui('Jaa')}. Ikkunassa on kokoelman linkki ja valmis viesti työnantajalle.` },
+    { title: 'Avaa jakoikkuna', body: `Valitse <a href="/my/collections">Kokoelmani</a>-sivulla kokoelman kohdalta ${ui('Jaa')}. Kirjoita vastaanottajan nimi, esimerkiksi työnantajan, ja valitse ${ui('Luo linkki')}. Jokainen vastaanottaja saa oman linkin. Ikkunassa on myös valmis viesti työnantajalle.` },
     { title: 'Lähetä linkki ja viesti', body: 'Kopioi viesti sähköpostiin tai työhakemukseen. Valitse viestin kieleksi suomi tai englanti sen mukaan, mitä työnantaja lukee.' },
   ],
   en: [
     { title: 'Sign in with a passkey', body: `Collections are saved to your account. Choose ${ui('Sign in')} in the top bar. If you don't have a passkey yet, you can register one in the same dialog. No password is needed: you unlock a passkey the same way you unlock your phone or computer, for example with your fingerprint.` },
     { title: 'Add badges to a collection', body: `Tick the badges on the front page and choose ${ui('Add to collection')} in the bottom bar. Pick a collection or create a new one. You could name it after the job you are applying for.` },
-    { title: 'Open the share dialog', body: `On the <a href="/my/collections">My collections</a> page, choose ${ui('Share')} next to the collection. The dialog holds the collection's link and a ready-made message to the employer.` },
+    { title: 'Open the share dialog', body: `On the <a href="/my/collections">My collections</a> page, choose ${ui('Share')} next to the collection. Type the recipient's name, for example the employer's, and choose ${ui('Create link')}. Each recipient gets a link of their own. The dialog also holds a ready-made message to the employer.` },
     { title: 'Send the link and the message', body: 'Copy the message into an email or a job application. Choose Finnish or English for the message, whichever the employer reads.' },
   ],
 }
@@ -181,7 +181,7 @@ ${steps(SHARING_STEPS.fi)}
   </div>
   <div class="guide-note">
     <h2>Linkki pysyy hallinnassasi</h2>
-    <p>Kun haku on ohi, valitse kokoelman kohdalta ${ui('Uusi jakolinkki')}. Vanha linkki lakkaa silloin toimimasta.</p>
+    <p>Kun haku on ohi, avaa jakoikkuna ja poista sen vastaanottajan linkki. Linkki lakkaa toimimasta, mutta muiden vastaanottajien linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.</p>
   </div>
 </aside>
 </div>`,
@@ -200,7 +200,7 @@ ${steps(SHARING_STEPS.en)}
   </div>
   <div class="guide-note">
     <h2>You stay in control of the link</h2>
-    <p>When the application is over, choose ${ui('New share link')} next to the collection. The old link then stops working.</p>
+    <p>When the application is over, open the share dialog and delete that recipient's link. It stops working, while the other recipients' links keep working. We don't track who opens a link.</p>
   </div>
 </aside>
 </div>`,

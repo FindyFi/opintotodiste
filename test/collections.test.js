@@ -122,7 +122,6 @@ describe('passkeys and collections', needsPostgres, () => {
       const created = await client.json('/collections', { method: 'POST', body: { name: 'Tutkinnot' } })
       assert.equal(created.status, 200, JSON.stringify(created.body))
       assert.equal(created.body.name, 'Tutkinnot')
-      assert.ok(created.body.shareToken)
 
       const listed = await client.json('/collections')
       assert.equal(listed.status, 200)
@@ -161,8 +160,9 @@ describe('passkeys and collections', needsPostgres, () => {
       // that does not exist, which is the point.
       assert.equal((await stranger.client.json(`/collections/${id}`, { method: 'PATCH', body: { name: 'x' } })).status, 404)
       assert.equal((await stranger.client.request(`/collections/${id}`, { method: 'DELETE' })).status, 404)
+      assert.equal((await stranger.client.json(`/share-links?collectionId=${id}`)).status, 404)
       assert.equal(
-        (await stranger.client.json(`/collections/${id}/share-token/regenerate`, { method: 'POST' })).status,
+        (await stranger.client.json('/share-links', { method: 'POST', body: { collectionId: id, label: 'x' } })).status,
         404
       )
       assert.deepEqual((await stranger.client.json('/collections')).body.collections, [])
@@ -186,50 +186,7 @@ describe('passkeys and collections', needsPostgres, () => {
     })
   })
 
-  describe('share links', () => {
-    test('serves a collection publicly, with no session', async () => {
-      const { client } = await signUp()
-      const created = await client.json('/collections', { method: 'POST', body: { name: 'Shared' } })
-
-      const anonymous = createClient(app.baseUrl)
-      const res = await anonymous.request(`/c/${created.body.shareToken}`)
-
-      assert.equal(res.status, 200)
-      const html = await res.text()
-      assert.match(html, /Shared/)
-      assert.match(html, /href="\/employer"/, 'points the employer to the employer page')
-    })
-
-    test('regenerating the token breaks the old link', async () => {
-      const { client } = await signUp()
-      const created = await client.json('/collections', { method: 'POST', body: { name: 'Rotating' } })
-      const oldToken = created.body.shareToken
-
-      const regenerated = await client.json(`/collections/${created.body.id}/share-token/regenerate`, {
-        method: 'POST',
-      })
-      assert.equal(regenerated.status, 200)
-      assert.notEqual(regenerated.body.shareToken, oldToken)
-
-      const anonymous = createClient(app.baseUrl)
-      assert.equal((await anonymous.request(`/c/${oldToken}`)).status, 404)
-      assert.equal((await anonymous.request(`/c/${regenerated.body.shareToken}`)).status, 200)
-    })
-
-    test('404s an item that is not in the shared collection', async () => {
-      const { client } = await signUp()
-      const created = await client.json('/collections', { method: 'POST', body: { name: 'Empty' } })
-
-      const anonymous = createClient(app.baseUrl)
-      const res = await anonymous.request(
-        `/c/${created.body.shareToken}/items/11111111-2222-3333-4444-555555555555/download`
-      )
-
-      assert.equal(res.status, 404)
-    })
-  })
-
-  describe('removing a credential from a collection', () => {
+  describe('saved credentials, collections and share links', () => {
     let db
 
     before(async () => {
@@ -241,59 +198,213 @@ describe('passkeys and collections', needsPostgres, () => {
       await db?.end()
     })
 
-    async function collectionWithItem(client) {
-      const created = await client.json('/collections', { method: 'POST', body: { name: 'Pruned' } })
+    // Saving through the API needs Koski records in the session (see
+    // journey.test.js); a stored snapshot is all these tests need.
+    async function saved(displayName, name = 'Badge') {
       const { rows } = await db.query(
-        'INSERT INTO collection_items (collection_id, credential) VALUES ($1, $2) RETURNING id',
-        [created.body.id, { credentialSubject: { achievement: { name: 'Pruned badge' } } }]
+        `INSERT INTO saved_credentials (owner_id, credential)
+         SELECT id, $2 FROM users WHERE display_name = $1 RETURNING id`,
+        [displayName, { credentialSubject: { achievement: { name } } }]
       )
-      return { collection: created.body, itemId: rows[0].id }
+      return rows[0].id
     }
 
-    test('removes the item and breaks its share link, keeping the collection', async () => {
-      const { client } = await signUp()
-      const { collection, itemId } = await collectionWithItem(client)
+    async function collectionWith(user, credentialIds, name = 'Hakemus') {
+      const created = await user.client.json('/collections', { method: 'POST', body: { name } })
+      const added = await user.client.json(`/collections/${created.body.id}/items`, {
+        method: 'POST',
+        body: { credentialIds },
+      })
+      assert.equal(added.status, 200)
+      assert.ok(added.body.results.every((r) => !r.error), JSON.stringify(added.body))
+      return created.body
+    }
 
-      const removed = await client.request(`/collections/${collection.id}/items/${itemId}`, { method: 'DELETE' })
-      assert.equal(removed.status, 204)
+    async function link(user, target, label = 'Yritys Oy') {
+      const created = await user.client.json('/share-links', { method: 'POST', body: { ...target, label } })
+      assert.equal(created.status, 200, JSON.stringify(created.body))
+      return created.body
+    }
 
-      assert.deepEqual((await client.json(`/collections/${collection.id}/items`)).body.items, [])
-      const anonymous = createClient(app.baseUrl)
-      assert.equal((await anonymous.request(`/c/${collection.shareToken}/items/${itemId}`)).status, 404)
-      assert.equal((await anonymous.request(`/c/${collection.shareToken}`)).status, 200)
+    const anonymous = () => createClient(app.baseUrl)
+
+    test('serves a collection publicly through a share link, with no session', async () => {
+      const user = await signUp()
+      const collection = await collectionWith(user, [await saved(user.displayName, 'Tradenomi')], 'Shared')
+      const { path, label } = await link(user, { collectionId: collection.id })
+      assert.match(path, /^\/c\/[\w-]{32}$/)
+      assert.equal(label, 'Yritys Oy')
+
+      const res = await anonymous().request(path)
+      assert.equal(res.status, 200)
+      const html = await res.text()
+      assert.match(html, /Shared/)
+      assert.match(html, /Tradenomi/)
+      assert.match(html, /href="\/employer"/, 'points the employer to the employer page')
     })
 
-    test('404s a stranger, an unknown item and a malformed id', async () => {
+    test('gives each recipient a link of their own, and deleting one leaves the others', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const collection = await collectionWith(user, [credentialId])
+      const first = await link(user, { collectionId: collection.id }, 'Yritys A')
+      const second = await link(user, { collectionId: collection.id }, 'Yritys B')
+      assert.notEqual(first.path, second.path)
+
+      const listed = await user.client.json(`/share-links?collectionId=${collection.id}`)
+      assert.deepEqual(listed.body.links.map((l) => l.label), ['Yritys B', 'Yritys A'])
+
+      assert.equal((await user.client.request(`/share-links/${first.id}`, { method: 'DELETE' })).status, 204)
+      assert.equal((await anonymous().request(first.path)).status, 404)
+      assert.equal((await anonymous().request(`${first.path}/items/${credentialId}`)).status, 404)
+      assert.equal((await anonymous().request(second.path)).status, 200)
+      assert.equal((await anonymous().request(`${second.path}/items/${credentialId}`)).status, 200)
+      assert.deepEqual((await user.client.json(`/share-links?collectionId=${collection.id}`)).body.links.map((l) => l.label), ['Yritys B'])
+    })
+
+    test('records nothing about who opens a link', async () => {
+      const { rows } = await db.query(
+        "SELECT column_name FROM information_schema.columns WHERE table_name = 'share_links' ORDER BY column_name"
+      )
+      assert.deepEqual(rows.map((r) => r.column_name), ['collection_id', 'created_at', 'credential_id', 'id', 'label', 'token'])
+    })
+
+    test('shares one credential without any collection', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName, 'Yksittäinen')
+      const { path } = await link(user, { credentialId })
+      assert.match(path, /^\/i\//)
+
+      const page = await anonymous().request(path)
+      assert.equal(page.status, 200)
+      const html = await page.text()
+      assert.match(html, /Yksittäinen/)
+      assert.match(html, new RegExp(`href="${path}/download"`))
+      assert.ok(html.includes(`href="/verify?url=${encodeURIComponent(`${path}/download`)}"`))
+
+      const download = await anonymous().request(`${path}/download`)
+      assert.equal(download.status, 200)
+      assert.equal((await download.json()).credentialSubject.achievement.name, 'Yksittäinen')
+    })
+
+    test('requires a recipient name, and keeps it short', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      for (const label of ['', '   ', 'x'.repeat(101)]) {
+        const res = await user.client.json('/share-links', { method: 'POST', body: { credentialId, label } })
+        assert.equal(res.status, 400, label)
+      }
+    })
+
+    test('keeps one account out of another account’s credentials and links', async () => {
       const owner = await signUp()
       const stranger = await signUp()
-      const { collection, itemId } = await collectionWithItem(owner.client)
+      const credentialId = await saved(owner.displayName)
+      const ownLink = await link(owner, { credentialId })
 
+      assert.equal((await stranger.client.json(`/share-links?credentialId=${credentialId}`)).status, 404)
       assert.equal(
-        (await stranger.client.request(`/collections/${collection.id}/items/${itemId}`, { method: 'DELETE' })).status,
+        (await stranger.client.json('/share-links', { method: 'POST', body: { credentialId, label: 'x' } })).status,
         404
       )
-      assert.equal(
-        (
-          await owner.client.request(`/collections/${collection.id}/items/11111111-2222-3333-4444-555555555555`, {
-            method: 'DELETE',
-          })
-        ).status,
-        404
-      )
-      assert.equal(
-        (await owner.client.request(`/collections/${collection.id}/items/not-a-uuid`, { method: 'DELETE' })).status,
-        404
-      )
-      assert.equal((await owner.client.json(`/collections/${collection.id}/items`)).body.items.length, 1)
+      assert.equal((await stranger.client.request(`/share-links/${ownLink.id}`, { method: 'DELETE' })).status, 404)
+      assert.equal((await stranger.client.request(`/saved-credentials/${credentialId}`, { method: 'DELETE' })).status, 404)
+      assert.deepEqual((await stranger.client.json('/saved-credentials')).body.credentials, [])
+
+      // Nor can a stranger put someone else's credential into their own collection.
+      const theirs = await stranger.client.json('/collections', { method: 'POST', body: { name: 'Mine' } })
+      const added = await stranger.client.json(`/collections/${theirs.body.id}/items`, {
+        method: 'POST',
+        body: { credentialIds: [credentialId] },
+      })
+      assert.match(added.body.results[0].error, /not found/i)
+      assert.equal((await anonymous().request(ownLink.path)).status, 200)
     })
 
-    test('refuses a caller who is not signed in', async () => {
-      const { client } = await signUp()
-      const { collection, itemId } = await collectionWithItem(client)
-      const { status } = await createClient(app.baseUrl).request(`/collections/${collection.id}/items/${itemId}`, {
-        method: 'DELETE',
-      })
-      assert.equal(status, 401)
+    test('404s an item that is not in the shared collection, and malformed ids', async () => {
+      const user = await signUp()
+      const outside = await saved(user.displayName)
+      const collection = await collectionWith(user, [])
+      const { path } = await link(user, { collectionId: collection.id })
+
+      assert.equal((await anonymous().request(`${path}/items/${outside}`)).status, 404)
+      assert.equal((await anonymous().request(`${path}/items/${outside}/download`)).status, 404)
+      assert.equal((await anonymous().request(`${path}/items/not-a-uuid`)).status, 404)
+      assert.equal((await user.client.request('/share-links/not-a-uuid', { method: 'DELETE' })).status, 404)
+      assert.equal((await user.client.json('/share-links?credentialId=not-a-uuid')).status, 404)
+      assert.equal((await user.client.json('/collections/not-a-uuid/items')).status, 404)
+    })
+
+    test('removing a credential from a collection keeps it saved and its own links working', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const collection = await collectionWith(user, [credentialId])
+      const collectionLink = await link(user, { collectionId: collection.id })
+      const ownLink = await link(user, { credentialId })
+
+      const removed = await user.client.request(`/collections/${collection.id}/items/${credentialId}`, { method: 'DELETE' })
+      assert.equal(removed.status, 204)
+
+      assert.deepEqual((await user.client.json(`/collections/${collection.id}/items`)).body.items, [])
+      assert.equal((await user.client.json('/saved-credentials')).body.credentials.length, 1)
+      assert.equal((await anonymous().request(`${collectionLink.path}/items/${credentialId}`)).status, 404)
+      assert.equal((await anonymous().request(collectionLink.path)).status, 200)
+      assert.equal((await anonymous().request(ownLink.path)).status, 200)
+    })
+
+    test('deleting a saved credential takes it out of every collection and breaks its links', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const kept = await saved(user.displayName, 'Kept')
+      const a = await collectionWith(user, [credentialId, kept], 'A')
+      const b = await collectionWith(user, [credentialId], 'B')
+      const ownLink = await link(user, { credentialId })
+      const collectionLink = await link(user, { collectionId: a.id })
+
+      assert.equal((await user.client.request(`/saved-credentials/${credentialId}`, { method: 'DELETE' })).status, 204)
+
+      assert.deepEqual((await user.client.json(`/collections/${a.id}/items`)).body.items.map((i) => i.id), [kept])
+      assert.deepEqual((await user.client.json(`/collections/${b.id}/items`)).body.items, [])
+      assert.equal((await anonymous().request(ownLink.path)).status, 404)
+      assert.equal((await anonymous().request(`${collectionLink.path}/items/${credentialId}`)).status, 404)
+      assert.equal((await anonymous().request(`${collectionLink.path}/items/${kept}`)).status, 200)
+    })
+
+    test('deleting a collection breaks its links and keeps the credentials', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const collection = await collectionWith(user, [credentialId])
+      const { path } = await link(user, { collectionId: collection.id })
+
+      assert.equal((await user.client.request(`/collections/${collection.id}`, { method: 'DELETE' })).status, 204)
+      assert.equal((await anonymous().request(path)).status, 404)
+      assert.deepEqual((await user.client.json('/saved-credentials')).body.credentials.map((c) => c.id), [credentialId])
+    })
+
+    test('adding a credential to a collection twice keeps one copy', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const collection = await collectionWith(user, [credentialId])
+      await user.client.json(`/collections/${collection.id}/items`, { method: 'POST', body: { credentialIds: [credentialId] } })
+
+      assert.equal((await user.client.json(`/collections/${collection.id}/items`)).body.items.length, 1)
+      assert.equal((await user.client.json('/collections')).body.collections[0].itemCount, 1)
+    })
+
+    test('refuses callers who are not signed in', async () => {
+      const user = await signUp()
+      const credentialId = await saved(user.displayName)
+      const collection = await collectionWith(user, [credentialId])
+      const client = anonymous()
+      assert.equal((await client.json('/saved-credentials')).status, 401)
+      assert.equal((await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })).status, 401)
+      assert.equal((await client.request(`/saved-credentials/${credentialId}`, { method: 'DELETE' })).status, 401)
+      assert.equal((await client.json(`/share-links?credentialId=${credentialId}`)).status, 401)
+      assert.equal((await client.json('/share-links', { method: 'POST', body: { credentialId, label: 'x' } })).status, 401)
+      assert.equal(
+        (await client.request(`/collections/${collection.id}/items/${credentialId}`, { method: 'DELETE' })).status,
+        401
+      )
     })
   })
 
@@ -319,19 +430,23 @@ describe('passkeys and collections', needsPostgres, () => {
       return rows[0].n
     }
 
-    test('deletes the user, passkeys, collections, items and sessions, and breaks the share links', async () => {
+    test('deletes the user, passkeys, saved credentials, collections, links and sessions', async () => {
       const { client, authenticator, displayName } = await signUp()
       const userId = await userIdOf(displayName)
       const created = await client.json('/collections', { method: 'POST', body: { name: 'Doomed' } })
-      // Adding through the API needs Koski records in the session; a stored
+      // Saving through the API needs Koski records in the session; a stored
       // snapshot is all the cascade cares about.
-      const { rows } = await db.query(
-        'INSERT INTO collection_items (collection_id, credential) VALUES ($1, $2) RETURNING id',
-        [created.body.id, { credentialSubject: { achievement: { name: 'Doomed badge' } } }]
-      )
-      const token = created.body.shareToken
+      const { rows } = await db.query('INSERT INTO saved_credentials (owner_id, credential) VALUES ($1, $2) RETURNING id', [
+        userId,
+        { credentialSubject: { achievement: { name: 'Doomed badge' } } },
+      ])
+      const credentialId = rows[0].id
+      await client.json(`/collections/${created.body.id}/items`, { method: 'POST', body: { credentialIds: [credentialId] } })
+      const collectionLink = (await client.json('/share-links', { method: 'POST', body: { collectionId: created.body.id, label: 'A' } })).body
+      const credentialLink = (await client.json('/share-links', { method: 'POST', body: { credentialId, label: 'B' } })).body
       const anonymous = createClient(app.baseUrl)
-      assert.equal((await anonymous.request(`/c/${token}/items/${rows[0].id}`)).status, 200)
+      assert.equal((await anonymous.request(`${collectionLink.path}/items/${credentialId}`)).status, 200)
+      assert.equal((await anonymous.request(credentialLink.path)).status, 200)
 
       // A second signed-in browser for the same account.
       const otherBrowser = createClient(app.baseUrl)
@@ -346,12 +461,17 @@ describe('passkeys and collections', needsPostgres, () => {
 
       assert.equal(await userIdOf(displayName), undefined)
       assert.equal(await count('SELECT COUNT(*)::int AS n FROM passkey_credentials WHERE user_id = $1', userId), 0)
+      assert.equal(await count('SELECT COUNT(*)::int AS n FROM saved_credentials WHERE owner_id = $1', userId), 0)
       assert.equal(await count('SELECT COUNT(*)::int AS n FROM collections WHERE owner_id = $1', userId), 0)
       assert.equal(await count('SELECT COUNT(*)::int AS n FROM collection_items WHERE collection_id = $1', created.body.id), 0)
+      assert.equal(
+        await count('SELECT COUNT(*)::int AS n FROM share_links WHERE id = ANY($1)', [collectionLink.id, credentialLink.id]),
+        0
+      )
       assert.equal(await count("SELECT COUNT(*)::int AS n FROM session WHERE sess->>'userId' = $1", userId), 0)
 
-      assert.equal((await anonymous.request(`/c/${token}`)).status, 404)
-      assert.equal((await anonymous.request(`/c/${token}/items/${rows[0].id}`)).status, 404)
+      assert.equal((await anonymous.request(collectionLink.path)).status, 404)
+      assert.equal((await anonymous.request(credentialLink.path)).status, 404)
       assert.equal((await client.json('/auth/me')).body.loggedIn, false)
       assert.equal((await otherBrowser.json('/auth/me')).body.loggedIn, false)
       assert.equal((await client.json('/collections')).status, 401)
@@ -373,12 +493,13 @@ describe('passkeys and collections', needsPostgres, () => {
     test('leaves other accounts alone', async () => {
       const keeper = await signUp()
       const kept = await keeper.client.json('/collections', { method: 'POST', body: { name: 'Kept' } })
+      const keptLink = await keeper.client.json('/share-links', { method: 'POST', body: { collectionId: kept.body.id, label: 'A' } })
       const leaver = await signUp()
 
       await leaver.client.json('/auth/account', { method: 'DELETE' })
 
       assert.equal((await keeper.client.json('/auth/me')).body.loggedIn, true)
-      assert.equal((await createClient(app.baseUrl).request(`/c/${kept.body.shareToken}`)).status, 200)
+      assert.equal((await createClient(app.baseUrl).request(keptLink.body.path)).status, 200)
     })
 
     test('refuses a caller who is not signed in', async () => {

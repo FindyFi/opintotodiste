@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test, { after, before, describe } from 'node:test'
 import pg from 'pg'
 
@@ -122,10 +123,12 @@ describe('the running app', needsPostgres, () => {
     assert.match(html, /<article lang="en">/)
   })
 
-  test('404s an unknown shared collection', async () => {
-    const res = await fetch(`${app.baseUrl}/c/not-a-real-token`)
-    assert.equal(res.status, 404)
-    assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow', 'share links stay out of search engines')
+  test('404s an unknown shared collection or credential', async () => {
+    for (const path of ['/c/not-a-real-token', '/i/not-a-real-token', '/i/not-a-real-token/download']) {
+      const res = await fetch(`${app.baseUrl}${path}`)
+      assert.equal(res.status, 404, path)
+      assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow', 'share links stay out of search engines')
+    }
   })
 })
 
@@ -141,12 +144,56 @@ describe('schema bootstrapping', needsPostgres, () => {
       )
       const tables = rows.map((r) => r.table_name)
 
-      for (const expected of ['users', 'passkey_credentials', 'collections', 'collection_items']) {
+      for (const expected of ['users', 'passkey_credentials', 'collections', 'saved_credentials', 'collection_items', 'share_links']) {
         assert.ok(tables.includes(expected), `expected table ${expected}, saw ${tables.join(', ')}`)
       }
     } finally {
       await client.end().catch(() => {})
       await app.stop()
+    }
+  })
+
+  test('moves pre-U9 collection items into saved credentials, keeping their ids', async () => {
+    // A schema of its own, so the shared test database is left alone.
+    const client = new pg.Client({ connectionString: databaseUrl() })
+    const schema = `u9_migration_${process.pid}`
+    const user = '00000000-0000-0000-0000-000000000001'
+    const collection = '00000000-0000-0000-0000-0000000000c1'
+    const item = '00000000-0000-0000-0000-0000000000a1'
+    try {
+      await client.connect()
+      await client.query(`CREATE SCHEMA ${schema}; SET search_path TO ${schema}`)
+      // The tables as they were before U9 (only what the migration touches).
+      await client.query(`
+        CREATE TABLE users (id UUID PRIMARY KEY DEFAULT gen_random_uuid(), display_name TEXT NOT NULL,
+          webauthn_user_id BYTEA NOT NULL UNIQUE, created_at TIMESTAMPTZ NOT NULL DEFAULT now());
+        CREATE TABLE collections (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE, name TEXT NOT NULL,
+          share_token TEXT NOT NULL UNIQUE, created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+          updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+        CREATE TABLE collection_items (id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+          collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+          credential JSONB NOT NULL, added_at TIMESTAMPTZ NOT NULL DEFAULT now());
+        INSERT INTO users (id, display_name, webauthn_user_id) VALUES ('${user}', 'Old', '\\x01');
+        INSERT INTO collections (id, owner_id, name, share_token) VALUES ('${collection}', '${user}', 'Old', 'tok');
+        INSERT INTO collection_items (id, collection_id, credential) VALUES ('${item}', '${collection}', '{"old": true}');
+      `)
+      const schemaSql = await readFile(new URL('../src/schema.sql', import.meta.url), 'utf8')
+      await client.query(schemaSql)
+      await client.query(schemaSql)
+
+      const { rows: saved } = await client.query('SELECT id, owner_id, credential FROM saved_credentials')
+      assert.deepEqual(saved, [{ id: item, owner_id: user, credential: { old: true } }])
+      const { rows: items } = await client.query('SELECT collection_id, credential_id FROM collection_items')
+      assert.deepEqual(items, [{ collection_id: collection, credential_id: item }])
+      const { rows: columns } = await client.query(
+        `SELECT column_name FROM information_schema.columns WHERE table_schema = $1 AND table_name = 'collections'`,
+        [schema]
+      )
+      assert.ok(!columns.some((c) => c.column_name === 'share_token'))
+    } finally {
+      await client.query(`DROP SCHEMA IF EXISTS ${schema} CASCADE`).catch(() => {})
+      await client.end().catch(() => {})
     }
   })
 

@@ -202,39 +202,70 @@ describe('the Koski journey', needsPostgres, () => {
     assert.equal(added.status, 200, JSON.stringify(added.body))
     const [result] = added.body.results
     assert.ok(!result.error, `adding the item failed: ${result.error}`)
-    assert.ok(result.itemId)
+    assert.ok(result.credentialId)
     assert.ok(result.signed.proof)
 
     const listed = await client.json('/collections')
     assert.equal(listed.body.collections[0].itemCount, 1)
 
+    // Saving the same record again (here: straight to the saved credentials)
+    // finds the copy already saved.
+    const again = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+    assert.equal(again.body.results[0].credentialId, result.credentialId)
+    assert.equal((await client.json('/saved-credentials')).body.credentials.length, 1)
+
+    const link = await client.json('/share-links', {
+      method: 'POST',
+      body: { collectionId: collection.body.id, label: 'Työnantaja' },
+    })
+    assert.equal(link.status, 200, JSON.stringify(link.body))
+    const base = link.body.path
+
     // The shared page and the item download are public, no session at all.
     const anonymous = createClient(app.baseUrl)
-    const page = await anonymous.request(`/c/${collection.body.shareToken}`)
+    const page = await anonymous.request(base)
     assert.equal(page.status, 200)
     const pageHtml = await page.text()
-    const verifyLink = `/verify?url=${encodeURIComponent(`/c/${collection.body.shareToken}/items/${result.itemId}/download`)}`
+    const verifyLink = `/verify?url=${encodeURIComponent(`${base}/items/${result.credentialId}/download`)}`
     assert.ok(pageHtml.includes(`href="${verifyLink}"`), 'each shared item should link to /verify')
 
-    const download = await anonymous.request(
-      `/c/${collection.body.shareToken}/items/${result.itemId}/download`
-    )
+    const download = await anonymous.request(`${base}/items/${result.credentialId}/download`)
     assert.equal(download.status, 200)
     assert.ok((await download.json()).proof, 'the shared credential should still carry its proof')
 
     // The public item page, linked from the shared collection page.
-    const itemUrl = `/c/${collection.body.shareToken}/items/${result.itemId}`
+    const itemUrl = `${base}/items/${result.credentialId}`
     assert.match(pageHtml, new RegExp(`href="${itemUrl}"`))
     const itemPage = await anonymous.request(itemUrl)
     assert.equal(itemPage.status, 200)
     const html = await itemPage.text()
     assert.match(html, new RegExp(`href="${itemUrl}/download"`))
     assert.ok(html.includes(`href="${verifyLink}"`), 'the item page should verify its own download')
-    assert.equal((await anonymous.request(`/c/${collection.body.shareToken}/items/not-a-uuid`)).status, 404)
+    assert.equal((await anonymous.request(`${base}/items/not-a-uuid`)).status, 404)
 
-    // Regenerating the token revokes the item page along with the collection.
-    await client.json(`/collections/${collection.body.id}/share-token/regenerate`, { method: 'POST' })
+    // Deleting the link revokes the item page along with the collection.
+    await client.request(`/share-links/${link.body.id}`, { method: 'DELETE' })
+    assert.equal((await anonymous.request(base)).status, 404)
     assert.equal((await anonymous.request(itemUrl)).status, 404)
+  })
+
+  test('saves one credential and shares it without a collection', async () => {
+    const client = createClient(app.baseUrl)
+    const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
+    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: 'Single' } })
+    await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
+    await loadCredentials(client)
+
+    const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+    assert.equal(saved.status, 200)
+    const [result] = saved.body.results
+    assert.ok(!result.error, result.error)
+    assert.deepEqual((await client.json('/collections')).body.collections, [])
+
+    const link = await client.json('/share-links', { method: 'POST', body: { credentialId: result.credentialId, label: 'A' } })
+    const download = await createClient(app.baseUrl).request(`${link.body.path}/download`)
+    assert.equal(download.status, 200)
+    assert.deepEqual((await download.json()).proof, result.signed.proof)
   })
 
   describe('sending a collection item to a wallet', () => {
@@ -253,14 +284,14 @@ describe('the Koski journey', needsPostgres, () => {
         method: 'POST',
         body: { indices: [0] },
       })
-      return { collection: collection.body, itemId: added.body.results[0].itemId, signed: added.body.results[0].signed }
+      return { collection: collection.body, itemId: added.body.results[0].credentialId, signed: added.body.results[0].signed }
     }
 
     test('re-issues the stored credential as a VCDM 2.0 offer for its owner', async () => {
       const client = await signUp('Owner')
       const { collection, itemId, signed } = await collectionWithItem(client)
 
-      const offer = await client.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      const offer = await client.json(`/saved-credentials/${itemId}/offer`, { method: 'POST' })
       assert.equal(offer.status, 200, JSON.stringify(offer.body))
       assert.match(offer.body.offerUri, /^openid-credential-offer:\/\//)
       assert.match(offer.body.qrDataUrl, /^data:image\/png;base64,/)
@@ -288,10 +319,10 @@ describe('the Koski journey', needsPostgres, () => {
 
     test('404s for someone who does not own the collection', async () => {
       const owner = await signUp('Owner 2')
-      const { collection, itemId } = await collectionWithItem(owner)
+      const { itemId } = await collectionWithItem(owner)
       const stranger = await signUp('Stranger 2')
 
-      const res = await stranger.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      const res = await stranger.json(`/saved-credentials/${itemId}/offer`, { method: 'POST' })
       assert.equal(res.status, 404)
     })
 
@@ -300,9 +331,10 @@ describe('the Koski journey', needsPostgres, () => {
       const { collection, itemId } = await collectionWithItem(owner)
 
       const anonymous = createClient(app.baseUrl)
-      const res = await anonymous.json(`/collections/${collection.id}/items/${itemId}/offer`, { method: 'POST' })
+      const res = await anonymous.json(`/saved-credentials/${itemId}/offer`, { method: 'POST' })
       assert.equal(res.status, 401)
-      assert.equal((await anonymous.request(`/c/${collection.shareToken}/items/${itemId}/offer`, { method: 'POST' })).status, 404)
+      const link = await owner.json('/share-links', { method: 'POST', body: { collectionId: collection.id, label: 'A' } })
+      assert.equal((await anonymous.request(`${link.body.path}/items/${itemId}/offer`, { method: 'POST' })).status, 404)
     })
 
     test('shows the award date on the shared page', async () => {
@@ -310,7 +342,8 @@ describe('the Koski journey', needsPostgres, () => {
       const { collection, signed } = await collectionWithItem(owner)
       const [y, m, d] = signed.issuanceDate.slice(0, 10).split('-')
 
-      const page = await createClient(app.baseUrl).request(`/c/${collection.shareToken}`)
+      const link = await owner.json('/share-links', { method: 'POST', body: { collectionId: collection.id, label: 'A' } })
+      const page = await createClient(app.baseUrl).request(link.body.path)
       assert.match(await page.text(), new RegExp(`${Number(d)}\\.${Number(m)}\\.${y}`))
     })
   })

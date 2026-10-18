@@ -336,33 +336,26 @@ function showCollectionResults(results) {
   detailDialog.showModal()
 }
 
-// "Jaa" needs no choice from the user. One credential goes into the user's
-// "Jaetut todisteet" collection (made on first use), so sharing single
-// credentials doesn't litter the list; several make a new collection named
-// after the date. Both can be renamed on the collections page.
-const SHARED_ITEMS_COLLECTION = 'Jaetut todisteet'
-async function createCollectionFor(indices) {
-  let name = `Jaettu ${new Date().toLocaleDateString('fi-FI')}`
-  if (indices.length === 1) {
-    // One credential: all of those live in one collection, found again by name.
-    name = SHARED_ITEMS_COLLECTION
-    const listed = await fetch('/collections')
-    const existing = (await listed.json().catch(() => ({}))).collections?.find((c) => c.name === name)
-    if (existing) return existing.id
-  }
-  const res = await fetch('/collections', {
+// "Jaa" needs no choice from the user. One credential is saved to the user's
+// credentials and shared on its own; several make a new collection named after
+// the date, which can be renamed on the collections page.
+async function postJson(url, body) {
+  const res = await fetch(url, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ name }),
+    body: JSON.stringify(body),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Could not create the collection')
-  return data.id
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
 }
 
-// Signs and adds the selection to a collection the user picks or creates.
-// With `share`, skips the picker (a new collection) and ends in the share dialog instead of the
-// "added" results (unless some item failed, which the results then show).
+const createCollectionFor = () =>
+  postJson('/collections', { name: `Jaettu ${new Date().toLocaleDateString('fi-FI')}` }).then((data) => data.id)
+
+// Signs and saves the selection: to a collection the user picks or creates, or
+// with `share`, straight into the share dialog (one credential on its own,
+// several in a new collection). Failed items show in the results instead.
 async function bulkAddToCollection({ share = false } = {}) {
   const indices = [...selectedIndices].sort((a, b) => a - b)
   if (!indices.length) return
@@ -372,25 +365,21 @@ async function bulkAddToCollection({ share = false } = {}) {
   button.classList.add('busy')
   try {
     await Auth.ensureLoggedIn()
-    const collectionId = share ? await createCollectionFor(indices) : await pickOrCreateCollection()
-    if (!collectionId) return
+    const single = share && indices.length === 1
+    const collectionId = single ? null : share ? await createCollectionFor() : await pickOrCreateCollection()
+    if (!single && !collectionId) return
 
-    const res = await fetch(`/collections/${collectionId}/items`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ indices }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Could not add to the collection')
+    const data = await postJson(single ? '/saved-credentials' : `/collections/${collectionId}/items`, { indices })
 
     data.results.forEach((r) => {
       if (r.signed) credentials[r.index].signed = r.signed
     })
     selectedIndices.clear()
     renderTable()
-    if (share && data.results.every((r) => !r.error)) {
-      await Share.open({ collectionId, itemId: data.results.length === 1 ? data.results[0].itemId : undefined })
-    } else showCollectionResults(data.results)
+    if (single && data.results[0].error) showError(data.results[0].error)
+    else if (single) await Share.open({ credentialId: data.results[0].credentialId })
+    else if (share && data.results.every((r) => !r.error)) await Share.open({ collectionId })
+    else showCollectionResults(data.results)
   } catch (err) {
     if (err.message !== 'cancelled') showError(err.message)
   } finally {

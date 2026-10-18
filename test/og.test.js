@@ -59,7 +59,7 @@ describe('Open Graph tags', () => {
   })
 
   test('a shared item carries its name and issuer, nothing else', () => {
-    const html = views.sharedItemPage({ token: 'tok', itemId: 'i1', credential: credential('Tradenomi') })
+    const html = views.sharedItemPage({ path: '/c/tok/items/i1', credential: credential('Tradenomi') })
     assert.equal(tag(html, 'og:title'), 'Tradenomi – Opintotodiste')
     assert.match(tag(html, 'og:description'), /myöntäjä Testikoulu/)
     assert.equal(tag(html, 'og:url'), 'https://todiste.example/c/tok/items/i1')
@@ -74,7 +74,7 @@ describe('Open Graph tags', () => {
 
   test('escapes names with quotes and angle brackets', () => {
     const name = `"><script>alert(1)</script> & 'x'`
-    const html = views.sharedItemPage({ token: 'tok', itemId: 'i1', credential: credential(name, `"Koulu" <b>`) })
+    const html = views.sharedItemPage({ path: '/c/tok/items/i1', credential: credential(name, `"Koulu" <b>`) })
     const metas = html.split('\n').filter((line) => line.startsWith('<meta property="og:') || line.startsWith('<meta name="description"'))
     assert.ok(metas.length > 5)
     for (const line of metas) assert.doesNotMatch(line.slice(0, -2).replace(/^<meta \w+="[^"]*" content="/, ''), /["<>]/, line)
