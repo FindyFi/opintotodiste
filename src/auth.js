@@ -193,8 +193,11 @@ export async function deleteAccount(userId) {
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
-    await client.query("DELETE FROM session WHERE sess->>'userId' = $1", [userId])
+    // Users first: the cascade then locks the tables in the order schema.sql
+    // creates their indexes, and session last, as runSchema does. The other
+    // way round, an instance booting meanwhile deadlocks with this.
     const { rows } = await client.query('DELETE FROM users WHERE id = $1 RETURNING webauthn_user_id', [userId])
+    await client.query("DELETE FROM session WHERE sess->>'userId' = $1", [userId])
     await client.query('COMMIT')
     if (!rows[0]) return null
     return { rpId: rpID, userId: Buffer.from(rows[0].webauthn_user_id).toString('base64url') }
