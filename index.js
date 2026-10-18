@@ -158,11 +158,12 @@ async function credentialsResponse(req) {
   const stored = req.session.userId ? await collections.listSavedCredentials(req.session.userId) : []
   const byKey = new Map(stored.map((item) => [credentialKey(item.credential), item]))
   const shown = new Set()
-  const entries = records.map((record, index) => {
+  const entries = records.flatMap((record, index) => {
+    if (record.removed) return []
     const item = byKey.get(credentialKey(record.signed ?? record))
-    if (!item || shown.has(item.id)) return { ...record, index }
+    if (!item || shown.has(item.id)) return [{ ...record, index }]
     shown.add(item.id)
-    return { ...storedEntry(item), index }
+    return [{ ...storedEntry(item), index }]
   })
   return {
     personName: req.session.personName,
@@ -211,9 +212,18 @@ app.delete('/credentials', (req, res) => {
   })
 })
 
+// "Poista" on a record from Koski takes it off the list until the next import.
+// It stays in the session, flagged, so the other records keep their positions.
+app.delete('/credentials/:index', (req, res) => {
+  const record = sessionRecord(req, req.params.index)
+  if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
+  record.removed = true
+  res.status(204).end()
+})
+
 // Re-runs the converter against the already-fetched Koski data in the
 // requested language (e.g. when the UI language switcher changes), without
-// another round trip to Koski. Signed statuses carry over by position, since
+// another round trip to Koski. Signed and removed statuses carry over by position, since
 // convert() produces the same records in the same order regardless of lang.
 app.post('/credentials/lang', async (req, res) => {
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
@@ -226,6 +236,7 @@ app.post('/credentials/lang', async (req, res) => {
   req.session.credentials = records.map((record, index) => ({
     ...record,
     signed: req.session.credentials?.[index]?.signed ?? null,
+    ...(req.session.credentials?.[index]?.removed ? { removed: true } : {}),
   }))
 
   res.json(await credentialsResponse(req))

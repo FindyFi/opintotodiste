@@ -373,6 +373,33 @@ describe('the Koski journey', needsPostgres, () => {
       assert.ok(entries[0].signed.proof, 'the session keeps the signature')
     })
 
+    test('Poista takes a record from Koski off the list until the next import', async () => {
+      const client = createClient(app.baseUrl)
+      const { credentials: fetched } = await loadCredentials(client)
+      assert.equal((await client.request('/credentials/1', { method: 'DELETE' })).status, 204)
+      assert.deepEqual((await list(client)).map((e) => e.index), fetched.map((_, i) => i).filter((i) => i !== 1))
+
+      // The other rows keep their positions, and a language switch keeps it off.
+      const en = await client.json('/credentials/lang', { method: 'POST', body: { lang: 'en' } })
+      assert.deepEqual(en.body.credentials.map((e) => e.index), fetched.map((_, i) => i).filter((i) => i !== 1))
+
+      await loadCredentials(client)
+      assert.equal((await list(client)).length, fetched.length)
+      assert.equal((await client.request('/credentials/99', { method: 'DELETE' })).status, 404)
+    })
+
+    test('Poista on a stored row deletes the stored copy and takes the record off the list', async () => {
+      const client = await signUp('Siivous')
+      const { credentials: fetched } = await loadCredentials(client)
+      const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+      await client.request(`/saved-credentials/${saved.body.results[0].credentialId}`, { method: 'DELETE' })
+      await client.request('/credentials/0', { method: 'DELETE' })
+
+      const entries = await list(client)
+      assert.equal(entries.length, fetched.length - 1)
+      assert.ok(entries.every((e) => e.index !== 0 && !e.credentialId))
+    })
+
     test('lists every share link with what it points to, for its owner only', async () => {
       const client = await signUp('Jakaja')
       await loadCredentials(client)

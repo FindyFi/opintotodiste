@@ -235,16 +235,14 @@ function showList(data) {
 }
 
 // The detail dialog's actions for one entry. Each stores a signed-in user's
-// record behind the scenes; only a stored credential can be deleted (a
-// session record would come back with the next import).
+// record behind the scenes.
 function detailActions(entry) {
-  const actions = [
+  return [
     { label: 'Lataa', run: () => download(entry) },
     { label: 'Jaa', run: () => shareOne(entry) },
     { label: 'Lisää lompakkoon', run: () => walletOne(entry), primary: true },
+    { label: 'Poista', run: () => deleteEntry(entry), danger: true },
   ]
-  if (entry.credentialId) actions.push({ label: 'Poista', run: () => deleteStored(entry), danger: true })
-  return actions
 }
 
 async function download(entry) {
@@ -280,10 +278,22 @@ async function walletOne(entry) {
   if (offer.credentialId) await reloadList()
 }
 
-async function deleteStored(entry) {
-  if (!confirm(`Poistetaanko "${entryName(entry)}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`)) return
-  const res = await fetch(`/saved-credentials/${entry.credentialId}`, { method: 'DELETE' })
+async function deleteRequest(url) {
+  const res = await fetch(url, { method: 'DELETE' })
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
+}
+
+// A stored credential is deleted everywhere, links included; a record from
+// Koski only leaves the list, and the next import brings it back. A row can be
+// both.
+async function deleteEntry(entry) {
+  const name = entryName(entry)
+  const question = entry.credentialId
+    ? `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`
+    : `Poistetaanko "${name}" listalta? Se palaa, kun haet Koski-tiedot uudelleen.`
+  if (!confirm(question)) return
+  if (entry.credentialId) await deleteRequest(`/saved-credentials/${entry.credentialId}`)
+  if (entry.index !== undefined) await deleteRequest(`/credentials/${entry.index}`)
   detailDialog.close()
   await reloadList()
 }
@@ -368,10 +378,12 @@ function pickOrCreateCollection() {
       if (i === 0) input.checked = true
       choices.append(el('p', {}, el('label', {}, [input, c.name, el('span', { class: 'muted' }, `(${c.itemCount})`)])))
     })
-    const newInput = el('input', { type: 'text', placeholder: 'Uusi kokoelma', lang: 'fi' })
+    // Typing a name chooses "new collection".
+    const newInput = el('input', { type: 'text' })
     const newRadio = el('input', { type: 'radio', name: 'collectionChoice', value: '__new__' })
     if (!collections.length) newRadio.checked = true
-    choices.append(el('p', {}, el('label', {}, [newRadio, newInput])))
+    newInput.addEventListener('focus', () => (newRadio.checked = true))
+    choices.append(el('p', {}, el('label', {}, [newRadio, el('span', { lang: 'fi' }, 'Uusi kokoelma:'), newInput])))
 
     const confirmBtn = el('button', { type: 'button', class: 'primary' }, el('span', { lang: 'fi' }, 'Lisää'))
     confirmBtn.addEventListener('click', async () => {
