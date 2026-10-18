@@ -175,12 +175,13 @@ describe('signCredential', () => {
     }
   })
 
-  test('surfaces a signing failure with the service response', async () => {
-    const signer = await startStubServer(() => ({ status: 500, text: 'no key for instance' }))
+  // The body may echo the credential, and the message is logged and shown.
+  test('surfaces a signing failure by status only, without the response body', async () => {
+    const signer = await startStubServer(() => ({ status: 500, text: 'cannot sign {"credentialSubject":{"id":"urn:oid:1.2.3"}}' }))
     try {
       await assert.rejects(
         () => signCredential({}, { baseUrl: signer.url, instanceId: 'test' }),
-        /Signing service responded with 500.*no key for instance/s
+        (err) => /^Signing service responded with 500/.test(err.message) && !err.message.includes('urn:oid')
       )
     } finally {
       await signer.stop()
