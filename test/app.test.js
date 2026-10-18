@@ -4,6 +4,7 @@ import test, { after, before, describe } from 'node:test'
 import pg from 'pg'
 
 import { databaseUrl, postgresUnavailable, startApp } from './helpers/app.js'
+import { startStubServer } from './helpers/stub-server.js'
 
 // Reported as skipped rather than failed on a bare clone: the app connects to
 // Postgres at import time, so these need `docker compose up -d db` (or CI's
@@ -69,6 +70,11 @@ describe('the running app', needsPostgres, () => {
     assert.equal((await fetch(`${app.baseUrl}/vendor/veri-good/`)).status, 404)
   })
 
+  // Not a did:key's absence (that's a 404): we can't tell what the issuer is.
+  test('answers 503 for did.json without a signing service', async () => {
+    assert.equal((await fetch(`${app.baseUrl}/.well-known/did.json`)).status, 503)
+  })
+
   test('404s an unknown guide', async () => {
     for (const name of ['nope', 'constructor']) {
       const res = await fetch(`${app.baseUrl}/guide/${name}`)
@@ -129,6 +135,44 @@ describe('the running app', needsPostgres, () => {
       assert.equal(res.status, 404, path)
       assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow', 'share links stay out of search engines')
     }
+  })
+})
+
+describe("the ldp_vc issuer's did.json", needsPostgres, () => {
+  const KEY = 'z6MknNQD1WHLGGraFi6zcbGevuAgkVfdyCdtZnQTGWVVvR5Q'
+  let app
+  let signer
+
+  // Like signing-service with TENANT_DIDMETHOD_<T>=web and TENANT_DID_URL_<T>=https://opinto.example.
+  before(async () => {
+    signer = await startStubServer(({ body }) => ({
+      json: { ...body, issuer: 'did:web:opinto.example', proof: { verificationMethod: `did:web:opinto.example#${KEY}` } },
+    }))
+    app = await startApp({
+      env: { ORIGIN: 'https://opinto.example', SIGNING_SERVICE_URL: signer.url, SIGNING_SERVICE_INSTANCE_ID: 'test', SIGNING_SERVICE_SUITE: 'ed25519' },
+    })
+  })
+
+  after(async () => {
+    await app?.stop()
+    await signer?.stop()
+  })
+
+  test('is served for any verifier, naming the signing key', async () => {
+    const res = await fetch(`${app.baseUrl}/.well-known/did.json`)
+    assert.equal(res.status, 200)
+    assert.match(res.headers.get('content-type'), /application\/json/)
+    assert.equal(res.headers.get('access-control-allow-origin'), '*')
+    const doc = await res.json()
+    assert.equal(doc.id, 'did:web:opinto.example')
+    assert.deepEqual(doc.assertionMethod, [`did:web:opinto.example#${KEY}`])
+    assert.equal(doc.verificationMethod[0].publicKeyMultibase, KEY)
+  })
+
+  test('makes /verify trust the did:web and the did:key of the same key', async () => {
+    const html = await (await fetch(`${app.baseUrl}/verify`)).text()
+    assert.ok(html.includes('did:web:opinto.example'))
+    assert.ok(html.includes(`did:key:${KEY}`))
   })
 })
 
