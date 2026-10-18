@@ -94,6 +94,20 @@ export function recordFromCredential(vc) {
   return { credentialSubject: vc.credentialSubject, awardedOn: vc.issuanceDate ?? vc.validFrom }
 }
 
+// When two credentials are the same achievement of the same person: the same
+// learner, achievement id and award date. koski2openbadge derives the
+// achievement id from the Koski record, not from its texts, so a Finnish and an
+// English conversion match. Without an achievement id, the whole
+// credentialSubject has to match. Takes a VC or a Koski record (`awardedOn`,
+// turned into the issuanceDate toVerifiableCredential would give it).
+export function credentialKey({ credentialSubject, issuanceDate, validFrom, awardedOn }) {
+  const date = issuanceDate ?? validFrom ?? (awardedOn ? new Date(awardedOn).toISOString() : null)
+  const achievementId = credentialSubject?.achievement?.id
+  return achievementId
+    ? JSON.stringify(['achievement', credentialSubject.id ?? null, achievementId, date])
+    : JSON.stringify(['subject', credentialSubject ?? null, date])
+}
+
 // Calls a https://github.com/digitalcredentials/signing-service instance to
 // add a proof to an unsigned credential.
 export async function signCredential(vc, { baseUrl, instanceId, suite = 'ed25519' }) {

@@ -273,6 +273,128 @@ describe('the Koski journey', needsPostgres, () => {
     assert.deepEqual((await download.json()).proof, result.signed.proof)
   })
 
+  describe('one list of credentials', () => {
+    async function signUp(name) {
+      const client = createClient(app.baseUrl)
+      const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
+      const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: name } })
+      await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
+      return client
+    }
+
+    const list = async (client) => (await client.json('/credentials')).body.credentials
+
+    test('lists a signed-in user’s fetched and stored credentials once each', async () => {
+      const client = await signUp('List')
+      const { credentials: fetched } = await loadCredentials(client)
+      const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [1] } })
+      const { credentialId } = saved.body.results[0]
+
+      const entries = await list(client)
+      assert.equal(entries.length, fetched.length)
+      assert.deepEqual(entries.map((e) => e.index), fetched.map((_, i) => i))
+      assert.deepEqual(entries.filter((e) => e.credentialId).map((e) => [e.index, e.credentialId]), [[1, credentialId]])
+      assert.equal(entries[1].signed, true)
+      assert.ok(entries[1].awardedOn, 'a stored entry carries its date like a fetched one')
+      assert.equal(entries[0].credentialId, undefined)
+    })
+
+    test('keeps the stored credentials in the list without Koski data', async () => {
+      const client = await signUp('Stored only')
+      await loadCredentials(client)
+      const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+      await client.request('/credentials', { method: 'DELETE' })
+
+      const entries = await list(client)
+      assert.deepEqual(entries.map((e) => [e.credentialId, e.index]), [[saved.body.results[0].credentialId, undefined]])
+
+      // The main page embeds the same list for the first render.
+      const html = await (await client.request('/')).text()
+      assert.ok(html.includes(saved.body.results[0].credentialId), 'expected the stored credential on the main page')
+    })
+
+    test('matches a re-import in another language to the stored copy, which stays as it was', async () => {
+      const client = await signUp('Kielet')
+      const fi = await loadCredentials(client, 'fi')
+      const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+      const { credentialId } = saved.body.results[0]
+
+      await loadCredentials(client, 'en')
+      const entries = await list(client)
+      assert.equal(entries.length, fi.credentials.length)
+      assert.equal(entries[0].credentialId, credentialId)
+      assert.equal(entries[0].credentialSubject.achievement.name, fi.credentials[0].credentialSubject.achievement.name)
+      assert.notEqual(entries[1].credentialSubject.achievement.name, fi.credentials[1].credentialSubject.achievement.name)
+
+      // Storing the English record finds the Finnish copy instead of a second one.
+      const again = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })
+      assert.equal(again.body.results[0].credentialId, credentialId)
+      assert.equal((await client.json('/saved-credentials')).body.credentials.length, 1)
+    })
+
+    test('signing stores a signed-in user’s credential, for them to download', async () => {
+      const client = await signUp('Lataa')
+      await loadCredentials(client)
+      const signed = await client.json('/credentials/0/sign', { method: 'POST' })
+      assert.equal(signed.status, 200, JSON.stringify(signed.body))
+      const { credentialId } = signed.body
+      assert.ok(credentialId)
+      assert.equal((await list(client))[0].credentialId, credentialId)
+
+      const download = await client.request(`/saved-credentials/${credentialId}/download`)
+      assert.equal(download.status, 200)
+      assert.match(download.headers.get('content-disposition') ?? '', /attachment/)
+      assert.deepEqual((await download.json()).proof, signed.body.signed.proof)
+
+      assert.equal((await (await signUp('Someone else')).request(`/saved-credentials/${credentialId}/download`)).status, 404)
+      assert.equal((await createClient(app.baseUrl).request(`/saved-credentials/${credentialId}/download`)).status, 401)
+    })
+
+    test('a wallet offer stores a signed-in user’s credential too', async () => {
+      const client = await signUp('Lompakko')
+      await loadCredentials(client)
+      const offer = await client.json('/credentials/2/offer', { method: 'POST' })
+      assert.equal(offer.status, 200, JSON.stringify(offer.body))
+      assert.ok(offer.body.credentialId)
+      assert.equal((await list(client))[2].credentialId, offer.body.credentialId)
+    })
+
+    test('stores nothing for an anonymous user', async () => {
+      const client = createClient(app.baseUrl)
+      const { credentials: fetched } = await loadCredentials(client)
+      const signed = await client.json('/credentials/0/sign', { method: 'POST' })
+      assert.equal(signed.body.credentialId, undefined)
+      const offer = await client.json('/credentials/0/offer', { method: 'POST' })
+      assert.equal(offer.body.credentialId, undefined)
+
+      const entries = await list(client)
+      assert.equal(entries.length, fetched.length)
+      assert.ok(entries.every((e) => e.credentialId === undefined))
+      assert.ok(entries[0].signed.proof, 'the session keeps the signature')
+    })
+
+    test('lists every share link with what it points to, for its owner only', async () => {
+      const client = await signUp('Jakaja')
+      await loadCredentials(client)
+      const saved = await client.json('/saved-credentials', { method: 'POST', body: { indices: [0, 1] } })
+      const [first, second] = saved.body.results
+      const collection = await client.json('/collections', { method: 'POST', body: { name: 'Hakemus' } })
+      await client.json(`/collections/${collection.body.id}/items`, { method: 'POST', body: { credentialIds: [second.credentialId] } })
+      await client.json('/share-links', { method: 'POST', body: { credentialId: first.credentialId, label: 'A Oy' } })
+      await client.json('/share-links', { method: 'POST', body: { collectionId: collection.body.id, label: 'B Oy' } })
+
+      const { links } = (await client.json('/share-links')).body
+      assert.deepEqual(
+        links.map((l) => [l.label, l.target, l.targetName]).sort(),
+        [
+          ['A Oy', { credentialId: first.credentialId }, first.name],
+          ['B Oy', { collectionId: collection.body.id }, 'Hakemus'],
+        ]
+      )
+      assert.deepEqual((await (await signUp('Muu')).json('/share-links')).body.links, [])
+    })
+  })
+
   describe('sending a collection item to a wallet', () => {
     async function signUp(name) {
       const client = createClient(app.baseUrl)

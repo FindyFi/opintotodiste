@@ -6,7 +6,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert, holderName } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
-import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, recordFromCredential, signCredential } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, recordFromCredential, signCredential, credentialKey } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import { scheduleUnusedAccountSweep } from './src/retention.js'
@@ -120,14 +120,8 @@ function requireAuth(req, res, next) {
 
 app.get('/healthz', (req, res) => res.sendStatus(200))
 
-app.get('/', (req, res) => {
-  const initialData = req.session.credentials
-    ? {
-        personName: req.session.personName,
-        koskiUrl: req.session.koskiUrl,
-        credentials: req.session.credentials,
-      }
-    : null
+app.get('/', async (req, res) => {
+  const initialData = req.session.credentials || req.session.userId ? await credentialsResponse(req) : null
   // The page embeds the imported records: no copy for the next person at a
   // shared computer to find in the cache or with the back button.
   res.set('Cache-Control', 'no-store')
@@ -152,13 +146,34 @@ function sessionRecord(req, index) {
   return req.session.credentials?.[position]
 }
 
-function credentialsResponse(req) {
+const storedEntry = (item) => ({ credentialId: item.id, ...recordFromCredential(item.credential), signed: true })
+
+// The page's one list: the session's Koski records (`index`) and, for a
+// signed-in user, their stored credentials (`credentialId`), one row per
+// achievement (credentialKey). A record that is stored shows the stored copy,
+// which is what its links and collections show, and has both ids.
+// Only an anonymous user's list ends with the session.
+async function credentialsResponse(req) {
+  const records = req.session.credentials ?? []
+  const stored = req.session.userId ? await collections.listSavedCredentials(req.session.userId) : []
+  const byKey = new Map(stored.map((item) => [credentialKey(item.credential), item]))
+  const shown = new Set()
+  const entries = records.map((record, index) => {
+    const item = byKey.get(credentialKey(record.signed ?? record))
+    if (!item || shown.has(item.id)) return { ...record, index }
+    shown.add(item.id)
+    return { ...storedEntry(item), index }
+  })
   return {
     personName: req.session.personName,
     koskiUrl: req.session.koskiUrl,
-    credentials: req.session.credentials,
+    credentials: [...entries, ...stored.filter((item) => !shown.has(item.id)).map(storedEntry)],
   }
 }
+
+app.get('/credentials', async (req, res) => {
+  res.json(await credentialsResponse(req))
+})
 
 app.post('/credentials', importLimit, async (req, res) => {
   const koskiUrl = (req.body?.koskiUrl || '').trim()
@@ -175,7 +190,7 @@ app.post('/credentials', importLimit, async (req, res) => {
     req.session.credentials = records.map((record) => ({ ...record, signed: null }))
     req.session.koskiSeenAt = Date.now()
 
-    res.json(credentialsResponse(req))
+    res.json(await credentialsResponse(req))
   } catch (err) {
     const message = err instanceof InvalidKoskiUrlError ? err.message : `Could not load Koski data: ${err.message}`
     res.status(400).json({ error: message })
@@ -200,7 +215,7 @@ app.delete('/credentials', (req, res) => {
 // requested language (e.g. when the UI language switcher changes), without
 // another round trip to Koski. Signed statuses carry over by position, since
 // convert() produces the same records in the same order regardless of lang.
-app.post('/credentials/lang', (req, res) => {
+app.post('/credentials/lang', async (req, res) => {
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   if (!req.session.koskiData) {
     return res.status(404).json({ error: 'No Koski data loaded yet.' })
@@ -213,14 +228,12 @@ app.post('/credentials/lang', (req, res) => {
     signed: req.session.credentials?.[index]?.signed ?? null,
   }))
 
-  res.json(credentialsResponse(req))
+  res.json(await credentialsResponse(req))
 })
 
-app.post('/credentials/:index/sign', signingLimit, async (req, res) => {
-  const record = sessionRecord(req, req.params.index)
-  if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
-
-  try {
+// Signs a session record once; later calls reuse the signature.
+async function signRecord(record) {
+  if (!record.signed) {
     const vc = toVerifiableCredential(record, {
       issuerId: process.env.ISSUER_ID,
       issuerName: process.env.ISSUER_NAME,
@@ -230,7 +243,20 @@ app.post('/credentials/:index/sign', signingLimit, async (req, res) => {
       instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
       suite: process.env.SIGNING_SERVICE_SUITE,
     })
-    res.json({ signed: record.signed })
+  }
+  return record.signed
+}
+
+// For a signed-in user, signing stores the credential too (there is no
+// separate "save" step); credentialId is then its stored copy.
+app.post('/credentials/:index/sign', signingLimit, async (req, res) => {
+  const record = sessionRecord(req, req.params.index)
+  if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
+
+  try {
+    const signed = await signRecord(record)
+    const credentialId = req.session.userId ? (await collections.saveCredential(req.session.userId, signed)).id : undefined
+    res.json({ signed, credentialId })
   } catch (err) {
     // A 502 here means a dependency refused the request, not that the user
     // did anything wrong - log it, or the only trace is a message in the
@@ -263,15 +289,24 @@ async function createWalletOffer(record) {
   return { offerUri, qrDataUrl, txCode, expiresIn }
 }
 
-// Unlike /sign, this never calls signCredential itself - it hands an
-// unsigned VC to the OID4VCI issuer, which signs it only once a wallet
-// actually completes the flow.
+// The offer itself never needs signCredential - it hands an unsigned VC to the
+// OID4VCI issuer, which signs it only once a wallet actually completes the
+// flow. A signed-in user's record is still signed and stored, like any other
+// action on it; if that fails, the offer goes ahead without it.
 app.post('/credentials/:index/offer', signingLimit, async (req, res) => {
   const record = sessionRecord(req, req.params.index)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
+  let credentialId
+  if (req.session.userId) {
+    try {
+      credentialId = (await collections.saveCredential(req.session.userId, await signRecord(record))).id
+    } catch (err) {
+      console.error('Storing a credential for a wallet offer failed:', err.message)
+    }
+  }
   try {
-    res.json(await createWalletOffer(record))
+    res.json({ ...(await createWalletOffer(record)), credentialId })
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
@@ -356,17 +391,7 @@ async function saveFromSession(req, indices) {
     }
     const name = record.credentialSubject?.achievement?.name ?? ''
     try {
-      if (!record.signed) {
-        const vc = toVerifiableCredential(record, {
-          issuerId: process.env.ISSUER_ID,
-          issuerName: process.env.ISSUER_NAME,
-        })
-        record.signed = await signCredential(vc, {
-          baseUrl: process.env.SIGNING_SERVICE_URL,
-          instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
-          suite: process.env.SIGNING_SERVICE_SUITE,
-        })
-      }
+      await signRecord(record)
       const saved = await collections.saveCredential(req.session.userId, record.signed)
       results.push({ index, name, credentialId: saved.id, signed: record.signed })
     } catch (err) {
@@ -389,6 +414,13 @@ app.get('/saved-credentials', requireAuth, async (req, res) => {
 app.post('/saved-credentials', requireAuth, signingLimit, async (req, res) => {
   const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
   res.json({ results: await saveFromSession(req, indices) })
+})
+
+app.get('/saved-credentials/:id/download', requireAuth, async (req, res) => {
+  const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
+  if (!credential) return res.status(404).send('Credential not found.')
+  res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.id}.json"`)
+  res.json(credential)
 })
 
 app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
@@ -489,7 +521,8 @@ app.get('/collections/:id/items', requireAuth, async (req, res) => {
 // --- Share links -------------------------------------------------------------
 
 // One link per recipient, to a collection or to one saved credential:
-// ?collectionId= or ?credentialId= (in the body for POST).
+// ?collectionId= or ?credentialId= (in the body for POST). GET with neither
+// lists all the owner's links.
 function shareTarget(source) {
   const collectionId = typeof source?.collectionId === 'string' ? source.collectionId : undefined
   const credentialId = typeof source?.credentialId === 'string' ? source.credentialId : undefined
@@ -498,7 +531,11 @@ function shareTarget(source) {
 
 app.get('/share-links', requireAuth, async (req, res) => {
   try {
-    res.json({ links: await collections.listShareLinks(req.session.userId, shareTarget(req.query)) })
+    const target = shareTarget(req.query)
+    const links = target.collectionId || target.credentialId
+      ? await collections.listShareLinks(req.session.userId, target)
+      : await collections.listAllShareLinks(req.session.userId)
+    res.json({ links })
   } catch (err) {
     sendCollectionsError(res, err)
   }

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { credentialKey, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -197,5 +197,32 @@ describe('signCredential', () => {
   test('refuses to call an unconfigured signing service', async () => {
     await assert.rejects(() => signCredential({}, {}), /SIGNING_SERVICE_URL/)
     await assert.rejects(() => signCredential({}, { baseUrl: 'http://localhost:4006' }), /SIGNING_SERVICE_INSTANCE_ID/)
+  })
+})
+
+describe('credentialKey', () => {
+  const subject = (name, achievementId = 'urn:opintopolku2openbadge:abc') => ({
+    id: 'urn:oid:1.2.3',
+    achievement: { ...(achievementId ? { id: achievementId } : {}), name },
+  })
+
+  test('matches a record and its signed credential, in any language', () => {
+    const record = { credentialSubject: subject('Ylioppilastutkinto'), awardedOn: '2021-06-01' }
+    const signed = toVerifiableCredential({ credentialSubject: subject('Matriculation examination'), awardedOn: '2021-06-01' }, ISSUER)
+    assert.equal(credentialKey(record), credentialKey(signed))
+    assert.equal(credentialKey(record), credentialKey(recordFromCredential(signed)))
+  })
+
+  test('tells apart another date, learner or achievement', () => {
+    const key = credentialKey({ credentialSubject: subject('A'), awardedOn: '2021-06-01' })
+    assert.notEqual(key, credentialKey({ credentialSubject: subject('A'), awardedOn: '2021-06-02' }))
+    assert.notEqual(key, credentialKey({ credentialSubject: { ...subject('A'), id: 'urn:oid:9' }, awardedOn: '2021-06-01' }))
+    assert.notEqual(key, credentialKey({ credentialSubject: subject('A', 'urn:opintopolku2openbadge:def'), awardedOn: '2021-06-01' }))
+  })
+
+  test('without an achievement id, needs the whole credentialSubject to match', () => {
+    const fi = { credentialSubject: subject('Kurssi', null), awardedOn: '2021-06-01' }
+    assert.equal(credentialKey(fi), credentialKey({ credentialSubject: subject('Kurssi', null), awardedOn: '2021-06-01' }))
+    assert.notEqual(credentialKey(fi), credentialKey({ credentialSubject: subject('Course', null), awardedOn: '2021-06-01' }))
   })
 })
