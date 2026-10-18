@@ -27,10 +27,51 @@ export function toApiUrl(input) {
   return `https://${KOSKI_HOST}/koski/api/opinnot/${id}`
 }
 
-export async function fetchKoskiData(apiUrl) {
-  const res = await fetch(apiUrl, { headers: { accept: 'application/json' } })
+// A study record is a few hundred kilobytes at most; the limit keeps a huge or
+// endless response from filling the app's memory.
+export const KOSKI_MAX_BYTES = 5 * 1024 * 1024
+export const KOSKI_TIMEOUT_MS = 15_000
+
+// Redirects are refused, not followed: toApiUrl's host check would mean nothing
+// if opintopolku.fi could send the request on to another server (an open
+// redirect there would let a link import an attacker's data, or reach an
+// internal address).
+export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, maxBytes = KOSKI_MAX_BYTES } = {}) {
+  let res
+  try {
+    res = await fetch(apiUrl, {
+      headers: { accept: 'application/json' },
+      redirect: 'error',
+      signal: AbortSignal.timeout(timeoutMs),
+    })
+  } catch (err) {
+    if (err.name === 'TimeoutError') throw new Error('Koski did not respond in time.')
+    throw new Error('Could not reach Koski.')
+  }
   if (!res.ok) {
+    await res.body?.cancel()
     throw new Error(`Koski responded with ${res.status} ${res.statusText}`)
   }
-  return res.json()
+  if (Number(res.headers.get('content-length')) > maxBytes) {
+    await res.body?.cancel()
+    throw new Error('The Koski response is too large.')
+  }
+
+  const chunks = []
+  let size = 0
+  try {
+    for await (const chunk of res.body) {
+      size += chunk.length
+      if (size > maxBytes) throw new Error('The Koski response is too large.')
+      chunks.push(chunk)
+    }
+  } catch (err) {
+    if (err.name === 'TimeoutError') throw new Error('Koski did not respond in time.')
+    throw err
+  }
+  try {
+    return JSON.parse(Buffer.concat(chunks).toString('utf8'))
+  } catch {
+    throw new Error('Koski did not return a study record.')
+  }
 }
