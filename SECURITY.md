@@ -36,6 +36,9 @@ Three properties are design decisions rather than oversights:
   `file://` path. `test/koski.test.js` covers those cases; please keep it that way when touching
   `src/koski.js`.
 
+The threats we have identified, how likely and how serious each is, and what we do to prevent and
+respond to them are in [docs/threat-analysis.md](docs/threat-analysis.md).
+
 ## Deployment expectations
 
 | Setting | Why it matters |
