@@ -354,6 +354,31 @@ describe('the Koski journey', needsPostgres, () => {
       }
     })
 
+    test('moves the Koski data of a session signed in before U18 into the account', async () => {
+      const name = `Vanha istunto ${randomUUID()}`
+      const client = await signUp(name)
+      const { refs } = await loadCredentials(client)
+      const db = new pg.Client({ connectionString: databaseUrl() })
+      await db.connect()
+      try {
+        // As the old code left it: the data in the session, none in the account.
+        const { rows } = await db.query(
+          'SELECT i.owner_id, i.data, i.koski_url FROM koski_imports i JOIN users u ON u.id = i.owner_id WHERE u.display_name = $1',
+          [name]
+        )
+        const { owner_id: ownerId, data, koski_url: koskiUrl } = rows[0]
+        await db.query('DELETE FROM koski_imports WHERE owner_id = $1', [ownerId])
+        await db.query(
+          `UPDATE session SET sess = (sess::jsonb || jsonb_build_object('koskiData', $2::jsonb, 'koskiUrl', $3::text, 'koskiSeenAt', $4::bigint))::json
+           WHERE sess->>'userId' = $1`,
+          [ownerId, data, koskiUrl, Date.now()]
+        )
+      } finally {
+        await db.end()
+      }
+      assert.deepEqual((await list(client)).map((e) => e.ref), refs)
+    })
+
     test('signing signs once and saves the copy, for its owner to download', async () => {
       const client = await signUp('Lataa')
       const { refs } = await loadCredentials(client)

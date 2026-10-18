@@ -149,8 +149,12 @@ const RECORD_REF = /^[A-Za-z0-9_-]{22}$/
 
 // Where this request's Koski data is: the signed-in user's stored import, or
 // an anonymous user's session.
+// A session signed in before U18 still has its Koski data, and moves it now.
 async function koskiSource(req) {
-  if (req.session.userId) return koskiImports.findImport(req.session.userId)
+  if (req.session.userId) {
+    await moveSessionImport(req)
+    return koskiImports.findImport(req.session.userId)
+  }
   if (!req.session.koskiData) return null
   return { koskiUrl: req.session.koskiUrl, data: req.session.koskiData, removed: req.session.removedRefs ?? [] }
 }
