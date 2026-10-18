@@ -229,6 +229,74 @@ describe('passkeys and collections', needsPostgres, () => {
     })
   })
 
+  describe('removing a credential from a collection', () => {
+    let db
+
+    before(async () => {
+      db = new pg.Client({ connectionString: databaseUrl() })
+      await db.connect()
+    })
+
+    after(async () => {
+      await db?.end()
+    })
+
+    async function collectionWithItem(client) {
+      const created = await client.json('/collections', { method: 'POST', body: { name: 'Pruned' } })
+      const { rows } = await db.query(
+        'INSERT INTO collection_items (collection_id, credential) VALUES ($1, $2) RETURNING id',
+        [created.body.id, { credentialSubject: { achievement: { name: 'Pruned badge' } } }]
+      )
+      return { collection: created.body, itemId: rows[0].id }
+    }
+
+    test('removes the item and breaks its share link, keeping the collection', async () => {
+      const { client } = await signUp()
+      const { collection, itemId } = await collectionWithItem(client)
+
+      const removed = await client.request(`/collections/${collection.id}/items/${itemId}`, { method: 'DELETE' })
+      assert.equal(removed.status, 204)
+
+      assert.deepEqual((await client.json(`/collections/${collection.id}/items`)).body.items, [])
+      const anonymous = createClient(app.baseUrl)
+      assert.equal((await anonymous.request(`/c/${collection.shareToken}/items/${itemId}`)).status, 404)
+      assert.equal((await anonymous.request(`/c/${collection.shareToken}`)).status, 200)
+    })
+
+    test('404s a stranger, an unknown item and a malformed id', async () => {
+      const owner = await signUp()
+      const stranger = await signUp()
+      const { collection, itemId } = await collectionWithItem(owner.client)
+
+      assert.equal(
+        (await stranger.client.request(`/collections/${collection.id}/items/${itemId}`, { method: 'DELETE' })).status,
+        404
+      )
+      assert.equal(
+        (
+          await owner.client.request(`/collections/${collection.id}/items/11111111-2222-3333-4444-555555555555`, {
+            method: 'DELETE',
+          })
+        ).status,
+        404
+      )
+      assert.equal(
+        (await owner.client.request(`/collections/${collection.id}/items/not-a-uuid`, { method: 'DELETE' })).status,
+        404
+      )
+      assert.equal((await owner.client.json(`/collections/${collection.id}/items`)).body.items.length, 1)
+    })
+
+    test('refuses a caller who is not signed in', async () => {
+      const { client } = await signUp()
+      const { collection, itemId } = await collectionWithItem(client)
+      const { status } = await createClient(app.baseUrl).request(`/collections/${collection.id}/items/${itemId}`, {
+        method: 'DELETE',
+      })
+      assert.equal(status, 401)
+    })
+  })
+
   describe('deleting the account', () => {
     let db
 

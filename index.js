@@ -305,6 +305,15 @@ app.post('/collections/:id/items', requireAuth, async (req, res) => {
   res.json({ results })
 })
 
+app.delete('/collections/:id/items/:itemId', requireAuth, async (req, res) => {
+  try {
+    await collections.removeItem(req.session.userId, req.params.id, req.params.itemId)
+    res.status(204).end()
+  } catch (err) {
+    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+  }
+})
+
 app.get('/collections/:id/items', requireAuth, async (req, res) => {
   try {
     res.json({ items: await collections.listItems(req.session.userId, req.params.id) })
