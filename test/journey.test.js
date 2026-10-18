@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import test, { after, before, describe } from 'node:test'
 
 import pg from 'pg'
@@ -74,17 +75,18 @@ describe('the Koski journey', needsPostgres, () => {
   // /policy promises this: the fixture carries a (fake) identity code and birth
   // date, which must not reach the session table.
   test('keeps only the learner number and names of the person in the session', async () => {
+    // A share link of its own, to find this session among the others.
+    const koskiUrl = `https://opintopolku.fi/koski/opinnot/session-${randomUUID()}`
     const client = createClient(app.baseUrl)
-    await loadCredentials(client)
+    const res = await client.json('/credentials', { method: 'POST', body: { koskiUrl, lang: 'fi' } })
+    assert.equal(res.status, 200)
 
     const db = new pg.Client({ connectionString: databaseUrl() })
     await db.connect()
     try {
-      const { rows } = await db.query(`SELECT sess FROM session WHERE sess->'koskiData'->'henkilö'->>'sukunimi' = 'Opiskelija'`)
-      assert.ok(rows.length > 0, 'expected a saved session with the Koski data')
-      for (const { sess } of rows) {
-        assert.deepEqual(Object.keys(sess.koskiData.henkilö).sort(), ['etunimet', 'oid', 'sukunimi'])
-      }
+      const { rows } = await db.query(`SELECT sess FROM session WHERE sess->>'koskiUrl' = $1`, [koskiUrl])
+      assert.equal(rows.length, 1, 'expected the saved session')
+      assert.deepEqual(Object.keys(rows[0].sess.koskiData.henkilö).sort(), ['etunimet', 'oid', 'sukunimi'])
     } finally {
       await db.end()
     }
