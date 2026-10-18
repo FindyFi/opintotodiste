@@ -35,66 +35,45 @@ const COPY = {
         body: `<ul>
 <li>Opintotodisteen rekisterinpitäjä on Findynet Osuuskunta. Yhteystiedot ovat alla.</li>
 <li>Palvelu tekee Koski-palvelun opintotiedoistasi osaamismerkkejä, jotka voit ladata, tallentaa lompakkoon tai jakaa linkillä.</li>
-<li>Jos et kirjaudu sisään, tietosi poistetaan palvelimelta viimeistään 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
-<li>Pääsyavaintilisi ja kokoelmasi säilyvät, kunnes poistat ne.</li>
-<li><strong>Huomaa:</strong> kuka tahansa jakolinkin saanut näkee kokoelman merkit kirjautumatta.</li>
+<li>Jos käytät palvelua kirjautumatta sisään, tietosi poistetaan palvelimelta viimeistään 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
+<li>Jos kirjaudut palveluun, käyttäjätilisi ja kokoelmasi säilyvät, kunnes poistat ne.</li>
+<li>Voit itse päättää, mitä palveluun tallennettuja tietoja jaat muille jakolinkkien avulla. Huomaa, että kuka tahansa jakolinkin saanut näkee kokoelman merkit.</li>
 <li>Voit tarkastaa ja poistaa tietosi. Katso <a href="#oikeudet">Oikeutesi</a>.</li>
 <li>Palvelussa ei ole analytiikkaa, mainoksia eikä seurantaevästeitä.</li>
 </ul>`,
       },
       {
         title: 'Rekisterinpitäjä',
-        body: `<p>Findynet Osuuskunta (Y-tunnus 3213523-3)<br>Sähköposti: ${CONTACT}</p>
-<p>Findynet ylläpitää koko palvelua, myös osaamismerkkien allekirjoituspalvelua ja lompakkopalvelua, jotka mainitaan alla.</p>
-<p>${draft('Postiosoite lisätään tähän. Tietosuojavastaavan yhteystiedot lisätään, jos sellainen on nimetty.')}</p>`,
+        body: `<p>Findynet Osuuskunta (Y-tunnus 3213523-3)<br>PL 1188<br>00101 Helsinki<br>Sähköposti: ${CONTACT}</p>`,
       },
       {
-        title: 'Mihin tietojasi käytetään',
-        body: `<ul>
-<li>Osaamismerkkien tekeminen Koski-tiedoistasi ja niiden näyttäminen sinulle.</li>
-<li>Merkkien allekirjoittaminen, jotta niiden aitouden voi tarkastaa.</li>
-<li>Merkkien toimittaminen lompakkosovellukseesi, kun pyydät sitä.</li>
-<li>Kirjautuminen pääsyavaimella sekä kokoelmien tallentaminen ja jakaminen.</li>
-<li>Palvelun ylläpito ja vikojen selvittäminen (lokit).</li>
-</ul>
-<p>${draft('Oikeusperuste, ehdotus: käsittely on tarpeen palvelun tarjoamiseksi, kun käytät sitä (sopimus, tietosuoja-asetuksen 6 artiklan 1 kohdan b alakohta). Lokien osalta peruste on rekisterinpitäjän oikeutettu etu pitää palvelu toimivana ja turvallisena (f alakohta).')}</p>`,
+        title: 'Mihin tietojasi käytetään ja kuka niitä käsittelee',
+        body: `<p>Sinä itse valitset palveluun tuomasi tiedot ja päätät, mitä tietoja jaat edelleen tai tallennat lompakkoosi.</p>
+<p>Palvelu käyttää sille antamiasi tietoja vain niiden näyttämiseen sinulle, digitaalisten todisteiden muodostamiseen, niiden jakamiseen sinun valitsemallasi tavalla sekä jakamiesi tietojen oikeellisuuden varmistasmiseen.</p>
+<p>Palvelun tarjoaja ei käytä tietojasi muihin tarkoituksiin eikä itse välitä niitä muille tahoille. Tietojasi ei käytetä markkinointiin.</p>
+<p>Tietoja palvelun käytöstä tallentuu lokeihin, joita palvelun tarjoaja voi käyttää vikojen selvittämiseen ja palvelun ylläpitoon.</p>
+<p>Palvelu tallentaa tiedot Amazon Web Services -palvelimiin Tukholman alueella (Ruotsi). Niitä ei siirretä EU:n tai Euroopan talousalueen ulkopuolelle.</p>
+<p>Tietojen käsittely perustuu sopimukseen (yleisen tietosuoja-asetuksen 6 artiklan 1 kohdan b alakohta).</p>`,
       },
       {
         title: 'Mitä tietoja käsitellään ja mistä ne saadaan',
-        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Jos Koski lähettää sinusta muita tietoja, esimerkiksi henkilötunnuksen tai syntymäajan, ne poistetaan heti eikä niitä tallenneta. Palvelu vain hakee tietoja Koskesta, eikä lähetä sinne mitään.</p>
-<p><strong>Sinulta:</strong> tilin nimi, jonka annat pääsyavainta luodessasi, pääsyavaimen julkiset tiedot ja kokoelmien nimet.</p>
-<p><strong>Palvelun käytöstä:</strong> osaamismerkit, joissa on suorituksen tiedot ja tunnisteena oppijanumerosi, kokoelmien jakolinkit, aikaleimat ja lokit.</p>`,
+        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, opintopolku.fi) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja tietoja ei tallenneta.</p>
+<p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
+<p><strong>Palvelun käytöstä:</strong> allekirjoitetut osaamismerkit, jakolinkit ja lokittiedot.</p>`,
       },
       {
         title: 'Kuinka kauan tietoja säilytetään',
         body: `<ul>
-<li><strong>Istunto</strong> (jakolinkki, Koskesta saadut tiedot, niistä tehdyt merkit ja kielivalinta): 24 tuntia viimeisestä sivunlatauksestasi, tai kunnes kirjaudut ulos. Istunto on palvelun tietokannassa, ja selaimesi tunnistetaan siihen evästeellä. Eväste poistuu yleensä, kun suljet selaimen, mutta palvelimella olevat tiedot säilyvät silti 24 tuntia.</li>
-<li><strong>Tili ja pääsyavaimet</strong> (nimi, satunnainen tunniste ja jokaisesta avaimesta tunniste, julkinen avain, käyttölaskuri, tieto synkronoinnista ja varmuuskopioinnista, yhteystavat sekä luonti- ja viimeinen käyttöaika): kunnes tili poistetaan. Käyttämättömiä tilejä ei poisteta automaattisesti. Yksityinen avain pysyy laitteellasi, eikä palvelu näe sormenjälkeäsi tai laitteesi PIN-koodia.</li>
-<li><strong>Kokoelmat</strong> (nimi, jakolinkki, luonti- ja muutosaika sekä allekirjoitettu kopio jokaisesta merkistä): kunnes poistat kokoelman tai tilisi.</li>
-<li><strong>Lompakkoon lähetetty merkki:</strong> lompakkopalvelun muistissa vain sen ajan, että lompakkosi ehtii hakea sen: enintään 10 minuuttia ja haun jälkeen vielä minuutin. Merkkiä ei tallenneta tietokantaan tai levylle.</li>
-<li><strong>Allekirjoitettavat merkit:</strong> allekirjoituspalvelu ei tallenna niitä.</li>
-<li><strong>Lokit:</strong> 30 päivää. Sovellus kirjaa virheilmoituksia. Lompakkopalvelu kirjaa pyyntöjen osoitteet, tilakoodit ja selaimen tunnisteen, mutta ei merkkien sisältöä.</li>
-<li><strong>Varmuuskopiot:</strong> ${draft('tietokannan varmuuskopioiden säilytysaika lisätään tähän. Poistetut tiedot voivat säilyä varmuuskopioissa sen ajan.')}</li>
+<li><strong>Istunto</strong> (jakolinkki, Koskesta saadut tiedot, niistä tehdyt merkit ja kielivalinta): 24 tuntia viimeisestä sivunlatauksestasi tai kunnes kirjaudut ulos. Istunto on palvelun tietokannassa, ja selaimesi tunnistetaan siihen evästeellä. Eväste poistuu yleensä, kun suljet selaimen, mutta palvelimella olevat tiedot säilyvät silti 24 tuntia.</li>
+<li><strong>Tili ja pääsyavaimet</strong>: kunnes tili poistetaan. Yli 6 kk käyttämättä olleet tilit voidaan poistaa.</li>
+<li><strong>Osaamismerkit ja kokoelmat</strong>: kunnes poistat kokoelman tai tilisi.</li>
+<li><strong>Lokit:</strong> 30 päivää. Sovelluksen käytöstä tallentuu tietoa virhetilanteiden selvittämistä ja palvelun ylläpitoa varten.</li>
+<li><strong>Varmuuskopiot:</strong> Tietosi voivat säilyä varmuuskopioissa korkeintaan vuoden ajan.</li>
 </ul>`,
       },
       {
-        title: 'Kuka tietojasi käsittelee ja kenelle niitä luovutetaan',
-        body: `<ul>
-<li><strong>Palvelin:</strong> palvelu toimii Amazon Web Servicesin Tukholman alueella (Ruotsi). ${draft('Amazon Web Services toimii henkilötietojen käsittelijänä; sopimusosapuolen nimi lisätään tähän.')}</li>
-<li><strong>Jakolinkin saajat:</strong> ne, joille lähetät kokoelman linkin, ja kaikki, joille he sen välittävät.</li>
-<li><strong>Lompakkosovellus:</strong> kun lisäät merkin lompakkoon, se siirtyy valitsemaasi sovellukseen laitteellesi, ja siihen sovelletaan sovelluksen omia ehtoja.</li>
-<li><strong>LinkedIn:</strong> vain, jos valitset jakoikkunassa LinkedIn-painikkeen. LinkedIn saa silloin jakamasi linkin.</li>
-</ul>
-<p>${draft('Tietoja ei luovuteta muille eikä käytetä markkinointiin.')}</p>`,
-      },
-      {
-        title: 'Siirrot EU:n ulkopuolelle',
-        body: `<p>${draft('Tietoja säilytetään EU:ssa, eikä niitä siirretä EU:n tai Euroopan talousalueen ulkopuolelle.')}</p>`,
-      },
-      {
         title: 'Evästeet ja selaimen tallennustila',
-        body: `<p>Palvelu käyttää yhtä evästettä, joka yhdistää selaimesi istuntoon. Valitsemasi kieli tallennetaan selaimesi paikalliseen tallennustilaan, jotta se säilyy sivulta toiselle; se säilyy, kunnes tyhjennät selaimen sivustotiedot.</p>
-<p>Todisteen tarkastus tehdään selaimessasi, eikä tarkastettavaa todistetta lähetetä palvelimelle.</p>`,
+        body: `<p>Palvelu käyttää yhtä evästettä, joka yhdistää selaimesi istuntoon. Valitsemasi kieli tallennetaan selaimesi paikalliseen tallennustilaan, jotta se säilyy sivulta toiselle; se säilyy, kunnes tyhjennät selaimen sivustotiedot.</p>`,
       },
       {
         title: 'Automaattinen päätöksenteko',
@@ -109,24 +88,22 @@ const COPY = {
         title: 'Oikeutesi',
         body: `<p>Voit käyttää alla olevia oikeuksiasi lähettämällä pyynnön osoitteeseen ${CONTACT}.</p>
 <ul>
-<li><strong>Tarkastaa tietosi:</strong> tallentamasi kokoelmat ja merkit näet <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
-<li><strong>Korjata tietosi:</strong> merkkien tiedot tulevat Koskesta, joten virheen korjaa oppilaitoksesi Koskessa. Sen jälkeen voit tehdä merkit uudelleen. Tilin nimeä ei vielä voi muuttaa palvelussa; voit pyytää korjausta.</li>
-<li><strong>Poistaa tietosi:</strong> katso <a href="#poisto">Näin poistat tietosi</a>.</li>
-<li><strong>Siirtää tietosi:</strong> voit ladata merkit tiedostoina (JSON) ja viedä ne muualle.</li>
-<li><strong>Rajoittaa käsittelyä ja vastustaa sitä:</strong> ${draft('näiden oikeuksien kuvaus täsmennetään, kun oikeusperuste on vahvistettu.')}</li>
-<li><strong>Tehdä valitus:</strong> jos katsot, että tietojasi käsitellään lainvastaisesti, voit tehdä valituksen tietosuojavaltuutetun toimistolle (<a href="https://tietosuoja.fi">tietosuoja.fi</a>).</li>
+<li><strong>Tietojen tarkastus:</strong> näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
+<li><strong>Tietojen korjaus:</strong> palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen.</li>
+<li><strong>Tietojen siirto:</strong> voit ladata merkit itsellesi tiedostoina (JSON-muodossa). Voit tallentaa merkkejä digitaalisina todisteina lompakkoosi ja välittää niitä LinkedIn-profiiliisi.</li>
+<li><strong>Tietojen poisto:</strong> katso <a href="#poisto">Näin poistat tietosi</a>.</li>
+<li><strong>Tietojen käsittelyn rajoitus tai vastustaminen</strong>: Voit lopettaa palvelun käytön ja <a href="#poisto">poistaa tietosi</a>.</li>
+<li><strong>Valitus:</strong> jos katsot, että tietojasi käsitellään lainvastaisesti, voit tehdä valituksen tietosuojavaltuutetun toimistolle (<a href="https://tietosuoja.fi">tietosuoja.fi</a>).</li>
 </ul>`,
       },
       {
         id: 'poisto',
         title: 'Näin poistat tietosi',
         body: `<ul>
+<li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
 <li><strong>Istunto:</strong> valitse ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten ne poistuvat 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
-<li><strong>Kokoelma:</strong> valitse <a href="/my/collections">Kokoelmani</a>-sivulla kokoelman kohdalta ${ui('Poista')}. Kokoelma, sen merkit ja jakolinkki poistetaan heti. Yksittäistä merkkiä ei vielä voi poistaa kokoelmasta.</li>
-<li><strong>Jakolinkki:</strong> valitse kokoelman kohdalta ${ui('Uusi jakolinkki')}, niin vanha linkki lakkaa toimimasta heti. Jakosivut on kielletty hakukoneilta. Kopioita, jotka joku on jo ladannut, palvelu ei voi poistaa.</li>
-<li><strong>Tili ja pääsyavaimet:</strong> ${draft('tilin poistaminen palvelussa on tulossa. Siihen asti lähetä poistopyyntö osoitteeseen ' + CONTACT + '.')} Tilin mukana poistuvat myös sen kokoelmat. Pääsyavain jää lisäksi laitteellesi; poista se laitteen tai salasanojen hallinnan asetuksista.</li>
+<li><strong>Lompakkoon tallentamasi merkit:</strong> poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
-<li><strong>Lompakossa olevat merkit:</strong> poista ne lompakkosovelluksessa.</li>
 </ul>`,
       },
       {
@@ -134,12 +111,13 @@ const COPY = {
         title: 'Käyttöehdot',
         body: `<p>Opintotodiste tekee Koski-palvelun opintotiedoistasi Open Badges 3.0 -muotoisia osaamismerkkejä ja allekirjoittaa ne sähköisesti. Voit ladata merkit, tallentaa ne digitaaliseen lompakkoon ja jakaa niitä kokoelmina linkillä.</p>
 <ul>
-<li>${draft('Maksullisuus: kirjoitetaan tähän.')}</li>
-<li>${draft('Käyttäjän vastuu, esimerkiksi palvelun käyttäminen vain omilla opintotiedoilla: kirjoitetaan tähän.')}</li>
-<li>${draft('Palvelun saatavuus ja muutokset: kirjoitetaan tähän.')}</li>
-<li>${draft('Vastuunrajoitus: kirjoitetaan tähän.')}</li>
-<li>${draft('Ehtojen ja tämän selosteen muuttaminen ja siitä kertominen: kirjoitetaan tähän.')}</li>
-<li>${draft('Sovellettava laki: kirjoitetaan tähän.')}</li>
+<li>Palvelun käyttö on maksutonta sekä osaamismerkkien haltijoille että niiden tarkastajille, joille on jaettu jakolinkki tästä palvelusta.</li>
+<li>Käyttäjän vastuulla on käyttää palvelua hyvän tavan mukaisesti. Osaamismerkkien haltijana </li>
+<li>Palvelun tarjoaja pyrkii vastaamaan palvelun saatavuudesta ja toimivuudesta parhaansa mukaan. Palvelun tarjoaminen voidaan lopettaa koska tahansa ilman ennakkoilmoitusta.</li>
+<li>Palvelun tarjoaja ei vastaa käyttäjän toimista tai käyttäjän tietojen menetyksestä.</li>
+<li>Palvelun tarjoaja ei tarkasta Koski-rekisteristä saatujen tietojen oikeellisuutta. Palvelu varmistaa hyvien tietoturvaperiaatteiden mukaisesti, että palvelun allekirjoittamat digitaaliset todisteet vastaavat Koski-rekisteristä saatua sisältöä. Palvelu ei varmista käyttäjän henkilöllisyyttä muulla tavalla kuin luottamalla Koski-rekisteristä saatavaan nimeen.</li>
+<li>Palvelun tarjoaja varaa oikeuden muuttaa näitä ehtoja milloin tahansa ilman ennakkoilmoitusta.</li>
+<li>Palveluun sovelletaan Suomen lakia.</li>
 </ul>`,
       },
     ],
@@ -155,66 +133,45 @@ const COPY = {
         body: `<ul>
 <li>The controller of Opintotodiste is Findynet Osuuskunta (Findynet Cooperative). Contact details are below.</li>
 <li>The service turns your study records from the Koski service into badges that you can download, save in a wallet or share with a link.</li>
-<li>If you don’t sign in, your data is deleted from the server at most 24 hours after your last visit.</li>
-<li>Your passkey account and your collections are kept until you delete them.</li>
-<li><strong>Note:</strong> anyone who gets a share link can see the collection’s badges without signing in.</li>
+<li>If you use the service without signing in, your data is deleted from the server at most 24 hours after your last visit.</li>
+<li>If you sign in, your user account and your collections are kept until you delete them.</li>
+<li>You decide which of the data saved in the service you share with others through share links. Note that anyone who gets a share link can see the collection’s badges.</li>
 <li>You can check and delete your data. See <a href="#rights">Your rights</a>.</li>
 <li>There is no analytics, advertising or tracking cookies.</li>
 </ul>`,
       },
       {
         title: 'Controller',
-        body: `<p>Findynet Osuuskunta (Findynet Cooperative), business ID 3213523-3<br>Email: ${CONTACT}</p>
-<p>Findynet runs the whole service, including the signing service and the wallet service mentioned below.</p>
-<p>${draft('A postal address will be added here, and the data protection officer’s contact details if one has been appointed.')}</p>`,
+        body: `<p>Findynet Osuuskunta (Findynet Cooperative), business ID 3213523-3<br>PL 1188<br>00101 Helsinki<br>Finland<br>Email: ${CONTACT}</p>`,
       },
       {
-        title: 'What your data is used for',
-        body: `<ul>
-<li>Making badges from your Koski records and showing them to you.</li>
-<li>Signing the badges, so that anyone can check they are genuine.</li>
-<li>Delivering badges to your wallet app when you ask for it.</li>
-<li>Signing in with a passkey, and saving and sharing collections.</li>
-<li>Running the service and investigating faults (logs).</li>
-</ul>
-<p>${draft('Legal basis, proposal: the processing is necessary to provide the service when you use it (contract, Article 6(1)(b) of the GDPR). For logs, the basis is the controller’s legitimate interest in keeping the service working and secure (Article 6(1)(f)).')}</p>`,
+        title: 'What your data is used for and who processes it',
+        body: `<p>You choose the data you bring into the service, and you decide what you share onwards or save in your wallet.</p>
+<p>The service uses the data you give it only to show it to you, to create digital credentials, to share them in the way you choose and to let others verify the data you share.</p>
+<p>The service provider doesn’t use your data for any other purpose and doesn’t pass it on to anyone else itself. Your data is not used for marketing.</p>
+<p>Data about the use of the service is recorded in logs, which the service provider may use to investigate faults and to maintain the service.</p>
+<p>The service stores the data on Amazon Web Services servers in the Stockholm region (Sweden). It is not transferred outside the EU or the European Economic Area.</p>
+<p>The processing is based on a contract (Article 6(1)(b) of the General Data Protection Regulation).</p>`,
       },
       {
         title: 'What data is processed and where it comes from',
-        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, opintopolku.fi), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. If Koski sends any other data about you, such as your personal identity code or date of birth, it is dropped at once and never stored. The service only fetches data from Koski and sends nothing there.</p>
-<p><strong>From you:</strong> the account name you give when you create a passkey, the passkey’s public data and the names of your collections.</p>
-<p><strong>From using the service:</strong> badges, which hold the achievement’s details and your learner number as an identifier, collection share links, timestamps and logs.</p>`,
+        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, opintopolku.fi), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. Any other data shared through the share link is not stored.</p>
+<p><strong>From you:</strong> the public data of the passkey you sign in with, and data you create while using the service, such as the names of your collections. Signing in uses no username, password or email address. The service stores your passkey’s public key so that only the private key you hold can sign in to the service.</p>
+<p><strong>From using the service:</strong> signed badges, share links and log data.</p>`,
       },
       {
         title: 'How long data is kept',
         body: `<ul>
-<li><strong>Session</strong> (the share link, the data from Koski, the badges made from it and your language): 24 hours after your last page load, or until you sign out. The session is stored in the service’s database, and a cookie connects your browser to it. The cookie usually goes away when you close the browser, but the data on the server is still kept for those 24 hours.</li>
-<li><strong>Account and passkeys</strong> (the name, a random identifier and, for each passkey, its identifier, public key, signature counter, whether it is synced or backed up, how it connects, and when it was created and last used): until the account is deleted. Unused accounts are not deleted automatically. The private key stays on your device, and the service never sees your fingerprint or your device PIN.</li>
-<li><strong>Collections</strong> (the name, the share link, when it was created and last changed, and a signed copy of each badge): until you delete the collection or your account.</li>
-<li><strong>A badge sent to a wallet:</strong> in the wallet service’s memory only until your wallet can fetch it: at most 10 minutes, plus one minute after the fetch. It is never written to a database or to disk.</li>
-<li><strong>Badges being signed:</strong> the signing service doesn’t store them.</li>
-<li><strong>Logs:</strong> 30 days. The app logs error messages. The wallet service logs request paths, status codes and the browser’s user agent, but not the content of badges.</li>
-<li><strong>Backups:</strong> ${draft('how long database backups are kept will be added here. Deleted data may remain in backups for that time.')}</li>
+<li><strong>Session</strong> (the share link, the data from Koski, the badges made from it and your language): 24 hours after your last page load or until you sign out. The session is stored in the service’s database, and a cookie connects your browser to it. The cookie usually goes away when you close the browser, but the data on the server is still kept for those 24 hours.</li>
+<li><strong>Account and passkeys</strong>: until the account is deleted. Accounts that have not been used for more than 6 months may be deleted.</li>
+<li><strong>Badges and collections</strong>: until you delete the collection or your account.</li>
+<li><strong>Logs:</strong> 30 days. Data about the use of the app is recorded to investigate errors and to maintain the service.</li>
+<li><strong>Backups:</strong> Your data may remain in backups for at most one year.</li>
 </ul>`,
       },
       {
-        title: 'Who processes your data and who receives it',
-        body: `<ul>
-<li><strong>Hosting:</strong> the service runs in Amazon Web Services’ Stockholm region (Sweden). ${draft('Amazon Web Services acts as a processor; the contracting entity’s name will be added here.')}</li>
-<li><strong>Share link recipients:</strong> the people you send a collection’s link to, and anyone they pass it on to.</li>
-<li><strong>Your wallet app:</strong> when you add a badge to a wallet, it moves to the app you chose on your device, and the app’s own terms apply to it.</li>
-<li><strong>LinkedIn:</strong> only if you choose a LinkedIn button in the share dialog. LinkedIn then gets the link you share.</li>
-</ul>
-<p>${draft('Data is not disclosed to anyone else or used for marketing.')}</p>`,
-      },
-      {
-        title: 'Transfers outside the EU',
-        body: `<p>${draft('Data is kept in the EU and is not transferred outside the EU or the European Economic Area.')}</p>`,
-      },
-      {
         title: 'Cookies and browser storage',
-        body: `<p>The service uses one cookie, which connects your browser to your session. Your chosen language is saved in your browser’s local storage so that it stays the same from page to page; it stays until you clear the browser’s site data.</p>
-<p>Credential verification runs in your browser, and the credential you check is not sent to the server.</p>`,
+        body: `<p>The service uses one cookie, which connects your browser to your session. Your chosen language is saved in your browser’s local storage so that it stays the same from page to page; it stays until you clear the browser’s site data.</p>`,
       },
       {
         title: 'Automated decision-making',
@@ -229,24 +186,22 @@ const COPY = {
         title: 'Your rights',
         body: `<p>To use the rights below, send a request to ${CONTACT}.</p>
 <ul>
-<li><strong>Access your data:</strong> you can see the collections and badges you saved on the <a href="/my/collections">My collections</a> page. You can ask for a copy of the rest.</li>
-<li><strong>Correct your data:</strong> badge details come from Koski, so your school corrects errors in Koski. You can then make the badges again. You can’t change your account name in the service yet; you can ask for it to be corrected.</li>
-<li><strong>Delete your data:</strong> see <a href="#deletion">How to delete your data</a>.</li>
-<li><strong>Take your data elsewhere:</strong> you can download badges as files (JSON) and use them elsewhere.</li>
-<li><strong>Restrict or object to processing:</strong> ${draft('these rights will be described once the legal basis is confirmed.')}</li>
-<li><strong>Complain:</strong> if you think your data is processed unlawfully, you can complain to the Office of the Data Protection Ombudsman (<a href="https://tietosuoja.fi/en">tietosuoja.fi</a>).</li>
+<li><strong>Access:</strong> you can see your badges on the service’s <a href="/">front page</a> and the collections you saved on the <a href="/my/collections">My collections</a> page. You can ask for a copy of the rest.</li>
+<li><strong>Rectification:</strong> your name shown in the service and the badge details come from Koski. If the data from Koski has errors, contact your school.</li>
+<li><strong>Portability:</strong> you can download the badges as files (in JSON format). You can save badges as digital credentials in your wallet and add them to your LinkedIn profile.</li>
+<li><strong>Erasure:</strong> see <a href="#deletion">How to delete your data</a>.</li>
+<li><strong>Restriction of or objection to processing</strong>: You can stop using the service and <a href="#deletion">delete your data</a>.</li>
+<li><strong>Complaint:</strong> if you think your data is processed unlawfully, you can complain to the Office of the Data Protection Ombudsman (<a href="https://tietosuoja.fi/en">tietosuoja.fi</a>).</li>
 </ul>`,
       },
       {
         id: 'deletion',
         title: 'How to delete your data',
         body: `<ul>
+<li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single collections and share links on the <a href="/my/collections">My collections</a> page.</li>
 <li><strong>Session:</strong> choose ${ui('Sign out')} and the session data is deleted at once. Otherwise it is deleted 24 hours after your last visit.</li>
-<li><strong>Collection:</strong> on the <a href="/my/collections">My collections</a> page, choose ${ui('Delete')} next to the collection. The collection, its badges and its share link are deleted at once. You can’t remove a single badge from a collection yet.</li>
-<li><strong>Share link:</strong> choose ${ui('New share link')} next to the collection and the old link stops working at once. Share pages are excluded from search engines. The service can’t delete copies that someone has already downloaded.</li>
-<li><strong>Account and passkeys:</strong> ${draft('deleting your account in the service is coming. Until then, send a deletion request to ' + CONTACT + '.')} Deleting the account also deletes its collections. The passkey also stays on your device; remove it in your device’s or password manager’s settings.</li>
+<li><strong>Badges you saved in a wallet:</strong> delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
-<li><strong>Badges in a wallet:</strong> delete them in the wallet app.</li>
 </ul>`,
       },
       {
@@ -254,12 +209,13 @@ const COPY = {
         title: 'Terms of use',
         body: `<p>Opintotodiste turns your study records from the Koski service into Open Badges 3.0 badges and signs them electronically. You can download the badges, save them in a digital wallet and share them as collections with a link.</p>
 <ul>
-<li>${draft('Fees: to be written.')}</li>
-<li>${draft('The user’s responsibilities, for example using the service only with one’s own study records: to be written.')}</li>
-<li>${draft('Availability and changes to the service: to be written.')}</li>
-<li>${draft('Limitation of liability: to be written.')}</li>
-<li>${draft('Changes to these terms and this notice, and how they are announced: to be written.')}</li>
-<li>${draft('Governing law: to be written.')}</li>
+<li>Using the service is free of charge both for badge holders and for the verifiers who have been sent a share link from this service.</li>
+<li>Users are responsible for using the service in accordance with good practice. As a badge holder ${draft('(this sentence is unfinished in the Finnish text)')}</li>
+<li>The service provider does its best to keep the service available and working. The service may be discontinued at any time without prior notice.</li>
+<li>The service provider is not responsible for users’ actions or for the loss of users’ data.</li>
+<li>The service provider does not check that the data received from the Koski register is correct. Following good security practice, the service makes sure that the digital credentials it signs match the content received from the Koski register. The service does not verify the user’s identity in any other way than by relying on the name received from the Koski register.</li>
+<li>The service provider reserves the right to change these terms at any time without prior notice.</li>
+<li>Finnish law applies to the service.</li>
 </ul>`,
       },
     ],
