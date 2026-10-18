@@ -34,6 +34,13 @@ export const OG_PAGES = {
       en: 'Turn your studies into verifiable badges, keep them in a digital wallet and share them with an employer.',
     },
   },
+  policy: {
+    title: { fi: 'Tietosuojaseloste ja käyttöehdot – Opintotodiste', en: 'Privacy notice and terms of use – Study credential' },
+    description: {
+      fi: 'Mitä tietoja Opintotodiste käsittelee ja kuinka kauan, miten poistat tietosi ja millä ehdoilla palvelua käytetään.',
+      en: 'What data Opintotodiste processes and for how long, how to delete your data and the terms for using the service.',
+    },
+  },
   employer: {
     title: { fi: 'Työnantajalle – Opintotodiste', en: 'For employers – Study credential' },
     description: {
