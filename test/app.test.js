@@ -125,6 +125,7 @@ describe('the running app', needsPostgres, () => {
   test('404s an unknown shared collection', async () => {
     const res = await fetch(`${app.baseUrl}/c/not-a-real-token`)
     assert.equal(res.status, 404)
+    assert.equal(res.headers.get('x-robots-tag'), 'noindex, nofollow', 'share links stay out of search engines')
   })
 })
 

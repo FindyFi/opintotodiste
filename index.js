@@ -348,6 +348,13 @@ app.post('/collections/:id/items/:itemId/offer', requireAuth, async (req, res) =
 
 // --- Public share links -----------------------------------------------------
 
+// Shared collections are for the people the owner sends the link to, not for
+// search results, even if someone posts a link publicly.
+app.use('/c/', (req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow')
+  next()
+})
+
 app.get('/c/:token', async (req, res) => {
   const found = await collections.findByShareToken(req.params.token)
   if (!found) return res.status(404).send('Collection not found.')
