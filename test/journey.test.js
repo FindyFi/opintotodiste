@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict'
 import test, { after, before, describe } from 'node:test'
 
+import pg from 'pg'
+
 import { createAuthenticator } from './helpers/authenticator.js'
-import { createClient, postgresUnavailable, startApp } from './helpers/app.js'
+import { createClient, databaseUrl, postgresUnavailable, startApp } from './helpers/app.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 // The primary journey - paste a Koski link, get badges, sign one, put it in a
@@ -66,6 +68,25 @@ describe('the Koski journey', needsPostgres, () => {
     for (const credential of body.credentials) {
       assert.ok(credential.credentialSubject?.achievement?.name)
       assert.equal(credential.signed, null)
+    }
+  })
+
+  // /policy promises this: the fixture carries a (fake) identity code and birth
+  // date, which must not reach the session table.
+  test('keeps only the learner number and names of the person in the session', async () => {
+    const client = createClient(app.baseUrl)
+    await loadCredentials(client)
+
+    const db = new pg.Client({ connectionString: databaseUrl() })
+    await db.connect()
+    try {
+      const { rows } = await db.query(`SELECT sess FROM session WHERE sess->'koskiData'->'henkilö'->>'sukunimi' = 'Opiskelija'`)
+      assert.ok(rows.length > 0, 'expected a saved session with the Koski data')
+      for (const { sess } of rows) {
+        assert.deepEqual(Object.keys(sess.koskiData.henkilö).sort(), ['etunimet', 'oid', 'sukunimi'])
+      }
+    } finally {
+      await db.end()
     }
   })
 

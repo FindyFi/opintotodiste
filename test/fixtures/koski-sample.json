@@ -2,7 +2,9 @@
   "henkilö": {
     "oid": "1.2.246.562.24.00000000001",
     "etunimet": "Testi Tapaus",
-    "sukunimi": "Opiskelija"
+    "sukunimi": "Opiskelija",
+    "hetu": "010101-0101",
+    "syntymäaika": "2001-01-01"
   },
   "opiskeluoikeudet": [
     {

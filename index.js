@@ -54,6 +54,15 @@ app.get('/', (req, res) => {
   res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData }))
 })
 
+// Only what convert() and the page use is kept in the session: the learner
+// number and names, and the study records. Anything else Koski sends about the
+// person (an identity code or a birth date, if a share link ever carries them)
+// is dropped before the session is saved; /policy says so.
+function minimalKoskiData(data) {
+  const { oid, etunimet, sukunimi } = data.henkilö ?? {}
+  return { henkilö: { oid, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
+}
+
 function credentialsResponse(req) {
   return {
     personName: req.session.personName,
@@ -67,7 +76,7 @@ app.post('/credentials', async (req, res) => {
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   try {
     const apiUrl = toApiUrl(koskiUrl)
-    const data = await fetchKoskiData(apiUrl)
+    const data = minimalKoskiData(await fetchKoskiData(apiUrl))
     const records = convert(data, { lang })
 
     req.session.koskiUrl = koskiUrl
