@@ -1,17 +1,19 @@
 import 'dotenv/config'
 import './src/env-check.js'
+import { createHash } from 'node:crypto'
 import express from 'express'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert, holderName } from 'koski2openbadge'
-import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
+import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError, mergedImport } from './src/koski.js'
 import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, recordFromCredential, signCredential, credentialKey } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import { scheduleUnusedAccountSweep } from './src/retention.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
+import * as koskiImports from './src/koski-imports.js'
 import { didDocument, signingKey } from './src/issuer-did.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
@@ -70,10 +72,12 @@ app.use(
   })
 )
 
-// What POST /credentials puts in the session. It goes after an hour without
-// requests (someone who walked away from a shared computer), on "clear my
-// data", and with the session.
-const KOSKI_SESSION_KEYS = ['koskiUrl', 'koskiData', 'lang', 'personName', 'credentials', 'koskiSeenAt']
+// What an anonymous user's import puts in the session (a signed-in user's goes
+// to the database). It goes after an hour without requests (someone who walked
+// away from a shared computer), on "clear my data", on signing in (moved to
+// the account) and with the session. `credentials` and `personName` are from
+// sessions made before U18.
+const KOSKI_SESSION_KEYS = ['koskiUrl', 'koskiData', 'removedRefs', 'signedRefs', 'koskiSeenAt', 'credentials', 'personName']
 const KOSKI_IDLE_MS = 60 * 60 * 1000
 
 function clearKoskiData(session) {
@@ -121,7 +125,7 @@ function requireAuth(req, res, next) {
 app.get('/healthz', (req, res) => res.sendStatus(200))
 
 app.get('/', async (req, res) => {
-  const initialData = req.session.credentials || req.session.userId ? await credentialsResponse(req) : null
+  const initialData = req.session.koskiData || req.session.userId ? await credentialsResponse(req) : null
   // The page embeds the imported records: no copy for the next person at a
   // shared computer to find in the cache or with the back button.
   res.set('Cache-Control', 'no-store')
@@ -137,37 +141,93 @@ function minimalKoskiData(data) {
   return { henkilö: { oid, kutsumanimi, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
 }
 
-// A position in the session's list of records, from the URL or a request body.
-// Only a plain non-negative integer counts: anything else (`__proto__`,
-// `length`, `-1`, `1.5`) would be looked up on the array as a property name.
-function sessionRecord(req, index) {
-  const position = typeof index === 'string' && /^\d+$/.test(index) ? Number(index) : index
-  if (!Number.isSafeInteger(position) || position < 0) return undefined
-  return req.session.credentials?.[position]
+// A record's reference in URLs and request bodies: a hash of credentialKey, so
+// it stays the same in every language and across imports (koski2openbadge
+// derives every achievement id from the Koski record, never from its texts).
+const recordRef = (record) => createHash('sha256').update(credentialKey(record)).digest('base64url').slice(0, 22)
+const RECORD_REF = /^[A-Za-z0-9_-]{22}$/
+
+// Where this request's Koski data is: the signed-in user's stored import, or
+// an anonymous user's session.
+async function koskiSource(req) {
+  if (req.session.userId) return koskiImports.findImport(req.session.userId)
+  if (!req.session.koskiData) return null
+  return { koskiUrl: req.session.koskiUrl, data: req.session.koskiData, removed: req.session.removedRefs ?? [] }
+}
+
+// The records converted from `data` in the session's language, one per ref,
+// with the removed ones left out.
+function recordsOf(source, lang) {
+  const removed = new Set(source.removed)
+  const seen = new Set()
+  const records = []
+  for (const record of convert(source.data, { lang })) {
+    const ref = recordRef(record)
+    if (seen.has(ref) || removed.has(ref)) continue
+    seen.add(ref)
+    records.push({ ref, record })
+  }
+  return records
+}
+
+const sessionLang = (req) => (SUPPORTED_LANGS.includes(req.session.lang) ? req.session.lang : 'fi')
+
+async function findRecord(req, ref) {
+  if (typeof ref !== 'string' || !RECORD_REF.test(ref)) return null
+  const source = await koskiSource(req)
+  return (source && recordsOf(source, sessionLang(req)).find((r) => r.ref === ref)?.record) ?? null
+}
+
+function signVerifiableCredential(record) {
+  const vc = toVerifiableCredential(record, {
+    issuerId: process.env.ISSUER_ID,
+    issuerName: process.env.ISSUER_NAME,
+  })
+  return signCredential(vc, {
+    baseUrl: process.env.SIGNING_SERVICE_URL,
+    instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
+    suite: process.env.SIGNING_SERVICE_SUITE,
+  })
+}
+
+// The signed credential for a record, made only when an action needs one and
+// kept from then on: a signed-in user's in their saved credentials
+// (`credentialId`), an anonymous user's in the session.
+async function signedRecord(req, ref, record) {
+  if (req.session.userId) {
+    const existing = await collections.findSavedByRef(req.session.userId, ref)
+    if (existing) return { credentialId: existing.id, signed: existing.credential }
+    const signed = await signVerifiableCredential(record)
+    return { credentialId: (await collections.saveCredential(req.session.userId, signed, ref)).id, signed }
+  }
+  req.session.signedRefs ??= {}
+  req.session.signedRefs[ref] ??= await signVerifiableCredential(record)
+  return { signed: req.session.signedRefs[ref] }
 }
 
 const storedEntry = (item) => ({ credentialId: item.id, ...recordFromCredential(item.credential), signed: true })
 
-// The page's one list: the session's Koski records (`index`) and, for a
-// signed-in user, their stored credentials (`credentialId`), one row per
-// achievement (credentialKey). A record that is stored shows the stored copy,
-// which is what its links and collections show, and has both ids.
-// Only an anonymous user's list ends with the session.
+// The page's one list: the records converted from the Koski data (`ref`), in
+// the current language, plus for a signed-in user any saved credential no
+// record matches (`credentialId` only, e.g. saved before U18). A record that
+// has been signed carries its saved copy's id: by its ref, or for copies saved
+// before refs, by credentialKey.
 async function credentialsResponse(req) {
-  const records = req.session.credentials ?? []
+  const source = await koskiSource(req)
+  const records = source ? recordsOf(source, sessionLang(req)) : []
   const stored = req.session.userId ? await collections.listSavedCredentials(req.session.userId) : []
-  const byKey = new Map(stored.map((item) => [credentialKey(item.credential), item]))
+  const byRef = new Map(stored.filter((item) => item.recordRef).map((item) => [item.recordRef, item]))
+  const byKey = new Map(stored.filter((item) => !item.recordRef).map((item) => [credentialKey(item.credential), item]))
   const shown = new Set()
-  const entries = records.flatMap((record, index) => {
-    if (record.removed) return []
-    const item = byKey.get(credentialKey(record.signed ?? record))
-    if (!item || shown.has(item.id)) return [{ ...record, index }]
-    shown.add(item.id)
-    return [{ ...storedEntry(item), index }]
+  const entries = records.map(({ ref, record }) => {
+    const item = byRef.get(ref) ?? byKey.get(credentialKey(record))
+    if (item && shown.has(item.id)) return { ...record, ref, signed: false }
+    if (item) shown.add(item.id)
+    return { ...record, ref, credentialId: item?.id, signed: Boolean(item || req.session.signedRefs?.[ref]) }
   })
   return {
-    personName: req.session.personName,
-    koskiUrl: req.session.koskiUrl,
+    personName: source ? holderName(source.data.henkilö) ?? '' : undefined,
+    koskiUrl: source?.koskiUrl,
     credentials: [...entries, ...stored.filter((item) => !shown.has(item.id)).map(storedEntry)],
   }
 }
@@ -176,21 +236,39 @@ app.get('/credentials', async (req, res) => {
   res.json(await credentialsResponse(req))
 })
 
+// A signed-in user's import is merged into their stored Koski data (see
+// src/koski-imports.js); an anonymous user's into the session, the same way.
+// Either way the records it holds come back onto the list.
+async function addImport(req, { koskiUrl, data }) {
+  const refs = convert(data, { lang: 'fi' }).map(recordRef)
+  if (req.session.userId) return koskiImports.saveImport(req.session.userId, { koskiUrl, data, refs })
+  const previous = req.session.koskiData ? { data: req.session.koskiData, removed: req.session.removedRefs ?? [] } : null
+  const next = mergedImport(previous, { koskiUrl, data, refs })
+  req.session.koskiUrl = next.koskiUrl
+  req.session.koskiData = next.data
+  req.session.removedRefs = next.removed
+  req.session.koskiSeenAt = Date.now()
+}
+
+// Signing in keeps what was imported before it: the session's Koski data moves
+// into the account, and the session keeps none.
+async function moveSessionImport(req) {
+  if (!req.session.koskiData) return
+  const data = req.session.koskiData
+  const refs = convert(data, { lang: 'fi' }).map(recordRef)
+  const removed = req.session.removedRefs ?? []
+  await koskiImports.saveImport(req.session.userId, { koskiUrl: req.session.koskiUrl, data, refs: refs.filter((ref) => !removed.includes(ref)), removed })
+  clearKoskiData(req.session)
+}
+
 app.post('/credentials', importLimit, async (req, res) => {
   const koskiUrl = (req.body?.koskiUrl || '').trim()
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   try {
     const apiUrl = toApiUrl(koskiUrl)
     const data = minimalKoskiData(await fetchKoskiData(apiUrl))
-    const records = convert(data, { lang })
-
-    req.session.koskiUrl = koskiUrl
-    req.session.koskiData = data
+    await addImport(req, { koskiUrl, data })
     req.session.lang = lang
-    req.session.personName = holderName(data.henkilö) ?? ''
-    req.session.credentials = records.map((record) => ({ ...record, signed: null }))
-    req.session.koskiSeenAt = Date.now()
-
     res.json(await credentialsResponse(req))
   } catch (err) {
     const message = err instanceof InvalidKoskiUrlError ? err.message : `Could not load Koski data: ${err.message}`
@@ -198,11 +276,13 @@ app.post('/credentials', importLimit, async (req, res) => {
   }
 })
 
-// "Clear my data": the imported Koski data goes. An
-// anonymous session has nothing else, so it goes as a whole; a signed-in user
-// stays signed in.
-app.delete('/credentials', (req, res) => {
+// "Clear my data": the imported Koski data goes. An anonymous session has
+// nothing else, so it goes as a whole. For a signed-in user (no button for it
+// yet) the stored Koski data goes; saved credentials, collections and links
+// stay.
+app.delete('/credentials', async (req, res) => {
   if (req.session.userId) {
+    await koskiImports.deleteImport(req.session.userId)
     clearKoskiData(req.session)
     return res.json({ ok: true })
   }
@@ -212,62 +292,29 @@ app.delete('/credentials', (req, res) => {
   })
 })
 
-// "Poista" on a record from Koski takes it off the list until the next import.
-// It stays in the session, flagged, so the other records keep their positions.
-app.delete('/credentials/:index', (req, res) => {
-  const record = sessionRecord(req, req.params.index)
-  if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
-  record.removed = true
+// "Poista" on a record takes it off the list until an import brings it back.
+app.delete('/credentials/:ref', async (req, res) => {
+  if (!(await findRecord(req, req.params.ref))) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
+  if (req.session.userId) await koskiImports.removeRecord(req.session.userId, req.params.ref)
+  else req.session.removedRefs = [...(req.session.removedRefs ?? []), req.params.ref]
   res.status(204).end()
 })
 
-// Re-runs the converter against the already-fetched Koski data in the
-// requested language (e.g. when the UI language switcher changes), without
-// another round trip to Koski. Signed and removed statuses carry over by position, since
-// convert() produces the same records in the same order regardless of lang.
+// The language the records are converted in (e.g. when the UI language
+// switcher changes); the Koski data is converted again, with no round trip
+// to Koski.
 app.post('/credentials/lang', async (req, res) => {
-  const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
-  if (!req.session.koskiData) {
-    return res.status(404).json({ error: 'No Koski data loaded yet.' })
-  }
-
-  const records = convert(req.session.koskiData, { lang })
-  req.session.lang = lang
-  req.session.credentials = records.map((record, index) => ({
-    ...record,
-    signed: req.session.credentials?.[index]?.signed ?? null,
-    ...(req.session.credentials?.[index]?.removed ? { removed: true } : {}),
-  }))
-
+  req.session.lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   res.json(await credentialsResponse(req))
 })
 
-// Signs a session record once; later calls reuse the signature.
-async function signRecord(record) {
-  if (!record.signed) {
-    const vc = toVerifiableCredential(record, {
-      issuerId: process.env.ISSUER_ID,
-      issuerName: process.env.ISSUER_NAME,
-    })
-    record.signed = await signCredential(vc, {
-      baseUrl: process.env.SIGNING_SERVICE_URL,
-      instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
-      suite: process.env.SIGNING_SERVICE_SUITE,
-    })
-  }
-  return record.signed
-}
-
-// For a signed-in user, signing stores the credential too (there is no
-// separate "save" step); credentialId is then its stored copy.
-app.post('/credentials/:index/sign', signingLimit, async (req, res) => {
-  const record = sessionRecord(req, req.params.index)
+// "Lataa": signs the record if it hasn't been yet; for a signed-in user that
+// is their saved copy (credentialId).
+app.post('/credentials/:ref/sign', signingLimit, async (req, res) => {
+  const record = await findRecord(req, req.params.ref)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
-
   try {
-    const signed = await signRecord(record)
-    const credentialId = req.session.userId ? (await collections.saveCredential(req.session.userId, signed)).id : undefined
-    res.json({ signed, credentialId })
+    res.json(await signedRecord(req, req.params.ref, record))
   } catch (err) {
     // A 502 here means a dependency refused the request, not that the user
     // did anything wrong - log it, or the only trace is a message in the
@@ -302,18 +349,18 @@ async function createWalletOffer(record) {
 
 // The offer itself never needs signCredential - it hands an unsigned VC to the
 // OID4VCI issuer, which signs it only once a wallet actually completes the
-// flow. A signed-in user's record is still signed and stored, like any other
-// action on it; if that fails, the offer goes ahead without it.
-app.post('/credentials/:index/offer', signingLimit, async (req, res) => {
-  const record = sessionRecord(req, req.params.index)
+// flow. A signed-in user's record is still signed and saved, like any record
+// that leaves the service; if that fails, the offer goes ahead without it.
+app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
+  const record = await findRecord(req, req.params.ref)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   let credentialId
   if (req.session.userId) {
     try {
-      credentialId = (await collections.saveCredential(req.session.userId, await signRecord(record))).id
+      credentialId = (await signedRecord(req, req.params.ref, record)).credentialId
     } catch (err) {
-      console.error('Storing a credential for a wallet offer failed:', err.message)
+      console.error('Saving a credential for a wallet offer failed:', err.message)
     }
   }
   try {
@@ -324,11 +371,13 @@ app.post('/credentials/:index/offer', signingLimit, async (req, res) => {
   }
 })
 
-app.get('/credentials/:index/download', (req, res) => {
-  const record = sessionRecord(req, req.params.index)
-  if (!record?.signed) return res.status(404).send('No signed credential available yet.')
-  res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.index}.json"`)
-  res.json(record.signed)
+// An anonymous user's signed record (a signed-in user's is a saved credential,
+// GET /saved-credentials/:id/download).
+app.get('/credentials/:ref/download', (req, res) => {
+  const signed = RECORD_REF.test(req.params.ref) ? req.session.signedRefs?.[req.params.ref] : undefined
+  if (!signed) return res.status(404).send('No signed credential available yet.')
+  res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.ref}.json"`)
+  res.json(signed)
 })
 
 // --- Passkey auth ---------------------------------------------------------
@@ -351,6 +400,7 @@ app.post('/auth/register/verify', async (req, res) => {
   try {
     const user = await auth.completeRegistration(req, req.body)
     await regenerateSession(req)
+    await moveSessionImport(req)
     res.json({ displayName: user.displayName })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -369,6 +419,7 @@ app.post('/auth/login/verify', async (req, res) => {
   try {
     const user = await auth.completeLogin(req, req.body)
     await regenerateSession(req)
+    await moveSessionImport(req)
     res.json({ displayName: user.displayName })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -389,24 +440,22 @@ app.delete('/auth/account', requireAuth, async (req, res) => {
   }
 })
 
-// Signs the session's Koski records at `indices` where needed (same as the
-// "Add to wallet" bulk action) and saves each signed VC for the signed-in user.
-// Per-index results, so one failure doesn't sink the rest.
-async function saveFromSession(req, indices) {
+// Signs the records at `refs` where needed and returns each one's saved copy
+// for the signed-in user. Per-record results, so one failure doesn't sink the
+// rest.
+async function saveRecords(req, refs) {
   const results = []
-  for (const index of indices) {
-    const record = sessionRecord(req, index)
+  for (const ref of refs) {
+    const record = await findRecord(req, ref)
     if (!record) {
-      results.push({ index, error: 'Credential not found. Please load your Koski data again.' })
+      results.push({ ref, error: 'Credential not found. Please load your Koski data again.' })
       continue
     }
     const name = record.credentialSubject?.achievement?.name ?? ''
     try {
-      await signRecord(record)
-      const saved = await collections.saveCredential(req.session.userId, record.signed)
-      results.push({ index, name, credentialId: saved.id, signed: record.signed })
+      results.push({ ref, name, ...(await signedRecord(req, ref, record)) })
     } catch (err) {
-      results.push({ index, name, error: err.message })
+      results.push({ ref, name, error: err.message })
     }
   }
   return results
@@ -423,8 +472,8 @@ app.get('/saved-credentials', requireAuth, async (req, res) => {
 })
 
 app.post('/saved-credentials', requireAuth, signingLimit, async (req, res) => {
-  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
-  res.json({ results: await saveFromSession(req, indices) })
+  const refs = Array.isArray(req.body?.refs) ? req.body.refs : []
+  res.json({ results: await saveRecords(req, refs) })
 })
 
 app.get('/saved-credentials/:id/download', requireAuth, async (req, res) => {
@@ -489,8 +538,8 @@ app.delete('/collections/:id', requireAuth, async (req, res) => {
   }
 })
 
-// Adds saved credentials (`credentialIds`) and/or the session's Koski records
-// (`indices`, saved first) to the collection.
+// Adds saved credentials (`credentialIds`) and/or records (`refs`, saved
+// first) to the collection.
 app.post('/collections/:id/items', requireAuth, signingLimit, async (req, res) => {
   try {
     await collections.assertOwnedCollection(req.session.userId, req.params.id)
@@ -498,9 +547,9 @@ app.post('/collections/:id/items', requireAuth, signingLimit, async (req, res) =
     return sendCollectionsError(res, err)
   }
 
-  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
+  const refs = Array.isArray(req.body?.refs) ? req.body.refs : []
   const credentialIds = Array.isArray(req.body?.credentialIds) ? req.body.credentialIds : []
-  const results = [...(await saveFromSession(req, indices)), ...credentialIds.map((credentialId) => ({ credentialId }))]
+  const results = [...(await saveRecords(req, refs)), ...credentialIds.map((credentialId) => ({ credentialId }))]
   for (const result of results) {
     if (result.error) continue
     try {

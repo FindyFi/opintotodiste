@@ -23,8 +23,9 @@ const COLUMNS = [
 ]
 
 // The page's one list (see credentialsResponse in index.js): each entry is a
-// Koski record from this session (`index`), a stored credential of the
-// signed-in user (`credentialId`), or a record and its stored copy (both).
+// record converted from the Koski data (`ref`), with its saved copy's
+// `credentialId` once it has been signed for a signed-in user, or a saved
+// credential no record matches (`credentialId` only).
 let credentials = []
 const sortState = { key: null, direction: 1 }
 const selectedIndices = new Set()
@@ -210,7 +211,7 @@ function buildStatusCell(record) {
 }
 
 const downloadUrl = (entry) =>
-  entry.credentialId ? `/saved-credentials/${entry.credentialId}/download` : `/credentials/${entry.index}/download`
+  entry.credentialId ? `/saved-credentials/${entry.credentialId}/download` : `/credentials/${entry.ref}/download`
 
 const entryName = (entry) => columnValue(entry, 'name')
 
@@ -248,8 +249,7 @@ function detailActions(entry) {
 async function download(entry) {
   let url = downloadUrl(entry)
   if (!entry.credentialId) {
-    const data = await postJson(`/credentials/${entry.index}/sign`)
-    entry.signed = data.signed
+    const data = await postJson(`/credentials/${entry.ref}/sign`)
     if (data.credentialId) url = downloadUrl({ credentialId: data.credentialId })
   }
   el('a', { href: url, download: '' }).click()
@@ -261,7 +261,7 @@ async function shareOne(entry) {
   await Auth.ensureLoggedIn()
   let credentialId = entry.credentialId
   if (!credentialId) {
-    const [result] = (await postJson('/saved-credentials', { indices: [entry.index] })).results
+    const [result] = (await postJson('/saved-credentials', { refs: [entry.ref] })).results
     if (result.error) throw new Error(result.error)
     credentialId = result.credentialId
   }
@@ -270,7 +270,7 @@ async function shareOne(entry) {
 }
 
 const requestOffer = (entry) =>
-  postJson(entry.credentialId ? `/saved-credentials/${entry.credentialId}/offer` : `/credentials/${entry.index}/offer`)
+  postJson(entry.credentialId ? `/saved-credentials/${entry.credentialId}/offer` : `/credentials/${entry.ref}/offer`)
 
 async function walletOne(entry) {
   const offer = await requestOffer(entry)
@@ -283,9 +283,8 @@ async function deleteRequest(url) {
   if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
 }
 
-// A stored credential is deleted everywhere, links included; a record from
-// Koski only leaves the list, and the next import brings it back. A row can be
-// both.
+// A saved copy is deleted everywhere, links included; the record leaves the
+// list, and the next import brings it back.
 async function deleteEntry(entry) {
   const name = entryName(entry)
   const question = entry.credentialId
@@ -293,18 +292,18 @@ async function deleteEntry(entry) {
     : `Poistetaanko "${name}" listalta? Se palaa, kun haet Koski-tiedot uudelleen.`
   if (!confirm(question)) return
   if (entry.credentialId) await deleteRequest(`/saved-credentials/${entry.credentialId}`)
-  if (entry.index !== undefined) await deleteRequest(`/credentials/${entry.index}`)
+  if (entry.ref) await deleteRequest(`/credentials/${entry.ref}`)
   detailDialog.close()
   await reloadList()
 }
 
-// The selected entries as request fields: session records by index, stored
-// credentials by id.
+// The selected entries as request fields: saved credentials by id, records
+// not signed yet by ref.
 function selectedRefs() {
   const entries = [...selectedIndices].sort((a, b) => a - b).map((i) => credentials[i])
   return {
     entries,
-    indices: entries.filter((e) => !e.credentialId).map((e) => e.index),
+    refs: entries.filter((e) => !e.credentialId).map((e) => e.ref),
     credentialIds: entries.filter((e) => e.credentialId).map((e) => e.credentialId),
   }
 }
@@ -453,7 +452,7 @@ const createCollectionFor = () =>
 // make a new collection named after the date, which can be renamed on the
 // collections page. Failed items show in the results instead.
 async function bulkAddToCollection({ share = false } = {}) {
-  const { entries, indices, credentialIds } = selectedRefs()
+  const { entries, refs, credentialIds } = selectedRefs()
   if (!entries.length) return
 
   const button = share ? bulkShareBtn : bulkCollectionBtn
@@ -468,8 +467,8 @@ async function bulkAddToCollection({ share = false } = {}) {
     const collectionId = share ? await createCollectionFor() : await pickOrCreateCollection()
     if (!collectionId) return
 
-    const data = await postJson(`/collections/${collectionId}/items`, { indices, credentialIds })
-    const nameOf = (r) => entryName(entries.find((e) => (r.credentialId && e.credentialId === r.credentialId) || (r.index !== undefined && e.index === r.index)) ?? {})
+    const data = await postJson(`/collections/${collectionId}/items`, { refs, credentialIds })
+    const nameOf = (r) => entryName(entries.find((e) => (r.credentialId && e.credentialId === r.credentialId) || (r.ref && e.ref === r.ref)) ?? {})
     const results = data.results.map((r) => ({ ...r, name: r.name || nameOf(r) }))
 
     await reloadList()
@@ -551,7 +550,7 @@ form.addEventListener('submit', (e) => {
 let syncedLang = currentLang()
 
 async function syncLanguage(lang) {
-  if (!credentials.some((entry) => entry.index !== undefined)) {
+  if (!credentials.some((entry) => entry.ref)) {
     syncedLang = lang
     return
   }

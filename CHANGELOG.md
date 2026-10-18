@@ -26,13 +26,16 @@ version to pin.
 
 ### Changed
 
-- One list of credentials (U18). A signed-in user's main page lists their stored credentials
-  together with the Koski records just fetched, one row per achievement (the same learner,
-  achievement id and date, so a re-import in another language matches the stored copy, which
-  stays as it was). Downloading, sharing, sending to a wallet or adding to a collection stores a
-  signed-in user's credential; there is no "save" step. The detail dialog has Lataa, Jaa, Lisää
-  lompakkoon and Poista, on the main page and on /my/collections. Poista deletes a stored
-  credential everywhere and takes a record from Koski off the list until the next import. /my/collections lists "Jaetut todisteet" (each shared credential or collection
+- One list of credentials (U18). A signed-in user's Koski data is kept in their account (new
+  table `koski_imports`), not in the session: the list is there the next day, in whichever
+  language the page is in. Later imports are merged in by study right; another person's data
+  replaces it. Signing in keeps what was imported before it. Credentials are signed only when one
+  is needed (download, share, collection, wallet), once, and that copy is reused
+  (`saved_credentials.record_ref`). Records are addressed by a ref derived from the achievement
+  instead of a list position (`/credentials/:ref/...`, `refs` in request bodies). There is no
+  "save" step. The detail dialog has Lataa, Jaa, Lisää lompakkoon and Poista, on the main page and
+  on /my/collections. Poista takes a record off the list until an import brings it back, and
+  deletes its signed copy, links included. /my/collections lists "Jaetut todisteet" (each shared credential or collection
   with its recipients) instead of "Tallennetut todisteet". Anonymous use is unchanged, apart from
   Lataa in the dialog. /policy says when a badge is stored and where to delete one.
 

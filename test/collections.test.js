@@ -169,15 +169,15 @@ describe('passkeys and collections', needsPostgres, () => {
     })
 
     test('reports a per-item error rather than failing the whole request', async () => {
-      // The happy path needs Koski records in the session, which this suite
-      // deliberately does not reach out for; what matters here is that an
-      // index with nothing behind it is reported per item, not as a 500.
+      // The happy path needs Koski data, which this suite deliberately does
+      // not reach out for; what matters here is that a record ref with nothing
+      // behind it is reported per item, not as a 500.
       const { client } = await signUp()
       const created = await client.json('/collections', { method: 'POST', body: { name: 'Items' } })
 
       const added = await client.json(`/collections/${created.body.id}/items`, {
         method: 'POST',
-        body: { indices: [0] },
+        body: { refs: ['AAAAAAAAAAAAAAAAAAAAAA'] },
       })
 
       assert.equal(added.status, 200)
@@ -397,7 +397,7 @@ describe('passkeys and collections', needsPostgres, () => {
       const collection = await collectionWith(user, [credentialId])
       const client = anonymous()
       assert.equal((await client.json('/saved-credentials')).status, 401)
-      assert.equal((await client.json('/saved-credentials', { method: 'POST', body: { indices: [0] } })).status, 401)
+      assert.equal((await client.json('/saved-credentials', { method: 'POST', body: { refs: [] } })).status, 401)
       assert.equal((await client.request(`/saved-credentials/${credentialId}`, { method: 'DELETE' })).status, 401)
       assert.equal((await client.json(`/share-links?credentialId=${credentialId}`)).status, 401)
       assert.equal((await client.json('/share-links', { method: 'POST', body: { credentialId, label: 'x' } })).status, 401)

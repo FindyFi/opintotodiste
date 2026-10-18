@@ -75,3 +75,33 @@ export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, max
     throw new Error('Koski did not return a study record.')
   }
 }
+
+// The same person: the same learner number, or with none, the same names.
+function samePerson(a, b) {
+  if (a?.oid || b?.oid) return a?.oid === b?.oid
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
+}
+
+// Adds a new import to an earlier one: a study right (opiskeluoikeus) in both
+// is taken from the new one, the rest of both are kept. Another person's data
+// replaces the earlier import instead of mixing with it (`replaced`).
+export function mergeKoskiData(previous, next) {
+  if (!previous || !samePerson(previous.henkilö, next.henkilö)) return { data: next, replaced: Boolean(previous) }
+  const key = (oo) => oo?.oid ?? JSON.stringify(oo)
+  const studyRights = new Map((previous.opiskeluoikeudet ?? []).map((oo) => [key(oo), oo]))
+  for (const oo of next.opiskeluoikeudet ?? []) studyRights.set(key(oo), oo)
+  return { data: { henkilö: next.henkilö, opiskeluoikeudet: [...studyRights.values()] }, replaced: false }
+}
+
+// Puts the merged result in place of `previous`. The records of the new
+// import (`refs`) come back onto the list; `removed` adds to what is off it.
+export function mergedImport(previous, { koskiUrl, data, refs = [], removed = [] }) {
+  const merged = mergeKoskiData(previous?.data, data)
+  const keep = merged.replaced ? [] : previous?.removed ?? []
+  const back = new Set(refs)
+  return {
+    koskiUrl,
+    data: merged.data,
+    removed: [...new Set([...keep.filter((ref) => !back.has(ref)), ...removed])],
+  }
+}

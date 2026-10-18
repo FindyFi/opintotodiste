@@ -281,9 +281,8 @@ we do it for them (info@findy.fi). Copies already downloaded cannot be recalled.
 **What may happen.** Alice imports their Koski data on a library or school computer without signing in
 and walks away. The session cookie has no expiry and the server keeps the session (with their name and
 study records) for 24 hours after the last request. The next person opens the site and sees Alice's
-records; if they sign in, they can put them into their own account (T1): any action on a record (download,
-share, wallet, collection) stores it for the signed-in user (U18). Anonymous users have no way
-to clear their data; only signed-in users can sign out.
+records; if they sign in, Alice's import moves into their account with everything else on the page
+(T1), since signing in keeps what was imported before it (U18).
 
 **Probability: Medium.** **Impact: Medium.**
 
@@ -294,7 +293,8 @@ to clear their data; only signed-in users can sign out.
   leaves the session after an hour without requests; "Tyhjennä tiedot" (*clear my data*) under the
   list removes it at once after a confirmation (an anonymous session is deleted as a whole); the main page, which embeds the records, is sent `Cache-Control: no-store`.
 - Residual: within that hour, or for a signed-in user who leaves without signing out, the next person
-  still sees the data (for a signed-in user, also every stored badge, which the main page lists).
+  still sees the data. A signed-in user's Koski data is kept in their account, not the session (U18),
+  so it doesn't expire; signing out is what protects it.
 
 **What we do if it happens anyway.** As T1 for any badges taken; otherwise the Koski data expires
 within the hour.
@@ -402,7 +402,8 @@ credentials or a vulnerability.
 
 **What we do so that it doesn't happen.**
 
-- In place: data minimisation (the session keeps only what the converter needs; credentials carry the
+- In place: data minimisation (the session, and a signed-in user's stored import, keep only what the
+  converter needs; credentials carry the
   oppijanumero and the name, nothing more about the person; passkeys store only public keys); the database is on a private network with its own
   credentials; CloudWatch logs are kept 30 days (development); sessions expire after 24 hours idle;
   account deletion removes everything of the user, including other sessions.

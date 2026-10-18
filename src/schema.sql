@@ -77,6 +77,32 @@ BEGIN
 END $$;
 CREATE INDEX IF NOT EXISTS idx_collection_items_credential_id ON collection_items(credential_id);
 
+-- Which Koski record a saved credential was signed from (see recordRef in
+-- index.js), so the list finds it again whatever the language or the date
+-- the signature got. Credentials saved before U18 have none and are matched by
+-- their contents instead. Added only while missing, for the same reason as above.
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                 WHERE table_schema = current_schema() AND table_name = 'saved_credentials' AND column_name = 'record_ref') THEN
+    ALTER TABLE saved_credentials ADD COLUMN record_ref TEXT;
+  END IF;
+END $$;
+CREATE INDEX IF NOT EXISTS idx_saved_credentials_record_ref ON saved_credentials(owner_id, record_ref);
+
+-- A signed-in user's Koski data: what an import fetched, trimmed as in the
+-- session (index.js, minimalKoskiData), with later imports merged in by study
+-- right. The list of credentials is converted from it on each request, and
+-- signed only when one is needed. `removed` holds the records the user took
+-- off the list, until an import brings them back.
+CREATE TABLE IF NOT EXISTS koski_imports (
+  owner_id UUID PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+  koski_url TEXT NOT NULL,
+  data JSONB NOT NULL,
+  removed TEXT[] NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
 -- One link per recipient (the label names them, e.g. an employer), to either a
 -- whole collection or one saved credential. Revoking a link deletes its row;
 -- nothing is recorded about who opens a link or when.
