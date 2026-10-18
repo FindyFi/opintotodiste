@@ -9,6 +9,7 @@ import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
 import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, recordFromCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
+import { scheduleUnusedAccountSweep } from './src/retention.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
 import { didDocument, signingKey } from './src/issuer-did.js'
@@ -509,6 +510,7 @@ app.get('/.well-known/did.json', async (req, res) => {
 })
 
 await runSchema()
+scheduleUnusedAccountSweep(pool)
 
 app.listen(PORT, () => {
   console.log(`opintotodiste listening on http://localhost:${PORT}`)

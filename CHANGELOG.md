@@ -17,6 +17,8 @@ version to pin.
   call name or all first names, then the surname. The credential detail dialog and the shared item
   page show it as "Haltija" / "Holder"; link previews don't. Needs koski2openbadge 0.2.0, which also
   accepts a Koski export without an oid.
+- Accounts whose passkeys have not been used for 6 months are deleted, with their collections,
+  checked at startup and daily.
 
 ## [0.0.4] - 2026-10-18
 
