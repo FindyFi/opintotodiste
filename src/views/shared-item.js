@@ -8,7 +8,10 @@ import { formatDate } from './shared-collection.js'
 export function sharedItemPage({ path, credential }) {
   const achievement = credential?.credentialSubject?.achievement || {}
   const awarded = formatDate((credential?.issuanceDate ?? credential?.validFrom)?.slice(0, 10))
+  const holder = [].concat(credential?.credentialSubject?.identifier ?? [])
+    .find((id) => id?.identityType === 'name' && id.hashed === false)?.identityHash
   const details = [
+    ['Haltija', holder],
     ['Tyyppi', achievement.achievementType],
     ['Myöntäjä', achievement.creator?.name],
     ['Myönnetty', awarded],

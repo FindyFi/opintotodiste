@@ -59,6 +59,13 @@ const Detail = (() => {
     return [el('span', { lang: 'fi' }, fi), el('span', { lang: 'en' }, text)]
   }
 
+  // The holder's name, from the plain-text name identifier koski2openbadge
+  // adds (credentials signed before it have none).
+  function holderName(credentialSubject) {
+    const ids = [].concat(credentialSubject?.identifier ?? [])
+    return ids.find((id) => id?.identityType === 'name' && id.hashed === false)?.identityHash
+  }
+
   function open(credential) {
     const achievement = credential.credentialSubject?.achievement || {}
     const awardedIso = credential.awardedOn ?? credential.issuanceDate ?? credential.validFrom
@@ -68,6 +75,7 @@ const Detail = (() => {
       if (!value) return
       dl.append(el('dt', { lang: 'fi' }, term), el('dd', {}, value))
     }
+    addRow('Haltija', holderName(credential.credentialSubject))
     addRow('Myöntäjä', achievement.creator?.name)
     addRow('Myönnetty', formatDate(awardedIso))
     addRow('Koulutusala', achievement.fieldOfStudy)

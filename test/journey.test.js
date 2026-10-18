@@ -65,9 +65,13 @@ describe('the Koski journey', needsPostgres, () => {
     const body = await loadCredentials(client)
 
     assert.ok(body.credentials.length > 0, 'expected at least one credential')
-    assert.ok(body.personName, 'expected the person name to be reported')
+    // The call name wins over all first names, on the page and in the credentials.
+    assert.equal(body.personName, 'Tapaus Opiskelija')
     for (const credential of body.credentials) {
       assert.ok(credential.credentialSubject?.achievement?.name)
+      assert.deepEqual(credential.credentialSubject.identifier, [
+        { type: 'IdentityObject', hashed: false, identityType: 'name', identityHash: 'Tapaus Opiskelija' },
+      ])
       assert.equal(credential.signed, null)
     }
   })
@@ -86,7 +90,7 @@ describe('the Koski journey', needsPostgres, () => {
     try {
       const { rows } = await db.query(`SELECT sess FROM session WHERE sess->>'koskiUrl' = $1`, [koskiUrl])
       assert.equal(rows.length, 1, 'expected the saved session')
-      assert.deepEqual(Object.keys(rows[0].sess.koskiData.henkilö).sort(), ['etunimet', 'oid', 'sukunimi'])
+      assert.deepEqual(Object.keys(rows[0].sess.koskiData.henkilö).sort(), ['etunimet', 'kutsumanimi', 'oid', 'sukunimi'])
     } finally {
       await db.end()
     }

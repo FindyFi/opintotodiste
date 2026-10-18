@@ -56,6 +56,8 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // No top-level `name` here: SD-JWT VC has no registered claim for it, and a
 // wallet's display name for this vct comes from the type metadata (F1), not
 // per-instance data. The achievement's own `name` is still in `achievement`.
+// The holder's name travels as Open Badges' `identifier` (G8), always
+// disclosed for now; the v1 type defines no display for it.
 export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
@@ -63,6 +65,7 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
   return {
     vct,
     ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
+    ...(credentialSubject.identifier ? { identifier: withoutJsonLdTypes(credentialSubject.identifier) } : {}),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
   }

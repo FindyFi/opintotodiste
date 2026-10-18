@@ -30,6 +30,12 @@ describe('toSdJwtVcClaims', () => {
     })
   })
 
+  test('carries the holder name identifier without its JSON-LD type', () => {
+    const identifier = [{ type: 'IdentityObject', hashed: false, identityType: 'name', identityHash: 'Testi Opiskelija' }]
+    const claims = toSdJwtVcClaims({ credentialSubject: { identifier, achievement: { name: 'A' } } }, { vct: VCT })
+    assert.deepEqual(claims.identifier, [{ hashed: false, identityType: 'name', identityHash: 'Testi Opiskelija' }])
+  })
+
   test('leaves out what the record lacks', () => {
     assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, achievement: { name: 'A' } })
   })

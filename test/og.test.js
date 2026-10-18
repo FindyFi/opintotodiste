@@ -65,6 +65,16 @@ describe('Open Graph tags', () => {
     assert.equal(tag(html, 'og:url'), 'https://todiste.example/c/tok/items/i1')
   })
 
+  // The page shows the holder's name (G8); a link preview stays without it.
+  test('a shared item shows the holder name on the page, not in the preview', () => {
+    const named = credential('Tradenomi')
+    named.credentialSubject.identifier = [{ type: 'IdentityObject', hashed: false, identityType: 'name', identityHash: 'Testi Opiskelija' }]
+    const html = views.sharedItemPage({ token: 'tok', itemId: 'i1', credential: named })
+    assert.match(html, /<dt lang="fi">Haltija<\/dt><dd>Testi Opiskelija<\/dd>/)
+    const metas = html.split('\n').filter((line) => line.startsWith('<meta ') || line.startsWith('<title>'))
+    for (const line of metas) assert.doesNotMatch(line, /Testi Opiskelija/, line)
+  })
+
   test('a shared collection carries its name and size', () => {
     const items = [{ id: 'a', credential: credential('A') }, { id: 'b', credential: credential('B') }]
     const html = views.sharedCollectionPage({ token: 'tok', collection: { name: 'Hakemus' }, items })
