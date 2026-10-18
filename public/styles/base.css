@@ -237,6 +237,9 @@ input[type=checkbox], input[type=radio] {
 .topbar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
 .auth-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
 .auth-nav a { font-weight: 700; color: var(--heading); }
+/* The display name opens the account dialog (public/auth.js). */
+.auth-nav .account-btn { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.auth-nav .account-btn:hover { color: var(--link-hover); }
 .site-nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .site-nav a { font-weight: 700; color: var(--heading); text-decoration: none; }
 .site-nav a:hover, .site-nav a[aria-current=page] { color: var(--link); text-decoration: underline; text-underline-offset: 6px; }

@@ -182,3 +182,26 @@ export async function listPasskeys(userId) {
   )
   return rows.map((r) => ({ id: r.credential_id, deviceType: r.device_type, createdAt: r.created_at, lastUsedAt: r.last_used_at }))
 }
+
+// Deletes the account: passkeys and collections (with their items and share
+// links) go with the users row through ON DELETE CASCADE. The user's other
+// sessions (another browser, another device) are deleted too, so none of them
+// stays signed in to an account that no longer exists, or keeps its Koski data.
+// Returns what the browser needs to tell its passkey provider the passkey is gone.
+export async function deleteAccount(userId) {
+  const { rpID } = rpConfig()
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+    await client.query("DELETE FROM session WHERE sess->>'userId' = $1", [userId])
+    const { rows } = await client.query('DELETE FROM users WHERE id = $1 RETURNING webauthn_user_id', [userId])
+    await client.query('COMMIT')
+    if (!rows[0]) return null
+    return { rpId: rpID, userId: Buffer.from(rows[0].webauthn_user_id).toString('base64url') }
+  } catch (err) {
+    await client.query('ROLLBACK')
+    throw err
+  } finally {
+    client.release()
+  }
+}

@@ -217,6 +217,16 @@ app.post('/auth/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }))
 })
 
+app.delete('/auth/account', requireAuth, async (req, res) => {
+  try {
+    const deleted = await auth.deleteAccount(req.session.userId)
+    req.session.destroy(() => res.json({ ok: true, passkey: deleted }))
+  } catch (err) {
+    console.error('Deleting an account failed:', err.message)
+    res.status(500).json({ error: 'The account could not be deleted. Please try again.' })
+  }
+})
+
 // --- Collections -----------------------------------------------------------
 
 app.get('/collections', requireAuth, async (req, res) => {

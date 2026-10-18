@@ -256,5 +256,29 @@
   },
   "Osaamismerkki kuvaa yhden suorituksen. Sen allekirjoituksesta näkee, kuka sen myönsi ja ettei sitä ole muutettu.": {
     "en": "A badge describes one achievement. Its signature shows who issued it and that it has not been changed."
+  },
+  "Tili": {
+    "en": "Account"
+  },
+  "Näyttönimi": {
+    "en": "Display name"
+  },
+  "Pääsyavaimia": {
+    "en": "Passkeys"
+  },
+  "Poista tili": {
+    "en": "Delete account"
+  },
+  "Tili, sen pääsyavaimet ja kaikki kokoelmasi poistetaan. Kokoelmien ja todisteiden jakolinkit lakkaavat toimimasta. Lompakkoon lisätyt ja ladatut todisteet säilyvät, koska ne ovat sinulla. Poistoa ei voi perua.": {
+    "en": "Your account, its passkeys and all your collections are deleted. Share links to your collections and credentials stop working. Credentials you added to a wallet or downloaded stay with you. This cannot be undone."
+  },
+  "Pääsyavain voi jäädä laitteesi salasanojen hallintaan. Voit poistaa sen sieltä itse.": {
+    "en": "The passkey may stay in your device's password manager. You can remove it there yourself."
+  },
+  "Ymmärrän, että poistoa ei voi perua.": {
+    "en": "I understand that this cannot be undone."
+  },
+  "Poista tili pysyvästi": {
+    "en": "Delete account permanently"
   }
 }

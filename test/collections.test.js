@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict'
 import test, { after, before, describe } from 'node:test'
+import pg from 'pg'
 
 import { createAuthenticator } from './helpers/authenticator.js'
-import { createClient, postgresUnavailable, startApp } from './helpers/app.js'
+import { createClient, databaseUrl, postgresUnavailable, startApp } from './helpers/app.js'
 
 // The authenticated half of the app - passkey registration and login, and
 // everything behind them - had no end-to-end coverage: the existing tests
@@ -225,6 +226,96 @@ describe('passkeys and collections', needsPostgres, () => {
       )
 
       assert.equal(res.status, 404)
+    })
+  })
+
+  describe('deleting the account', () => {
+    let db
+
+    before(async () => {
+      db = new pg.Client({ connectionString: databaseUrl() })
+      await db.connect()
+    })
+
+    after(async () => {
+      await db?.end()
+    })
+
+    async function userIdOf(displayName) {
+      const { rows } = await db.query('SELECT id FROM users WHERE display_name = $1', [displayName])
+      return rows[0]?.id
+    }
+
+    async function count(sql, userId) {
+      const { rows } = await db.query(sql, [userId])
+      return rows[0].n
+    }
+
+    test('deletes the user, passkeys, collections, items and sessions, and breaks the share links', async () => {
+      const { client, authenticator, displayName } = await signUp()
+      const userId = await userIdOf(displayName)
+      const created = await client.json('/collections', { method: 'POST', body: { name: 'Doomed' } })
+      // Adding through the API needs Koski records in the session; a stored
+      // snapshot is all the cascade cares about.
+      const { rows } = await db.query(
+        'INSERT INTO collection_items (collection_id, credential) VALUES ($1, $2) RETURNING id',
+        [created.body.id, { credentialSubject: { achievement: { name: 'Doomed badge' } } }]
+      )
+      const token = created.body.shareToken
+      const anonymous = createClient(app.baseUrl)
+      assert.equal((await anonymous.request(`/c/${token}/items/${rows[0].id}`)).status, 200)
+
+      // A second signed-in browser for the same account.
+      const otherBrowser = createClient(app.baseUrl)
+      const options = await otherBrowser.json('/auth/login/options', { method: 'POST' })
+      await otherBrowser.json('/auth/login/verify', { method: 'POST', body: authenticator.authenticate(options.body) })
+      assert.equal((await otherBrowser.json('/auth/me')).body.loggedIn, true)
+
+      const deleted = await client.json('/auth/account', { method: 'DELETE' })
+      assert.equal(deleted.status, 200, JSON.stringify(deleted.body))
+      assert.equal(deleted.body.passkey.rpId, 'localhost')
+      assert.ok(deleted.body.passkey.userId)
+
+      assert.equal(await userIdOf(displayName), undefined)
+      assert.equal(await count('SELECT COUNT(*)::int AS n FROM passkey_credentials WHERE user_id = $1', userId), 0)
+      assert.equal(await count('SELECT COUNT(*)::int AS n FROM collections WHERE owner_id = $1', userId), 0)
+      assert.equal(await count('SELECT COUNT(*)::int AS n FROM collection_items WHERE collection_id = $1', created.body.id), 0)
+      assert.equal(await count("SELECT COUNT(*)::int AS n FROM session WHERE sess->>'userId' = $1", userId), 0)
+
+      assert.equal((await anonymous.request(`/c/${token}`)).status, 404)
+      assert.equal((await anonymous.request(`/c/${token}/items/${rows[0].id}`)).status, 404)
+      assert.equal((await client.json('/auth/me')).body.loggedIn, false)
+      assert.equal((await otherBrowser.json('/auth/me')).body.loggedIn, false)
+      assert.equal((await client.json('/collections')).status, 401)
+    })
+
+    test('the deleted passkey no longer signs in', async () => {
+      const { client, authenticator } = await signUp()
+      await client.json('/auth/account', { method: 'DELETE' })
+
+      const options = await client.json('/auth/login/options', { method: 'POST' })
+      const verified = await client.json('/auth/login/verify', {
+        method: 'POST',
+        body: authenticator.authenticate(options.body),
+      })
+      assert.equal(verified.status, 400)
+      assert.match(verified.body.error, /not registered/i)
+    })
+
+    test('leaves other accounts alone', async () => {
+      const keeper = await signUp()
+      const kept = await keeper.client.json('/collections', { method: 'POST', body: { name: 'Kept' } })
+      const leaver = await signUp()
+
+      await leaver.client.json('/auth/account', { method: 'DELETE' })
+
+      assert.equal((await keeper.client.json('/auth/me')).body.loggedIn, true)
+      assert.equal((await createClient(app.baseUrl).request(`/c/${kept.body.shareToken}`)).status, 200)
+    })
+
+    test('refuses a caller who is not signed in', async () => {
+      const { status } = await createClient(app.baseUrl).json('/auth/account', { method: 'DELETE' })
+      assert.equal(status, 401)
     })
   })
 })
