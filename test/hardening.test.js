@@ -137,17 +137,24 @@ describe('hardening', needsPostgres, () => {
   test('"clear my data" keeps a signed-in user signed in', async () => {
     const client = createClient(app.baseUrl)
     const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
-    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: 'Clearer' } })
+    const displayName = `Clearer ${randomUUID()}`
+    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName } })
     await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
     await load(client)
+    // A credential already signed and saved (shared, say); signing needs no signer here.
+    const { rows: saved } = await withDb((db) =>
+      db.query(
+        `INSERT INTO saved_credentials (owner_id, credential) SELECT id, $2 FROM users WHERE display_name = $1 RETURNING id`,
+        [displayName, { credentialSubject: { achievement: { name: 'Jaettu' } } }]
+      )
+    )
 
-    // The page hides the button from signed-in users; the route still works.
     assert.match(await (await client.request('/')).text(), /<html lang="fi" data-auth="in">/)
     assert.equal((await client.json('/credentials', { method: 'DELETE' })).status, 200)
-    // The account's stored Koski data goes too (U18).
-    assert.deepEqual((await client.json('/credentials')).body.credentials, [])
+    // The account's Koski data goes (U18); its saved credentials stay.
+    assert.deepEqual((await client.json('/credentials')).body.credentials.map((e) => e.credentialId), [saved[0].id])
     const rows = await withDb((db) =>
-      db.query(`SELECT 1 FROM koski_imports i JOIN users u ON u.id = i.owner_id WHERE u.display_name = 'Clearer'`)
+      db.query(`SELECT 1 FROM koski_imports i JOIN users u ON u.id = i.owner_id WHERE u.display_name = $1`, [displayName])
     )
     assert.equal(rows.rowCount, 0)
     assert.equal((await client.json('/auth/me')).body.loggedIn, true)

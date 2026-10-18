@@ -516,8 +516,14 @@ async function fetchCredentials(koskiUrl) {
 
 // "Clear my data": the server forgets the imported records (and an anonymous
 // session altogether), and so does the page.
+// For a signed-in user the account's Koski data goes, and what has been shared
+// or put in a collection stays on the list.
 clearDataBtn.addEventListener('click', async () => {
-  if (!confirm('Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.')) return
+  const signedIn = document.documentElement.dataset.auth === 'in'
+  const question = signedIn
+    ? 'Poistetaanko Koskesta haetut tiedot? Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät.'
+    : 'Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.'
+  if (!confirm(question)) return
   clearError()
   try {
     const res = await fetch('/credentials', { method: 'DELETE' })
@@ -526,11 +532,15 @@ clearDataBtn.addEventListener('click', async () => {
     showError(err.message)
     return
   }
+  if (detailDialog.open) detailDialog.close()
+  koskiUrlInput.value = ''
+  if (signedIn) {
+    await reloadList().catch((err) => showError(err.message))
+    return
+  }
   credentials = []
   selectedIndices.clear()
-  if (detailDialog.open) detailDialog.close()
   setMeta(null, null)
-  koskiUrlInput.value = ''
   updateBulkBar()
   resultsPanel.hidden = true
 })
@@ -541,8 +551,8 @@ form.addEventListener('submit', (e) => {
 })
 
 // The Koski content (achievement names/descriptions/etc.) is converted
-// server-side once, in whatever language was current at the time, and cached
-// in the session - it doesn't automatically follow later UI language
+// server-side, in the language last sent to /credentials/lang - it doesn't
+// automatically follow later UI language
 // switches the way the app's own chrome does via translate-element. Watching
 // <html lang> (which translate-element updates on every switch) lets us
 // re-request the same already-fetched Koski data in the new language,

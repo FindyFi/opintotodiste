@@ -35,7 +35,8 @@ version to pin.
   instead of a list position (`/credentials/:ref/...`, `refs` in request bodies). There is no
   "save" step. The detail dialog has Lataa, Jaa, Lisää lompakkoon and Poista, on the main page and
   on /my/collections. Poista takes a record off the list until an import brings it back, and
-  deletes its signed copy, links included. /my/collections lists "Jaetut todisteet" (each shared credential or collection
+  deletes its signed copy, links included. "Tyhjennä tiedot" is back for signed-in users: it deletes the
+  account's Koski data and keeps the credentials already signed (shared, in a collection). /my/collections lists "Jaetut todisteet" (each shared credential or collection
   with its recipients) instead of "Tallennetut todisteet". Anonymous use is unchanged, apart from
   Lataa in the dialog. /policy says when a badge is stored and where to delete one.
 

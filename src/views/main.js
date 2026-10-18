@@ -14,7 +14,7 @@ const STEPS = [
 ]
 
 // `signedIn` sets <html data-auth>, which public/auth.js keeps up to date after
-// signing in or out; CSS hides "Tyhjennä tiedot" from signed-in users.
+// signing in or out; public/app.js reloads the list when it changes.
 export function page({ koskiUrl = '', initialData = null, signedIn = false } = {}) {
   return `<!doctype html>
 <html lang="fi" data-auth="${signedIn ? 'in' : 'out'}">
