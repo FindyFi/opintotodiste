@@ -2,7 +2,10 @@
 // records, keyed by `awardedOn`), the collections page and the shared
 // collection page (both signed VCs, keyed by `issuanceDate`/`validFrom`).
 // Detail.open() takes whatever a caller already has - a draft record or a
-// stored credential - with no shape conversion of its own.
+// stored credential - with no shape conversion of its own, plus the owner's
+// actions for it (none on the public pages):
+//   Detail.open(credential, [{ label: 'Jaa', run: () => ..., primary, danger }])
+// A rejected run() shows its message in the dialog.
 const Detail = (() => {
   function el(tag, props = {}, children = []) {
     const node = document.createElement(tag)
@@ -66,7 +69,31 @@ const Detail = (() => {
     return ids.find((id) => id?.identityType === 'name' && id.hashed === false)?.identityHash
   }
 
-  function open(credential) {
+  function actionButtons(actions) {
+    const errorLine = el('p', { class: 'row-error', role: 'alert', hidden: '' })
+    const buttons = actions.map(({ label, run, primary, danger }) => {
+      const button = el('button', { type: 'button', class: ['small', primary && 'primary', danger && 'ghost danger'].filter(Boolean).join(' ') }, el('span', { lang: 'fi' }, label))
+      button.addEventListener('click', async () => {
+        errorLine.hidden = true
+        button.disabled = true
+        button.classList.add('busy')
+        try {
+          await run()
+        } catch (err) {
+          if (err.message === 'cancelled') return
+          errorLine.textContent = err.message
+          errorLine.hidden = false
+        } finally {
+          button.disabled = false
+          button.classList.remove('busy')
+        }
+      })
+      return button
+    })
+    return [el('p', { class: 'detail-actions' }, buttons), errorLine]
+  }
+
+  function open(credential, actions = []) {
     const achievement = credential.credentialSubject?.achievement || {}
     const awardedIso = credential.awardedOn ?? credential.issuanceDate ?? credential.validFrom
 
@@ -98,7 +125,8 @@ const Detail = (() => {
       el('p', {}, el('span', { class: 'badge' }, achievement.achievementType)),
       dl,
       el('p', {}, achievement.description ?? ''),
-      ...(resultRows.length ? [el('table', {}, el('tbody', {}, resultRows))] : [])
+      ...(resultRows.length ? [el('table', {}, el('tbody', {}, resultRows))] : []),
+      ...(actions.length ? actionButtons(actions) : [])
     )
     dialog.showModal()
   }

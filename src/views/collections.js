@@ -25,10 +25,10 @@ ${header()}
 
 <main class="panel">
   <div id="collectionsContainer"></div>
-  <section id="savedSection" class="saved-credentials" hidden>
-    <h2 lang="fi">Tallennetut todisteet</h2>
-    <p class="muted" lang="fi">Kaikki tallentamasi todisteet, myös ne, jotka eivät ole missään kokoelmassa. Voit jakaa todisteen yksinään.</p>
-    <div id="savedContainer"></div>
+  <section id="sharedSection" class="shared-links" hidden>
+    <h2 lang="fi">Jaetut todisteet</h2>
+    <p class="muted" lang="fi">Todisteet ja kokoelmat, joihin on voimassa oleva jakolinkki, ja keille linkit on tehty. Jaa-painikkeesta voit lisätä ja poistaa linkkejä.</p>
+    <div id="sharedContainer"></div>
   </section>
 </main>
 

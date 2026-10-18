@@ -281,15 +281,6 @@
   "Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä. Jokainen vastaanottaja saa oman linkin, jonka voit poistaa koska tahansa.": {
     "en": "Group your badges into collections and share them with a link, for example alongside a job application. Each recipient gets a link of their own, which you can delete at any time."
   },
-  "Tallennetut todisteet": {
-    "en": "Saved credentials"
-  },
-  "Kaikki tallentamasi todisteet, myös ne, jotka eivät ole missään kokoelmassa. Voit jakaa todisteen yksinään.": {
-    "en": "All the credentials you have saved, including those not in any collection. You can share a credential on its own."
-  },
-  "Ei tallennettuja todisteita vielä.": {
-    "en": "No saved credentials yet."
-  },
   "Poista kokoelmasta": {
     "en": "Remove from collection"
   },
@@ -310,5 +301,20 @@
   },
   "Merkki osoittaa, että tiedot ovat peräisin Koskesta eikä niitä ole muutettu. Se ei osoita, että merkin esittäjä on sen haltija: vertaa nimeä tarvittaessa henkilöllisyystodistukseen.": {
     "en": "A badge shows that the records come from Koski and have not been changed. It does not show that whoever presents it is its holder: compare the name with an ID if it matters."
+  },
+  "Todisteet ja kokoelmat, joihin on voimassa oleva jakolinkki, ja keille linkit on tehty. Jaa-painikkeesta voit lisätä ja poistaa linkkejä.": {
+    "en": "Credentials and collections with a live share link, and who the links were made for. Use Share to add or delete links."
+  },
+  "Et ole vielä jakanut todisteita.": {
+    "en": "You have not shared any credentials yet."
+  },
+  "Kokoelma": {
+    "en": "Collection"
+  },
+  "Todiste": {
+    "en": "Credential"
+  },
+  "Linkit:": {
+    "en": "Links:"
   }
 }
