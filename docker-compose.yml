@@ -30,7 +30,9 @@ services:
       # "test" instance both this app (SIGNING_SERVICE_INSTANCE_ID) and
       # oid4vci-issuer (SIGNING_SERVICE_INSTANCE) point at exist. "generate"
       # mints a fresh dev key on every start - fine for local dev, not for
-      # anything that needs stable credential keys.
+      # anything that needs stable credential keys. The tenant signs as a
+      # did:key; deployed ones sign as the site's did:web (README, "The ldp_vc
+      # issuer as a did:web"), which needs https and so isn't used here.
       TENANT_SEED_TEST: generate
 
   # Built straight from its own repo, which ships its own Dockerfile, rather

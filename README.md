@@ -149,7 +149,7 @@ missing `required` variable; `secret` ones belong in a secret store, not plain d
 | `SESSION_SECRET` | Express session signing secret |
 | `DATABASE_URL` | Postgres connection string |
 | `RP_ID`, `RP_NAME`, `ORIGIN` | WebAuthn relying-party config for passkey login |
-| `ISSUER_ID`, `ISSUER_NAME` | Identity used as the issuer on issued credentials |
+| `ISSUER_ID`, `ISSUER_NAME` | Issuer of the credentials; signing-service replaces `ISSUER_ID` with its own DID (see [the `ldp_vc` issuer as a did:web](#the-ldp_vc-issuer-as-a-didweb)) |
 | `SIGNING_SERVICE_URL`, `SIGNING_SERVICE_INSTANCE_ID`, `SIGNING_SERVICE_SUITE` | Where/how to reach signing-service |
 | `OID4VCI_ISSUER_URL`, `OID4VCI_ISSUER_INSTANCE`, `OID4VCI_ISSUER_TOKEN` | Where/how to reach oid4vci-issuer |
 | `OID4VCI_CREDENTIAL_CONFIGURATION_ID` | Credential configuration requested for wallet offers (default `OpenBadgeCredentialSdJwt`; Compose uses `OpenBadgeCredentialSdJwtVc`) |
@@ -212,6 +212,39 @@ Two things follow for anyone changing this repository:
   [`oid4vci-issuer`](https://github.com/FindyFi/oid4vci-issuer) should be
   consumed at a released tag, so a merge cannot silently change what the next
   build produces.
+
+### The `ldp_vc` issuer as a did:web
+
+Downloaded and collected credentials (`ldp_vc`) are signed by signing-service,
+which names its tenant's DID as the issuer. By default that is a `did:key`.
+Deployed environments sign as the site's own `did:web` instead (for example
+`did:web:opinto.todiste.fi`) by giving the tenant two more variables next to its
+seed:
+
+```sh
+TENANT_SEED_OPINTOTODISTE=<unchanged>
+TENANT_DIDMETHOD_OPINTOTODISTE=web
+TENANT_DID_URL_OPINTOTODISTE=https://opinto.todiste.fi   # = the app's ORIGIN
+```
+
+The key comes from the seed either way, so keep the seed: the did:web then
+has the same key as the old `did:key`. The app needs no new configuration.
+It learns the DID and key from a probe signature (as `/verify` already did),
+and serves `/.well-known/did.json` when the DID is the did:web of its
+`ORIGIN`; otherwise that path is a 404. `/verify` trusts both the did:web and
+the `did:key` of the same key, so credentials issued before the switch still
+verify. Deploy the app before switching the tenant, so that the first
+did:web credentials can be resolved; the app rechecks the DID every ten
+minutes, so it may take that long to notice the switch. Local development stays on `did:key`,
+because did:web resolves over https only.
+
+The trade-off: a `did:key` is self-contained, but a did:web credential
+verifies only while this domain serves `did.json`. In return the issuer is
+readable, the key can be rotated, and registries and the OpenID Federation can
+name it. A rotation needs a new seed; `did.json` then lists only the new key,
+so earlier credentials stop verifying. That is what a key compromise needs. A
+planned rotation that keeps old credentials valid would need the old keys
+listed too, which isn't built yet.
 
 ## Contributing
 
