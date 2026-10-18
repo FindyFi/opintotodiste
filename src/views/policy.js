@@ -94,7 +94,7 @@ const COPY = {
         title: 'Näin poistat tietosi',
         body: `<ul>
 <li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisen merkin voit poistaa sen tietoikkunasta (valitse merkin nimi etusivulla tai Kokoelmani-sivulla), kokoelmia ja jakolinkkejä <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
-<li><strong>Istunto:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta (kun et ole kirjautunut sisään) tai ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten Koskesta saadut tiedot poistuvat tunnin ja muut istunnon tiedot 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
+<li><strong>Koskesta haetut tiedot:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta, niin tiedot poistetaan heti. Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät. Jos et ole kirjautunut, tiedot poistuvat muutenkin tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li><strong>Lompakkoon tallentamasi merkit:</strong> Poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> Poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
 </ul>`,
@@ -194,7 +194,7 @@ const COPY = {
         title: 'How to delete your data',
         body: `<ul>
 <li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete a single badge in its details dialog (choose the badge’s name on the front page or the My collections page), and collections and share links on the <a href="/my/collections">My collections</a> page.</li>
-<li><strong>Session:</strong> Choose ${ui('Clear my data')} below your fetched achievements (when you are not signed in), or ${ui('Sign out')}, and the session data is deleted at once. Otherwise the data from Koski is deleted an hour, and the rest of the session data 24 hours, after your last visit.</li>
+<li><strong>Data fetched from Koski:</strong> Choose ${ui('Clear my data')} below your fetched achievements, and the data is deleted at once. Credentials you have shared or added to collections are kept. If you are not signed in, the data is deleted anyway an hour after your last visit.</li>
 <li><strong>Badges you saved in a wallet:</strong> Delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> Delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
 </ul>`,
