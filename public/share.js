@@ -151,17 +151,16 @@ const Share = (() => {
       errorEl.hidden = false
     }
 
-    const labelInput = el('input', {
-      type: 'text',
-      required: '',
-      maxlength: '100',
-      lang: 'fi',
-      placeholder: 'Vastaanottaja, esim. työnantajan nimi',
-      'aria-label': 'Vastaanottaja',
-    })
-    const form = el('form', { class: 'field-row share-new' }, [
-      labelInput,
-      el('button', { type: 'submit', class: 'primary' }, el('span', { lang: 'fi' }, 'Luo linkki')),
+    // The label carries the text to translate, not the input: translate-element
+    // would clone an input with a lang attribute, and the hidden copy would sit
+    // in the form, empty and required.
+    const labelInput = el('input', { type: 'text', id: 'shareLabelInput', required: '', maxlength: '100' })
+    const form = el('form', { class: 'share-new-form' }, [
+      el('label', { for: 'shareLabelInput', lang: 'fi' }, 'Vastaanottaja, esim. työnantajan nimi'),
+      el('div', { class: 'field-row share-new' }, [
+        labelInput,
+        el('button', { type: 'submit', class: 'primary' }, el('span', { lang: 'fi' }, 'Luo linkki')),
+      ]),
     ])
     form.addEventListener('submit', async (e) => {
       e.preventDefault()

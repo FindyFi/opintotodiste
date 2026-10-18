@@ -212,11 +212,8 @@
   "Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.": {
     "en": "This badge is a digitally signed Open Badges 3.0 credential. You can verify that it is genuine without downloading it; download it only if you want to keep a copy."
   },
-  "Nimesi": {
-    "en": "Your name"
-  },
-  "Uusi kokoelma": {
-    "en": "New collection"
+  "Uusi kokoelma:": {
+    "en": "New collection:"
   },
   "Kokoelman nimi": {
     "en": "Collection name"

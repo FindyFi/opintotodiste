@@ -17,9 +17,12 @@ ${header()}
     <span lang="fi">Kirjaudu sisään pääsyavaimella hallitaksesi kokoelmia.</span>
     <button type="button" class="primary" id="loginPromptBtn"><span lang="fi">Kirjaudu sisään</span></button>
   </p>
-  <form class="new-collection field-row" id="newCollectionForm" hidden>
-    <input type="text" id="newCollectionName" placeholder="Kokoelman nimi" lang="fi" aria-label="Kokoelman nimi" required>
-    <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
+  <form class="new-collection" id="newCollectionForm" hidden>
+    <label for="newCollectionName" lang="fi">Kokoelman nimi</label>
+    <div class="field-row">
+      <input type="text" id="newCollectionName" required>
+      <button type="submit" class="primary"><span lang="fi">Luo kokoelma</span></button>
+    </div>
   </form>
 </section>
 

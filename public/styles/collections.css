@@ -19,7 +19,8 @@
 .collections-hero h1 { font-size: clamp(2rem, 4.5vw, 3rem); line-height: 1.08; letter-spacing: -.02em; }
 .collections-hero .lede { max-width: 40rem; font-size: 1.15rem; }
 
-.new-collection { max-width: 40rem; }
+.new-collection { display: flex; flex-direction: column; gap: 10px; max-width: 40rem; }
+.new-collection label { font-weight: 700; color: var(--heading); }
 .new-collection[hidden] { display: none; }
 .login-prompt { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
 .login-prompt[hidden] { display: none; }

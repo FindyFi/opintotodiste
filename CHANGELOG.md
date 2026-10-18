@@ -31,10 +31,17 @@ version to pin.
   achievement id and date, so a re-import in another language matches the stored copy, which
   stays as it was). Downloading, sharing, sending to a wallet or adding to a collection stores a
   signed-in user's credential; there is no "save" step. The detail dialog has Lataa, Jaa, Lisää
-  lompakkoon and Poista (Poista for stored credentials only), on the main page and on
-  /my/collections. /my/collections lists "Jaetut todisteet" (each shared credential or collection
+  lompakkoon and Poista, on the main page and on /my/collections. Poista deletes a stored
+  credential everywhere and takes a record from Koski off the list until the next import. /my/collections lists "Jaetut todisteet" (each shared credential or collection
   with its recipients) instead of "Tallennetut todisteet". Anonymous use is unchanged, apart from
   Lataa in the dialog. /policy says when a badge is stored and where to delete one.
+
+### Fixed
+
+- Creating a share link and naming a new collection (in the "Lisää kokoelmaan" dialog and on
+  /my/collections) works again. translate-element cloned the inputs to translate their
+  placeholders, and the hidden, empty copy blocked the form or was the one the page read. The
+  inputs now have labels and no `lang` of their own; a test keeps it that way.
 
 ### Security
 
