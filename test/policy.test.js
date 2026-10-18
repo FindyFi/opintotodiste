@@ -39,13 +39,6 @@ describe('policy page', () => {
     assert.equal(count(fi), count(en))
   })
 
-  // Remove when the reviewed text replaces the draft.
-  test('marks unreviewed statements visibly, in both languages', () => {
-    const [fi, en] = views.policyPage().split('<article lang="en">')
-    for (const half of [fi, en]) assert.match(half, /<mark class="draft"><span class="draft-tag">LUONNOS \/ DRAFT<\/span>/)
-    assert.match(views.policyPage(), /class="draft-banner"/)
-  })
-
   test('names the contact address', () => {
     assert.match(views.policyPage(), /href="mailto:info@findy\.fi"/)
   })
