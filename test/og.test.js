@@ -27,6 +27,7 @@ describe('Open Graph tags', () => {
       '/guide/studyinfo': views.guidePage('studyinfo'),
       '/guide/wallet': views.guidePage('wallet'),
       '/guide/sharing': views.guidePage('sharing'),
+      '/policy': views.policyPage(),
     }
     for (const [path, html] of Object.entries(pages)) {
       assert.equal(tag(html, 'og:url'), `https://todiste.example${path}`, path)

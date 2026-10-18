@@ -75,3 +75,15 @@ export function header({ auth = true, current = '' } = {}) {
       : ''
   }`
 }
+
+// Rendered at the end of every page's <body>. `current` marks the link of the
+// page being shown, as in header().
+const FOOTER_LINKS = [{ id: 'policy', href: '/policy', text: 'Tietosuoja ja käyttöehdot' }]
+
+export function footer({ current = '' } = {}) {
+  return `<footer class="site-footer">
+  <nav aria-label="Alatunniste">${FOOTER_LINKS.map(
+    ({ id, href, text }) => `<a href="${href}"${id === current ? ' aria-current="page"' : ''}><span lang="fi">${text}</span></a>`
+  ).join('')}</nav>
+</footer>`
+}

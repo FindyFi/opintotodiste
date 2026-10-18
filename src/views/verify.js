@@ -1,4 +1,4 @@
-import { head, header, esc } from './layout.js'
+import { head, header, footer, esc } from './layout.js'
 import { OG_PAGES } from './og.js'
 
 // /verify: in-browser verification of a downloaded ldp_vc (or a VP holding
@@ -72,6 +72,7 @@ ${header({ auth: false, current: 'verify' })}
     </div>
   </aside>
 </main>
+${footer()}
 </body>
 </html>`
 }

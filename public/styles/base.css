@@ -337,6 +337,21 @@ dd { margin: 0; }
 
 .wallet-offer + .wallet-offer { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
 
+/* ---------- footer ---------- */
+
+.site-footer {
+  width: min(100% - 2 * var(--gutter), var(--content));
+  margin: auto auto 0;
+  padding: 32px 0;
+  border-top: 1px solid var(--line);
+  font-size: .95rem;
+}
+.site-footer nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.site-footer a { color: var(--muted); }
+.site-footer a:hover, .site-footer a[aria-current=page] { color: var(--link); }
+/* Room for the main page's fixed selection bar. */
+.page-main .site-footer { padding-bottom: 120px; }
+
 /* ---------- small screens ---------- */
 
 @media (max-width: 560px) {

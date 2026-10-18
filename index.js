@@ -54,6 +54,15 @@ app.get('/', (req, res) => {
   res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData }))
 })
 
+// Only what convert() and the page use is kept in the session: the learner
+// number and names, and the study records. Anything else Koski sends about the
+// person (an identity code or a birth date, if a share link ever carries them)
+// is dropped before the session is saved; /policy says so.
+function minimalKoskiData(data) {
+  const { oid, etunimet, sukunimi } = data.henkilö ?? {}
+  return { henkilö: { oid, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
+}
+
 function credentialsResponse(req) {
   return {
     personName: req.session.personName,
@@ -67,7 +76,7 @@ app.post('/credentials', async (req, res) => {
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   try {
     const apiUrl = toApiUrl(koskiUrl)
-    const data = await fetchKoskiData(apiUrl)
+    const data = minimalKoskiData(await fetchKoskiData(apiUrl))
     const records = convert(data, { lang })
 
     req.session.koskiUrl = koskiUrl
@@ -339,6 +348,13 @@ app.post('/collections/:id/items/:itemId/offer', requireAuth, async (req, res) =
 
 // --- Public share links -----------------------------------------------------
 
+// Shared collections are for the people the owner sends the link to, not for
+// search results, even if someone posts a link publicly.
+app.use('/c/', (req, res, next) => {
+  res.set('X-Robots-Tag', 'noindex, nofollow')
+  next()
+})
+
 app.get('/c/:token', async (req, res) => {
   const found = await collections.findByShareToken(req.params.token)
   if (!found) return res.status(404).send('Collection not found.')
@@ -360,6 +376,10 @@ app.get('/c/:token/items/:itemId/download', async (req, res) => {
 
 app.get('/employer', (req, res) => {
   res.send(views.employerPage())
+})
+
+app.get('/policy', (req, res) => {
+  res.send(views.policyPage())
 })
 
 app.get('/my/collections', (req, res) => {

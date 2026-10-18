@@ -1,4 +1,4 @@
-import { head, header } from './layout.js'
+import { head, header, footer } from './layout.js'
 
 export function collectionsPage() {
   return `<!doctype html>
@@ -32,6 +32,7 @@ ${header()}
   <form method="dialog"><button type="submit" lang="fi">Sulje</button></form>
 </dialog>
 
+${footer()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>

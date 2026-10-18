@@ -1,4 +1,4 @@
-import { head, header, esc, BADGE_ICON, SHARE_ICON } from './layout.js'
+import { head, header, footer, esc, BADGE_ICON, SHARE_ICON } from './layout.js'
 import { formatDate } from './shared-collection.js'
 
 // The public page for one credential (/c/:token/items/:itemId). It doesn't link
@@ -57,6 +57,7 @@ ${header({ auth: false })}
     <a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a>
   </aside>
 </main>
+${footer()}
 </body>
 </html>`
 }

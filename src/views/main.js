@@ -1,4 +1,4 @@
-import { head, header, esc, embedJson } from './layout.js'
+import { head, header, footer, esc, embedJson } from './layout.js'
 import { OG_PAGES } from './og.js'
 
 const icon = (shapes) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${shapes}</svg>`
@@ -73,6 +73,7 @@ ${STEPS.map(
   <form method="dialog"><button type="submit" lang="fi">Sulje</button></form>
 </dialog>
 
+${footer()}
 <script>window.__INITIAL_DATA__ = ${embedJson(initialData)}</script>
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
 <script src="/auth.js" defer></script>

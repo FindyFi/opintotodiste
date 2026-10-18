@@ -1,8 +1,11 @@
 import assert from 'node:assert/strict'
+import { randomUUID } from 'node:crypto'
 import test, { after, before, describe } from 'node:test'
 
+import pg from 'pg'
+
 import { createAuthenticator } from './helpers/authenticator.js'
-import { createClient, postgresUnavailable, startApp } from './helpers/app.js'
+import { createClient, databaseUrl, postgresUnavailable, startApp } from './helpers/app.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 // The primary journey - paste a Koski link, get badges, sign one, put it in a
@@ -66,6 +69,26 @@ describe('the Koski journey', needsPostgres, () => {
     for (const credential of body.credentials) {
       assert.ok(credential.credentialSubject?.achievement?.name)
       assert.equal(credential.signed, null)
+    }
+  })
+
+  // /policy promises this: the fixture carries a (fake) identity code and birth
+  // date, which must not reach the session table.
+  test('keeps only the learner number and names of the person in the session', async () => {
+    // A share link of its own, to find this session among the others.
+    const koskiUrl = `https://opintopolku.fi/koski/opinnot/session-${randomUUID()}`
+    const client = createClient(app.baseUrl)
+    const res = await client.json('/credentials', { method: 'POST', body: { koskiUrl, lang: 'fi' } })
+    assert.equal(res.status, 200)
+
+    const db = new pg.Client({ connectionString: databaseUrl() })
+    await db.connect()
+    try {
+      const { rows } = await db.query(`SELECT sess FROM session WHERE sess->>'koskiUrl' = $1`, [koskiUrl])
+      assert.equal(rows.length, 1, 'expected the saved session')
+      assert.deepEqual(Object.keys(rows[0].sess.koskiData.henkilö).sort(), ['etunimet', 'oid', 'sukunimi'])
+    } finally {
+      await db.end()
     }
   })
 
