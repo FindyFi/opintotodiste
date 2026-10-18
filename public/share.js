@@ -1,9 +1,10 @@
 // The share dialog, shared by the main page and the collections page (both
 // provide <dialog id="detailDialog"> with a #detailDialogContent child).
-//   Share.open({ collectionId })            the collection's link
-//   Share.open({ collectionId, itemId })    the public page of one item
-// It shows the link with a copy button, and a ready-made message for the
-// recipient (fi/en) with a copy button of its own.
+//   Share.open({ collectionId })    links to a collection
+//   Share.open({ credentialId })    links to one saved credential
+// Each recipient gets a link of their own (named after them), so one can be
+// deleted without breaking the others. The selected link comes with a copy
+// button, LinkedIn buttons and a ready-made message for the recipient (fi/en).
 const Share = (() => {
   function el(tag, props = {}, children = []) {
     const node = document.createElement(tag)
@@ -102,65 +103,171 @@ const Share = (() => {
     return button
   }
 
-  async function open({ collectionId, itemId }) {
-    const dialog = document.getElementById('detailDialog')
-    const res = await fetch('/collections')
+  async function requestJson(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      headers: options.body ? { 'content-type': 'application/json' } : undefined,
+      body: options.body ? JSON.stringify(options.body) : undefined,
+    })
+    if (res.status === 204) return null
     const data = await res.json().catch(() => ({}))
     if (!res.ok) throw new Error(data.error || 'Request failed')
-    const collection = data.collections.find((c) => c.id === collectionId)
-    if (!collection) throw new Error('Collection not found.')
+    return data
+  }
 
-    const itemsRes = await fetch(`/collections/${collectionId}/items`)
-    const itemsData = await itemsRes.json().catch(() => ({}))
-    if (!itemsRes.ok) throw new Error(itemsData.error || 'Request failed')
-    const items = itemId ? itemsData.items.filter((item) => item.id === itemId) : itemsData.items
+  const formatDate = (iso) => new Date(iso).toLocaleDateString('fi-FI')
+
+  async function open({ collectionId, credentialId }) {
+    const dialog = document.getElementById('detailDialog')
+    const content = dialog.querySelector('#detailDialogContent')
+    const target = collectionId ? { collectionId } : { credentialId }
+    const query = new URLSearchParams(target)
+
+    // What is shared: a collection (its name and items) or one credential.
+    let title
+    let items
+    if (collectionId) {
+      const { collections } = await requestJson('/collections')
+      const collection = collections.find((c) => c.id === collectionId)
+      if (!collection) throw new Error('Collection not found.')
+      title = collection.name
+      items = (await requestJson(`/collections/${collectionId}/items`)).items
+    } else {
+      const { credentials } = await requestJson('/saved-credentials')
+      const item = credentials.find((c) => c.id === credentialId)
+      if (!item) throw new Error('Credential not found.')
+      title = item.credential?.credentialSubject?.achievement?.name ?? ''
+      items = [item]
+    }
 
     const origin = location.origin
-    const link = itemId
-      ? `${origin}/c/${collection.shareToken}/items/${itemId}`
-      : `${origin}/c/${collection.shareToken}`
-
-    const linkEl = el('a', { class: 'share-link', href: link, target: '_blank', rel: 'noopener' }, link)
-    const linkRow = el('div', { class: 'share-row' }, [linkEl, copyButton(() => link)])
-
-    const linkedInButtons = items.map((item) => addToProfileButton(item, `${origin}/c/${collection.shareToken}/items/${item.id}`))
-    if (!itemId) linkedInButtons.push(linkedInLink('Jaa LinkedInissä', linkedInShareUrl(link)))
-    const linkedInRow = el('div', { class: 'linkedin-actions' }, linkedInButtons)
-
+    let links = (await requestJson(`/share-links?${query}`)).links
+    let selectedId = links[0]?.id
     let lang = document.documentElement.lang === 'en' ? 'en' : 'fi'
-    const textarea = el('textarea', { class: 'share-message', rows: '11', 'aria-label': 'Viesti' })
-    const setMessage = () => {
-      textarea.value = MESSAGES[lang]({ link, origin, single: Boolean(itemId) })
-    }
-    setMessage()
+    const errorEl = el('p', { class: 'error', role: 'alert', hidden: '' })
 
-    const toggle = el('div', { class: 'lang-toggle', role: 'group', 'aria-label': 'Viestin kieli' })
-    for (const [code, label] of [['fi', 'Suomeksi'], ['en', 'In English']]) {
-      const button = el('button', { type: 'button', class: 'small ghost', 'aria-pressed': String(code === lang) }, label)
-      button.addEventListener('click', () => {
-        lang = code
-        toggle.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
-        setMessage()
+    function showError(message) {
+      errorEl.textContent = message
+      errorEl.hidden = false
+    }
+
+    const labelInput = el('input', {
+      type: 'text',
+      required: '',
+      maxlength: '100',
+      lang: 'fi',
+      placeholder: 'Vastaanottaja, esim. työnantajan nimi',
+      'aria-label': 'Vastaanottaja',
+    })
+    const form = el('form', { class: 'field-row share-new' }, [
+      labelInput,
+      el('button', { type: 'submit', class: 'primary' }, el('span', { lang: 'fi' }, 'Luo linkki')),
+    ])
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault()
+      const label = labelInput.value.trim()
+      if (!label) return
+      try {
+        const link = await requestJson('/share-links', { method: 'POST', body: { ...target, label } })
+        links = [link, ...links]
+        selectedId = link.id
+        labelInput.value = ''
+        errorEl.hidden = true
+        render()
+      } catch (err) {
+        showError(err.message)
+      }
+    })
+
+    function linkItem(link) {
+      const selected = link.id === selectedId
+      const url = `${origin}${link.path}`
+      const select = el('button', { type: 'button', class: 'share-link-label', 'aria-pressed': String(selected) }, link.label)
+      select.addEventListener('click', () => {
+        selectedId = link.id
+        render()
       })
-      toggle.append(button)
+      const remove = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
+      remove.addEventListener('click', async () => {
+        if (!confirm(`Poistetaanko linkki "${link.label}"? Se lakkaa toimimasta.`)) return
+        try {
+          await requestJson(`/share-links/${link.id}`, { method: 'DELETE' })
+          links = links.filter((l) => l.id !== link.id)
+          if (selected) selectedId = links[0]?.id
+          render()
+        } catch (err) {
+          showError(err.message)
+        }
+      })
+      return el('li', { class: selected ? 'share-link-item selected' : 'share-link-item' }, [
+        el('div', { class: 'share-link-head' }, [
+          select,
+          el('span', { class: 'muted' }, formatDate(link.createdAt)),
+          remove,
+        ]),
+        selected
+          ? el('div', { class: 'share-row' }, [
+              el('a', { class: 'share-link', href: url, target: '_blank', rel: 'noopener' }, url),
+              copyButton(() => url),
+            ])
+          : '',
+      ])
     }
 
-    dialog.querySelector('#detailDialogContent').replaceChildren(
-      el('h2', { lang: 'fi' }, itemId ? 'Jaa todiste' : 'Jaa kokoelma'),
-      el(
-        'p',
-        { class: 'muted', lang: 'fi' },
-        itemId
-          ? 'Linkin avaaja näkee tämän todisteen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.'
-          : 'Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.'
-      ),
-      linkRow,
-      linkedInRow,
-      el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),
-      textarea,
-      el('p', {}, copyButton(() => textarea.value))
-    )
+    // The LinkedIn buttons and the message, for the selected link.
+    function forLink(link) {
+      const url = `${origin}${link.path}`
+      const certUrl = (item) => (collectionId ? `${url}/items/${item.id}` : url)
+      const linkedInButtons = items.map((item) => addToProfileButton(item, certUrl(item)))
+      if (collectionId) linkedInButtons.push(linkedInLink('Jaa LinkedInissä', linkedInShareUrl(url)))
+
+      const textarea = el('textarea', { class: 'share-message', rows: '11', 'aria-label': 'Viesti' })
+      const setMessage = () => {
+        textarea.value = MESSAGES[lang]({ link: url, origin, single: !collectionId })
+      }
+      setMessage()
+
+      const toggle = el('div', { class: 'lang-toggle', role: 'group', 'aria-label': 'Viestin kieli' })
+      for (const [code, label] of [['fi', 'Suomeksi'], ['en', 'In English']]) {
+        const button = el('button', { type: 'button', class: 'small ghost', 'aria-pressed': String(code === lang) }, label)
+        button.addEventListener('click', () => {
+          lang = code
+          toggle.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
+          setMessage()
+        })
+        toggle.append(button)
+      }
+
+      return [
+        el('div', { class: 'linkedin-actions' }, linkedInButtons),
+        el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),
+        textarea,
+        el('p', {}, copyButton(() => textarea.value)),
+      ]
+    }
+
+    function render() {
+      const selected = links.find((l) => l.id === selectedId)
+      content.replaceChildren(
+        el('h2', { lang: 'fi' }, collectionId ? 'Jaa kokoelma' : 'Jaa todiste'),
+        el('p', { class: 'share-subject' }, title),
+        el(
+          'p',
+          { class: 'muted', lang: 'fi' },
+          collectionId
+            ? 'Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.'
+            : 'Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee tämän todisteen ja voi ladata sen. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.'
+        ),
+        form,
+        errorEl,
+        links.length ? el('ul', { class: 'share-links' }, links.map(linkItem)) : '',
+        ...(selected ? forLink(selected) : [])
+      )
+    }
+
+    render()
     dialog.showModal()
+    if (!links.length) labelInput.focus()
   }
 
   return { open }

@@ -57,6 +57,18 @@ body.page-collections .panel {
 .collection-items { list-style: none; margin: 0; padding: 0; }
 .collection-items .credential:last-child { border-bottom: 0; }
 
+/* All saved credentials, below the collections, in the same card. */
+.saved-credentials {
+  margin-top: 48px;
+  padding: 24px clamp(16px, 3vw, 32px) 8px;
+  border: 1px solid var(--line);
+  border-radius: 32px;
+  background: var(--surface);
+}
+.saved-credentials[hidden] { display: none; }
+.saved-credentials h2 { font-size: 1.4rem; }
+.saved-credentials > .muted { padding-bottom: 16px; border-bottom: 2px solid var(--line-strong); }
+
 /* ---------- small screens ---------- */
 
 @media (max-width: 900px) {

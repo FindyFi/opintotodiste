@@ -119,9 +119,6 @@
   "Poista": {
     "en": "Delete"
   },
-  "Uusi jakolinkki": {
-    "en": "New share link"
-  },
   "Kopioi linkki": {
     "en": "Copy link"
   },
@@ -163,9 +160,6 @@
   },
   "Järjestä:": {
     "en": "Sort:"
-  },
-  "Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä.": {
-    "en": "Group your badges into collections and share them with a link, for example alongside a job application."
   },
   "Kopioitu!": {
     "en": "Copied!"
@@ -214,12 +208,6 @@
   },
   "Tämä osaamismerkki on digitaalisesti allekirjoitettu Open Badges 3.0 -todiste. Voit tarkastaa sen aitouden ilman latausta; lataa todiste vain, jos haluat tallentaa sen.": {
     "en": "This badge is a digitally signed Open Badges 3.0 credential. You can verify that it is genuine without downloading it; download it only if you want to keep a copy."
-  },
-  "Linkin avaaja näkee tämän todisteen ja voi ladata sen. Linkki lakkaa toimimasta, kun kokoelman jakolinkki uusitaan.": {
-    "en": "Anyone with the link can see this credential and download it. The link stops working when the collection's share link is renewed."
-  },
-  "Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Voit sulkea linkin luomalla kokoelmalle uuden jakolinkin.": {
-    "en": "Anyone with the link can see all the credentials in the collection and download them. You can close the link by creating a new share link for the collection."
   },
   "Nimesi": {
     "en": "Your name"
@@ -286,5 +274,32 @@
   },
   "Tietosuojaseloste ja käyttöehdot – Opintotodiste": {
     "en": "Privacy notice and terms of use – Opintotodiste"
+  },
+  "Kokoa osaamismerkit kokoelmiksi ja jaa ne linkillä esimerkiksi työnhakemuksen liitteenä. Jokainen vastaanottaja saa oman linkin, jonka voit poistaa koska tahansa.": {
+    "en": "Group your badges into collections and share them with a link, for example alongside a job application. Each recipient gets a link of their own, which you can delete at any time."
+  },
+  "Tallennetut todisteet": {
+    "en": "Saved credentials"
+  },
+  "Kaikki tallentamasi todisteet, myös ne, jotka eivät ole missään kokoelmassa. Voit jakaa todisteen yksinään.": {
+    "en": "All the credentials you have saved, including those not in any collection. You can share a credential on its own."
+  },
+  "Ei tallennettuja todisteita vielä.": {
+    "en": "No saved credentials yet."
+  },
+  "Poista kokoelmasta": {
+    "en": "Remove from collection"
+  },
+  "Luo linkki": {
+    "en": "Create link"
+  },
+  "Vastaanottaja, esim. työnantajan nimi": {
+    "en": "Recipient, e.g. the employer's name"
+  },
+  "Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.": {
+    "en": "Create a link of its own for each recipient. Anyone with the link can see all the credentials in the collection and download them. When you delete a link it stops working, but the other links keep working. We don't track who opens a link."
+  },
+  "Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee tämän todisteen ja voi ladata sen. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.": {
+    "en": "Create a link of its own for each recipient. Anyone with the link can see this credential and download it. When you delete a link it stops working, but the other links keep working. We don't track who opens a link."
   }
 }
