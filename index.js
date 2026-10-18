@@ -11,6 +11,7 @@ import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
+import { didDocument, signingKey } from './src/issuer-did.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
 import { ogLanguageMiddleware } from './src/views/og.js'
@@ -485,6 +486,26 @@ app.get('/verify', async (req, res) => {
     { issuerName: process.env.ISSUER_NAME, url: process.env.ORIGIN }
   )
   res.send(views.verifyPage({ issuers }))
+})
+
+// The DID document of our ldp_vc issuer when signing-service signs as this
+// site's did:web; 404 while it signs as a did:key. Verifiers anywhere fetch
+// it (veri-good from the browser), hence CORS.
+app.get('/.well-known/did.json', async (req, res) => {
+  let key
+  try {
+    key = await signingKey({
+      baseUrl: process.env.SIGNING_SERVICE_URL,
+      instanceId: process.env.SIGNING_SERVICE_INSTANCE_ID,
+      suite: process.env.SIGNING_SERVICE_SUITE,
+    })
+  } catch (err) {
+    console.error('Could not learn the signing key for did.json:', err.message)
+    return res.sendStatus(503)
+  }
+  const doc = didDocument(key, process.env.ORIGIN)
+  if (!doc) return res.sendStatus(404)
+  res.set({ 'Access-Control-Allow-Origin': '*', 'Cache-Control': 'public, max-age=300' }).json(doc)
 })
 
 await runSchema()
