@@ -70,12 +70,13 @@ describe('createOffer', () => {
     }
   })
 
-  test('surfaces an issuer failure with its response', async () => {
-    const issuer = await startStubServer(() => ({ status: 401, text: 'unauthorized' }))
+  // The body may echo the credential, and the message is logged and shown.
+  test('surfaces an issuer failure by status only, without the response body', async () => {
+    const issuer = await startStubServer(() => ({ status: 400, text: 'bad claims {"sub":"urn:oid:1.2.3"}' }))
     try {
       await assert.rejects(
         () => createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test' }),
-        /OID4VCI issuer responded with 401.*unauthorized/s
+        (err) => /^OID4VCI issuer responded with 400/.test(err.message) && !err.message.includes('urn:oid')
       )
     } finally {
       await issuer.stop()

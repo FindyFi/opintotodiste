@@ -20,6 +20,18 @@ version to pin.
 - Accounts whose passkeys have not been used for 6 months are deleted, with their collections,
   checked at startup and daily.
 
+### Security
+
+- Application hardening (H3, see docs/threat-analysis.md). Koski fetches refuse redirects, time
+  out after 15 s and stop at 5 MB. A new session id on registration and sign-in; over HTTPS the
+  cookie is `__Host-sid`, `Secure`, `SameSite=Lax` (**deploying this signs everyone out once**).
+  CSP `frame-ancestors`/`object-src`/`base-uri`/`form-action`, `X-Frame-Options`, `nosniff` and
+  `Referrer-Policy: no-referrer` on every response. Imported Koski data leaves the session after
+  an hour idle, and "Tyhjennä tiedot" clears it at once. Per-IP rate limits on imports, signing,
+  wallet offers and passkey challenges. A production start refuses placeholder secrets
+  (`change-me`, `dev-…`). Upstream error bodies are no longer logged or shown. `/employer`, the
+  shared pages and `/verify` say that a badge does not prove the presenter is its holder.
+
 ## [0.0.4] - 2026-10-18
 
 ### Added

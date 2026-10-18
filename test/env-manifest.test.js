@@ -3,7 +3,7 @@ import { readdirSync, readFileSync } from 'node:fs'
 import { spawnSync } from 'node:child_process'
 import test, { describe } from 'node:test'
 
-import { loadEnvManifest, missingRequired, parseEnvManifest } from '../src/env-manifest.js'
+import { knownDefaults, loadEnvManifest, missingRequired, parseEnvManifest } from '../src/env-manifest.js'
 import { APP_ENV_KEYS, cleanEnv } from './helpers/app.js'
 
 const ROOT = new URL('../', import.meta.url)
@@ -93,6 +93,13 @@ describe('parseEnvManifest', () => {
     assert.throws(() => parseEnvManifest('# @env required\n# @env optional\nA=1\n'), /two @env tags/)
   })
 
+  test('knownDefaults names secrets left at a placeholder value', () => {
+    const m = parseEnvManifest('# @env required secret\nA=1\n# @env optional secret\nB=1\n# @env required secret\nC=1\n# @env required\nD=1\n')
+    const env = { A: 'change-me', B: 'dev-coordinator-token-change-me', C: 'a-real-secret', D: 'dev-not-secret' }
+    assert.deepEqual(knownDefaults(m, env), ['A', 'B'])
+    assert.deepEqual(knownDefaults(m, {}), [])
+  })
+
   test('missingRequired names unset and empty required variables only', () => {
     const m = parseEnvManifest('# @env required\nA=1\n# @env required\nB=1\n# @env optional\nC=1\n')
     assert.deepEqual(missingRequired(m, { A: 'x', B: '' }), ['B'])
@@ -119,6 +126,14 @@ describe('startup in production', () => {
     assert.match(result.stderr, /SESSION_SECRET/)
     assert.match(result.stderr, /OID4VCI_CREDENTIAL_VCT/)
     assert.doesNotMatch(result.stderr, /Missing required.*DATABASE_URL/)
+  })
+
+  test('refuses secrets left at a development default', () => {
+    const present = Object.fromEntries(manifest.filter((e) => e.required).map((e) => [e.name, 'x']))
+    const result = start({ ...present, SESSION_SECRET: 'change-me', OID4VCI_ISSUER_TOKEN: 'dev-coordinator-token-change-me' })
+    assert.notEqual(result.status, 0)
+    assert.match(result.stderr, /development default: SESSION_SECRET, OID4VCI_ISSUER_TOKEN/)
+    assert.doesNotMatch(result.stderr, /Missing required/)
   })
 
   test('names all of them when nothing is set', () => {

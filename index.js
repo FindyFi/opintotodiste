@@ -16,10 +16,31 @@ import { didDocument, signingKey } from './src/issuer-did.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
 import { ogLanguageMiddleware } from './src/views/og.js'
+import { rateLimit } from './src/rate-limit.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 const SUPPORTED_LANGS = ['fi', 'en']
+
+// Deployed behind one load balancer hop, which terminates TLS: req.secure
+// (for the Secure cookie) and req.ip (for the rate limits) come from its
+// X-Forwarded-* headers.
+app.set('trust proxy', 1)
+
+// On every response, static files included. frame-ancestors (with
+// X-Frame-Options for older browsers) stops clickjacking, e.g. "delete account"
+// in a hidden frame. No referrer at all: share-link tokens are in our URLs,
+// including /verify?url=, and must not leak to other sites in Referer.
+// script-src is not restricted: the pages still embed their data inline.
+app.use((req, res, next) => {
+  res.set({
+    'Content-Security-Policy': "frame-ancestors 'none'; object-src 'none'; base-uri 'none'; form-action 'self'",
+    'X-Frame-Options': 'DENY',
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'no-referrer',
+  })
+  next()
+})
 
 app.use(ogLanguageMiddleware)
 app.use(express.json())
@@ -29,14 +50,68 @@ app.use('/vendor/simplewebauthn-browser', express.static('node_modules/@simplewe
 app.use('/vendor/archivo', express.static('node_modules/@fontsource-variable/archivo'))
 // bundle.js plus the JSON-LD contexts it loads next to itself; not its demo page.
 app.use('/vendor/veri-good', express.static('node_modules/@digitalcredentials/veri-good/dist', { index: false }))
+// Over HTTPS the cookie is Secure and `__Host-` prefixed, so neither a plain
+// HTTP page nor a sibling *.findy.fi subdomain can set or overwrite it.
+// localhost over http:// (development, tests) keeps the old name. The cookie has
+// no expiry, so it goes when the browser closes; the server keeps the session
+// for 24 hours after the last request (connect-pg-simple's default).
+const HTTPS_ORIGIN = (process.env.ORIGIN || '').startsWith('https://')
+const SESSION_COOKIE = HTTPS_ORIGIN ? '__Host-sid' : 'connect.sid'
+const SESSION_COOKIE_OPTIONS = { path: '/', httpOnly: true, secure: HTTPS_ORIGIN, sameSite: 'lax' }
+
 app.use(
   session({
     store: new (connectPgSimple(session))({ pool }),
     secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+    name: SESSION_COOKIE,
+    cookie: SESSION_COOKIE_OPTIONS,
     resave: false,
     saveUninitialized: false,
   })
 )
+
+// What POST /credentials puts in the session. It goes after an hour without
+// requests (someone who walked away from a shared computer), on "clear my
+// data", and with the session.
+const KOSKI_SESSION_KEYS = ['koskiUrl', 'koskiData', 'lang', 'personName', 'credentials', 'koskiSeenAt']
+const KOSKI_IDLE_MS = 60 * 60 * 1000
+
+function clearKoskiData(session) {
+  for (const key of KOSKI_SESSION_KEYS) delete session[key]
+}
+
+app.use((req, res, next) => {
+  if (req.session.koskiData) {
+    const idle = Date.now() - (req.session.koskiSeenAt ?? 0)
+    if (idle > KOSKI_IDLE_MS) clearKoskiData(req.session)
+    // Saving the session on every request isn't needed for an hour's precision.
+    else if (idle > 60 * 1000) req.session.koskiSeenAt = Date.now()
+  }
+  next()
+})
+
+// A fresh session id once someone signs in, so an id planted in their browser
+// beforehand (session fixation) is worth nothing afterwards. Everything but
+// the finished ceremony carries over: the imported Koski data, and the user.
+function regenerateSession(req) {
+  const keep = Object.fromEntries(
+    Object.entries(req.session).filter(([key]) => !['cookie', 'pendingLogin', 'pendingRegistration'].includes(key))
+  )
+  return new Promise((resolve, reject) => {
+    req.session.regenerate((err) => {
+      if (err) return reject(err)
+      Object.assign(req.session, keep)
+      resolve()
+    })
+  })
+}
+
+// Per client IP; see src/rate-limit.js. Generous enough for a classroom behind
+// one address.
+const FIVE_MINUTES = 5 * 60 * 1000
+const importLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 60 })
+const signingLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 200 })
+const authLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 100 })
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ error: 'Please sign in with a passkey first.' })
@@ -53,7 +128,10 @@ app.get('/', (req, res) => {
         credentials: req.session.credentials,
       }
     : null
-  res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData }))
+  // The page embeds the imported records: no copy for the next person at a
+  // shared computer to find in the cache or with the back button.
+  res.set('Cache-Control', 'no-store')
+  res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData, signedIn: Boolean(req.session.userId) }))
 })
 
 // Only what convert() and the page use is kept in the session: the learner
@@ -65,6 +143,15 @@ function minimalKoskiData(data) {
   return { henkilö: { oid, kutsumanimi, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
 }
 
+// A position in the session's list of records, from the URL or a request body.
+// Only a plain non-negative integer counts: anything else (`__proto__`,
+// `length`, `-1`, `1.5`) would be looked up on the array as a property name.
+function sessionRecord(req, index) {
+  const position = typeof index === 'string' && /^\d+$/.test(index) ? Number(index) : index
+  if (!Number.isSafeInteger(position) || position < 0) return undefined
+  return req.session.credentials?.[position]
+}
+
 function credentialsResponse(req) {
   return {
     personName: req.session.personName,
@@ -73,7 +160,7 @@ function credentialsResponse(req) {
   }
 }
 
-app.post('/credentials', async (req, res) => {
+app.post('/credentials', importLimit, async (req, res) => {
   const koskiUrl = (req.body?.koskiUrl || '').trim()
   const lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
   try {
@@ -86,12 +173,27 @@ app.post('/credentials', async (req, res) => {
     req.session.lang = lang
     req.session.personName = holderName(data.henkilö) ?? ''
     req.session.credentials = records.map((record) => ({ ...record, signed: null }))
+    req.session.koskiSeenAt = Date.now()
 
     res.json(credentialsResponse(req))
   } catch (err) {
     const message = err instanceof InvalidKoskiUrlError ? err.message : `Could not load Koski data: ${err.message}`
     res.status(400).json({ error: message })
   }
+})
+
+// "Clear my data": the imported Koski data goes. An
+// anonymous session has nothing else, so it goes as a whole; a signed-in user
+// stays signed in.
+app.delete('/credentials', (req, res) => {
+  if (req.session.userId) {
+    clearKoskiData(req.session)
+    return res.json({ ok: true })
+  }
+  req.session.destroy(() => {
+    res.clearCookie(SESSION_COOKIE, SESSION_COOKIE_OPTIONS)
+    res.json({ ok: true })
+  })
 })
 
 // Re-runs the converter against the already-fetched Koski data in the
@@ -114,9 +216,8 @@ app.post('/credentials/lang', (req, res) => {
   res.json(credentialsResponse(req))
 })
 
-app.post('/credentials/:index/sign', async (req, res) => {
-  const { index } = req.params
-  const record = req.session.credentials?.[index]
+app.post('/credentials/:index/sign', signingLimit, async (req, res) => {
+  const record = sessionRecord(req, req.params.index)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   try {
@@ -162,9 +263,8 @@ async function createWalletOffer(record) {
 // Unlike /sign, this never calls signCredential itself - it hands an
 // unsigned VC to the OID4VCI issuer, which signs it only once a wallet
 // actually completes the flow.
-app.post('/credentials/:index/offer', async (req, res) => {
-  const { index } = req.params
-  const record = req.session.credentials?.[index]
+app.post('/credentials/:index/offer', signingLimit, async (req, res) => {
+  const record = sessionRecord(req, req.params.index)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   try {
@@ -176,7 +276,7 @@ app.post('/credentials/:index/offer', async (req, res) => {
 })
 
 app.get('/credentials/:index/download', (req, res) => {
-  const record = req.session.credentials?.[req.params.index]
+  const record = sessionRecord(req, req.params.index)
   if (!record?.signed) return res.status(404).send('No signed credential available yet.')
   res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.index}.json"`)
   res.json(record.signed)
@@ -190,7 +290,7 @@ app.get('/auth/me', async (req, res) => {
   res.json({ loggedIn: true, displayName: req.session.displayName, passkeys })
 })
 
-app.post('/auth/register/options', async (req, res) => {
+app.post('/auth/register/options', authLimit, async (req, res) => {
   try {
     res.json(await auth.beginRegistration(req, req.body?.displayName))
   } catch (err) {
@@ -201,13 +301,14 @@ app.post('/auth/register/options', async (req, res) => {
 app.post('/auth/register/verify', async (req, res) => {
   try {
     const user = await auth.completeRegistration(req, req.body)
+    await regenerateSession(req)
     res.json({ displayName: user.displayName })
   } catch (err) {
     res.status(400).json({ error: err.message })
   }
 })
 
-app.post('/auth/login/options', async (req, res) => {
+app.post('/auth/login/options', authLimit, async (req, res) => {
   try {
     res.json(await auth.beginLogin(req))
   } catch (err) {
@@ -218,6 +319,7 @@ app.post('/auth/login/options', async (req, res) => {
 app.post('/auth/login/verify', async (req, res) => {
   try {
     const user = await auth.completeLogin(req, req.body)
+    await regenerateSession(req)
     res.json({ displayName: user.displayName })
   } catch (err) {
     res.status(400).json({ error: err.message })
@@ -244,7 +346,7 @@ app.delete('/auth/account', requireAuth, async (req, res) => {
 async function saveFromSession(req, indices) {
   const results = []
   for (const index of indices) {
-    const record = req.session.credentials?.[index]
+    const record = sessionRecord(req, index)
     if (!record) {
       results.push({ index, error: 'Credential not found. Please load your Koski data again.' })
       continue
@@ -281,7 +383,7 @@ app.get('/saved-credentials', requireAuth, async (req, res) => {
   res.json({ credentials: await collections.listSavedCredentials(req.session.userId) })
 })
 
-app.post('/saved-credentials', requireAuth, async (req, res) => {
+app.post('/saved-credentials', requireAuth, signingLimit, async (req, res) => {
   const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
   res.json({ results: await saveFromSession(req, indices) })
 })
@@ -298,7 +400,7 @@ app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
 // Owner only: with no holder binding, a public share link must not be able to
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
 // re-issued as a VCDM 2.0 credential for the wallet.
-app.post('/saved-credentials/:id/offer', requireAuth, async (req, res) => {
+app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, res) => {
   const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
 
@@ -343,7 +445,7 @@ app.delete('/collections/:id', requireAuth, async (req, res) => {
 
 // Adds saved credentials (`credentialIds`) and/or the session's Koski records
 // (`indices`, saved first) to the collection.
-app.post('/collections/:id/items', requireAuth, async (req, res) => {
+app.post('/collections/:id/items', requireAuth, signingLimit, async (req, res) => {
   try {
     await collections.assertOwnedCollection(req.session.userId, req.params.id)
   } catch (err) {

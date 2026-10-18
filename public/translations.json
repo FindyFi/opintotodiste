@@ -304,5 +304,11 @@
   },
   "Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee tämän todisteen ja voi ladata sen. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.": {
     "en": "Create a link of its own for each recipient. Anyone with the link can see this credential and download it. When you delete a link it stops working, but the other links keep working. We don't track who opens a link."
+  },
+  "Tyhjennä tiedot": {
+    "en": "Clear my data"
+  },
+  "Merkki osoittaa, että tiedot ovat peräisin Koskesta eikä niitä ole muutettu. Se ei osoita, että merkin esittäjä on sen haltija: vertaa nimeä tarvittaessa henkilöllisyystodistukseen.": {
+    "en": "A badge shows that the records come from Koski and have not been changed. It does not show that whoever presents it is its holder: compare the name with an ID if it matters."
   }
 }

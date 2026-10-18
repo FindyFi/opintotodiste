@@ -13,9 +13,11 @@ const STEPS = [
   { text: 'Kokoa ja jaa kokoelma työnantajalle', href: '/guide/sharing' },
 ]
 
-export function page({ koskiUrl = '', initialData = null } = {}) {
+// `signedIn` sets <html data-auth>, which public/auth.js keeps up to date after
+// signing in or out; CSS hides "Tyhjennä tiedot" from signed-in users.
+export function page({ koskiUrl = '', initialData = null, signedIn = false } = {}) {
   return `<!doctype html>
-<html lang="fi">
+<html lang="fi" data-auth="${signedIn ? 'in' : 'out'}">
 <head>
 ${head('<title lang="fi">Opintotodiste</title>', ['credentials', 'share', 'main'], { path: '/', ...OG_PAGES.site })}
 </head>
@@ -56,6 +58,9 @@ ${STEPS.map(
       <p id="metaBox" class="muted" hidden></p>
     </div>
     <div id="tableContainer"></div>
+    <div class="clear-data">
+      <button type="button" id="clearDataBtn"><span lang="fi">Tyhjennä tiedot</span></button>
+    </div>
   </section>
 </main>
 

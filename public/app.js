@@ -13,6 +13,7 @@ const bulkShareBtn = document.getElementById('bulkShareBtn')
 const bulkClearBtn = document.getElementById('bulkClearBtn')
 const detailDialog = document.getElementById('detailDialog')
 const detailDialogContent = document.getElementById('detailDialogContent')
+const clearDataBtn = document.getElementById('clearDataBtn')
 
 const COLUMNS = [
   { key: 'name', label: 'Nimi' },
@@ -424,6 +425,27 @@ async function fetchCredentials(koskiUrl) {
     submitBtn.classList.remove('busy')
   }
 }
+
+// "Clear my data": the server forgets the imported records (and an anonymous
+// session altogether), and so does the page.
+clearDataBtn.addEventListener('click', async () => {
+  if (!confirm('Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.')) return
+  clearError()
+  try {
+    const res = await fetch('/credentials', { method: 'DELETE' })
+    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
+  } catch (err) {
+    showError(err.message)
+    return
+  }
+  credentials = []
+  selectedIndices.clear()
+  if (detailDialog.open) detailDialog.close()
+  setMeta(null, null)
+  koskiUrlInput.value = ''
+  updateBulkBar()
+  resultsPanel.hidden = true
+})
 
 form.addEventListener('submit', (e) => {
   e.preventDefault()

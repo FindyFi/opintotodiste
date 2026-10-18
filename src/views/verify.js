@@ -62,6 +62,15 @@ ${header({ auth: false, current: 'verify' })}
       )}
     </div>
     <div class="verify-note">
+      ${pair('h2', '', 'Mitä ei tarkasteta', 'What is not checked')}
+      ${pair(
+        'ul',
+        '',
+        '<li>Onko todisteen esittäjä sama henkilö kuin sen haltija. Vertaa todisteessa olevaa nimeä tarvittaessa henkilöllisyystodistukseen.</li><li>Onko suoritusta korjattu Koskessa todisteen tekemisen jälkeen.</li>',
+        '<li>Whether the person presenting the credential is its holder. Compare the name in the credential with an ID if it matters.</li><li>Whether the record has been corrected in Koski since the credential was made.</li>'
+      )}
+    </div>
+    <div class="verify-note">
       ${pair('h2', '', 'Todiste mobiililompakossa?', 'A credential in a mobile wallet?')}
       ${pair(
         'p',

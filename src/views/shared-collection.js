@@ -52,6 +52,7 @@ ${header({ auth: false })}
   <div class="recipient-card">
     <h2>${SHIELD_ICON}<span lang="fi">Tarkasta aitous itse</span></h2>
     <p lang="fi">Valitse merkin kohdalta Tarkasta. Tarkastus tehdään selaimessasi, eikä kirjautumista tarvita.</p>
+    <p lang="fi">Merkki osoittaa, että tiedot ovat peräisin Koskesta eikä niitä ole muutettu. Se ei osoita, että merkin esittäjä on sen haltija: vertaa nimeä tarvittaessa henkilöllisyystodistukseen.</p>
     <a href="/employer" lang="fi">Mitä osaamismerkit ovat ja miten ne tarkastetaan?</a>
   </div>
 </section>

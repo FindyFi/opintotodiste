@@ -22,12 +22,12 @@ export async function startStubServer(handler) {
       }
       requests.push(request)
 
-      const { status = 200, json, text } = (await handler(request)) ?? {}
+      const { status = 200, json, text, headers = {} } = (await handler(request)) ?? {}
       if (text !== undefined) {
-        res.writeHead(status, { 'content-type': 'text/plain' })
+        res.writeHead(status, { 'content-type': 'text/plain', ...headers })
         return res.end(text)
       }
-      res.writeHead(status, { 'content-type': 'application/json' })
+      res.writeHead(status, { 'content-type': 'application/json', ...headers })
       res.end(JSON.stringify(json ?? {}))
     })
   })

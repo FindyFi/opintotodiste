@@ -98,8 +98,10 @@ export async function signCredential(vc, { baseUrl, instanceId, suite = 'ed25519
     body: JSON.stringify(vc),
   })
   if (!res.ok) {
-    const text = await res.text().catch(() => '')
-    throw new Error(`Signing service responded with ${res.status} ${res.statusText}${text ? `: ${text}` : ''}`)
+    // Status only: the body may echo the credential we sent, and this message
+    // is logged and shown to the user. The service logs the details itself.
+    await res.body?.cancel()
+    throw new Error(`Signing service responded with ${res.status} ${res.statusText}`)
   }
   return res.json()
 }

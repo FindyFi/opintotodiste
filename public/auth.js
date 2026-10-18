@@ -56,6 +56,7 @@ async function renderAuthNav() {
   const nav = document.getElementById('authNav')
   if (!nav) return currentMe
   currentMe = await getMe().catch(() => ({ loggedIn: false }))
+  document.documentElement.dataset.auth = currentMe.loggedIn ? 'in' : 'out'
   nav.replaceChildren()
 
   if (currentMe.loggedIn) {

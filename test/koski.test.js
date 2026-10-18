@@ -90,4 +90,46 @@ describe('fetchKoskiData', () => {
       await koski.stop()
     }
   })
+
+  test('refuses to follow a redirect', async () => {
+    const elsewhere = await startStubServer(() => ({ json: { henkilö: { oid: 'attacker' } } }))
+    const koski = await startStubServer(() => ({ status: 302, text: '', headers: { location: `${elsewhere.url}/data` } }))
+    try {
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /Could not reach Koski/)
+      assert.equal(elsewhere.requests.length, 0)
+    } finally {
+      await koski.stop()
+      await elsewhere.stop()
+    }
+  })
+
+  test('gives up on a slow response', async () => {
+    const koski = await startStubServer(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 300))
+      return { json: {} }
+    })
+    try {
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { timeoutMs: 50 }), /did not respond in time/)
+    } finally {
+      await koski.stop()
+    }
+  })
+
+  test('refuses a response over the size limit', async () => {
+    const koski = await startStubServer(() => ({ json: { padding: 'x'.repeat(2000) } }))
+    try {
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { maxBytes: 1000 }), /too large/)
+    } finally {
+      await koski.stop()
+    }
+  })
+
+  test('refuses a response that is not JSON', async () => {
+    const koski = await startStubServer(() => ({ text: '<html>maintenance</html>' }))
+    try {
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /did not return a study record/)
+    } finally {
+      await koski.stop()
+    }
+  })
 })

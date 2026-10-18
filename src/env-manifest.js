@@ -46,3 +46,13 @@ export function loadEnvManifest(url = MANIFEST_URL) {
 export function missingRequired(manifest, env = process.env) {
   return manifest.filter((entry) => entry.required && !env[entry.name]).map((entry) => entry.name)
 }
+
+// The placeholder secrets in .env.example, docker-compose.yml and index.js
+// (`change-me`, `dev-…`). A deployment that copied one would let anyone mint
+// session cookies or offers, so production refuses them like missing ones.
+const KNOWN_DEFAULT = /change-me|^dev-/i
+
+/** Names of secret variables set to one of this repository's placeholder values. */
+export function knownDefaults(manifest, env = process.env) {
+  return manifest.filter((entry) => entry.secret && env[entry.name] && KNOWN_DEFAULT.test(env[entry.name])).map((entry) => entry.name)
+}
