@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { recordFromCredential, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -42,6 +42,12 @@ describe('toSdJwtVcClaims', () => {
 
   test('refuses to build claims with no configured vct', () => {
     assert.throws(() => toSdJwtVcClaims(RECORD, {}), /OID4VCI_CREDENTIAL_VCT/)
+  })
+
+  test('makes the holder claims disclosable, only those present', () => {
+    assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, sub: 'urn:oid:1', identifier: [], achievement: {} }), ['sub', 'identifier'])
+    assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, identifier: [], achievement: {} }), ['identifier'])
+    assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, achievement: {} }), [])
   })
 })
 

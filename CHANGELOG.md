@@ -13,12 +13,16 @@ version to pin.
 
 - Credentials name their holder: `credentialSubject.identifier` carries the name from Koski as a
   plain-text Open Badges `IdentityObject` (`identityType: name`), in downloads, collections and wallet
-  offers (the SD-JWT VC gets it as an `identifier` claim, always disclosed for now). The name is the
+  offers (the SD-JWT VC gets it as an `identifier` claim). The name is the
   call name or all first names, then the surname. The credential detail dialog and the shared item
   page show it as "Haltija" / "Holder"; link previews don't. Needs koski2openbadge 0.2.0, which also
   accepts a Koski export without an oid.
 - Accounts whose passkeys have not been used for 6 months are deleted, with their collections,
   checked at startup and daily.
+- In the wallet credential (SD-JWT VC) the holder's name (`identifier`) and oppijanumero (`sub`) are
+  selectively disclosable: the app sends them as `disclosable` in the offer, and the wallet asks the
+  holder before presenting them. Needs an oid4vci-issuer with `disclosable` support; an older one
+  ignores the field and keeps them always disclosed.
 
 ## [0.0.4] - 2026-10-18
 

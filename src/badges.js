@@ -56,8 +56,9 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // No top-level `name` here: SD-JWT VC has no registered claim for it, and a
 // wallet's display name for this vct comes from the type metadata (F1), not
 // per-instance data. The achievement's own `name` is still in `achievement`.
-// The holder's name travels as Open Badges' `identifier` (G8), always
-// disclosed for now; the v1 type defines no display for it.
+// The holder's name travels as Open Badges' `identifier` (G8); the v1 type
+// defines no display for it. It and `sub` are selectively disclosable (see
+// sdJwtVcDisclosable).
 export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
@@ -69,6 +70,16 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
   }
+}
+
+// The claims of toSdJwtVcClaims that identify the holder, sent to
+// oid4vci-issuer as `disclosable` so the wallet asks before presenting them:
+// the holder's name and the oid. Only the ones the claims have, since the
+// issuer refuses a claim that isn't there.
+const HOLDER_CLAIMS = ['sub', 'identifier']
+
+export function sdJwtVcDisclosable(claims) {
+  return HOLDER_CLAIMS.filter((claim) => claim in claims)
 }
 
 function withoutJsonLdTypes(value) {
