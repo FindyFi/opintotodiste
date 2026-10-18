@@ -153,3 +153,7 @@ body.page-main .panel {
   .selection-bar #bulkWalletBtn { grid-column: 1 / -1; grid-row: 2; }
   .selection-bar button:not(.link-btn) { padding: 0 .5rem; font-stretch: 100%; }
 }
+
+/* "Clear my data" under the list, for shared computers. */
+.clear-data { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 24px; }
+.clear-data .muted { flex: 1 1 24em; margin: 0; }
