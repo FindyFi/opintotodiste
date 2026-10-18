@@ -4,7 +4,7 @@ import express from 'express'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
-import { convert } from 'koski2openbadge'
+import { convert, holderName } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
 import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, recordFromCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
@@ -55,12 +55,12 @@ app.get('/', (req, res) => {
 })
 
 // Only what convert() and the page use is kept in the session: the learner
-// number and names, and the study records. Anything else Koski sends about the
+// number and names (kutsumanimi is the name convert() prefers), and the study records. Anything else Koski sends about the
 // person (an identity code or a birth date, if a share link ever carries them)
 // is dropped before the session is saved; /policy says so.
 function minimalKoskiData(data) {
-  const { oid, etunimet, sukunimi } = data.henkilö ?? {}
-  return { henkilö: { oid, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
+  const { oid, kutsumanimi, etunimet, sukunimi } = data.henkilö ?? {}
+  return { henkilö: { oid, kutsumanimi, etunimet, sukunimi }, opiskeluoikeudet: data.opiskeluoikeudet }
 }
 
 function credentialsResponse(req) {
@@ -82,7 +82,7 @@ app.post('/credentials', async (req, res) => {
     req.session.koskiUrl = koskiUrl
     req.session.koskiData = data
     req.session.lang = lang
-    req.session.personName = [data.henkilö?.etunimet, data.henkilö?.sukunimi].filter(Boolean).join(' ')
+    req.session.personName = holderName(data.henkilö) ?? ''
     req.session.credentials = records.map((record) => ({ ...record, signed: null }))
 
     res.json(credentialsResponse(req))
