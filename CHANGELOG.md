@@ -9,6 +9,11 @@ version to pin.
 
 ## [Unreleased]
 
+### Added
+
+- Accounts whose passkeys have not been used for 6 months are deleted, with their collections,
+  checked at startup and daily.
+
 ## [0.0.4] - 2026-10-18
 
 ### Added

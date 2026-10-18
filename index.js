@@ -9,6 +9,7 @@ import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError } from './src/koski.js'
 import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, recordFromCredential, signCredential } from './src/badges.js'
 import { createOffer } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
+import { scheduleUnusedAccountSweep } from './src/retention.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
@@ -488,6 +489,7 @@ app.get('/verify', async (req, res) => {
 })
 
 await runSchema()
+scheduleUnusedAccountSweep(pool)
 
 app.listen(PORT, () => {
   console.log(`opintotodiste listening on http://localhost:${PORT}`)
