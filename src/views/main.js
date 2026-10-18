@@ -1,4 +1,5 @@
 import { head, header, esc, embedJson } from './layout.js'
+import { OG_PAGES } from './og.js'
 
 const icon = (shapes) => `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${shapes}</svg>`
 const ARROW_ICON = icon('<path d="M5 12h14M13 6l6 6-6 6"/>')
@@ -16,7 +17,7 @@ export function page({ koskiUrl = '', initialData = null } = {}) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head('<title lang="fi">Opintotodiste</title>', ['credentials', 'share', 'main'])}
+${head('<title lang="fi">Opintotodiste</title>', ['credentials', 'share', 'main'], { path: '/', ...OG_PAGES.site })}
 </head>
 <body class="page-main">
 ${header()}

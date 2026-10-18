@@ -30,7 +30,14 @@ export function sharedCollectionPage({ token, collection, items }) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head(`<title>${esc(collection.name)} – Opintotodiste</title>`, ['credentials', 'recipient'])}
+${head(`<title>${esc(collection.name)} – Opintotodiste</title>`, ['credentials', 'recipient'], {
+  path: `/c/${token}`,
+  title: { fi: `${collection.name} – Opintotodiste`, en: `${collection.name} – Study credential` },
+  description: {
+    fi: `Jaettu kokoelma, ${items.length === 1 ? '1 osaamismerkki' : `${items.length} osaamismerkkiä`}. Tarkasta merkkien aitous Opintotodisteessa.`,
+    en: `Shared collection, ${items.length === 1 ? '1 badge' : `${items.length} badges`}. Check they are genuine on Study credential.`,
+  },
+})}
 </head>
 <body class="page-recipient">
 <div class="recipient-band">

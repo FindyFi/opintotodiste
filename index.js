@@ -13,11 +13,13 @@ import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
+import { ogLanguageMiddleware } from './src/views/og.js'
 
 const app = express()
 const PORT = process.env.PORT || 3000
 const SUPPORTED_LANGS = ['fi', 'en']
 
+app.use(ogLanguageMiddleware)
 app.use(express.json())
 app.use(express.static('public'))
 app.use('/vendor/translate-element', express.static('node_modules/translate-element'))

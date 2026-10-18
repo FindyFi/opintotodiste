@@ -20,7 +20,14 @@ export function sharedItemPage({ token, itemId, credential }) {
   return `<!doctype html>
 <html lang="fi">
 <head>
-${head(`<title>${esc(achievement.name)} – Opintotodiste</title>`, ['credentials', 'recipient'])}
+${head(`<title>${esc(achievement.name)} – Opintotodiste</title>`, ['credentials', 'recipient'], {
+  path: `/c/${token}/items/${itemId}`,
+  title: { fi: `${achievement.name} – Opintotodiste`, en: `${achievement.name} – Study credential` },
+  description: {
+    fi: ['Osaamismerkki', achievement.creator?.name && `myöntäjä ${achievement.creator.name}`].filter(Boolean).join(', ') + '. Tarkasta merkin aitous Opintotodisteessa.',
+    en: ['Badge', achievement.creator?.name && `issued by ${achievement.creator.name}`].filter(Boolean).join(', ') + '. Check it is genuine on Study credential.',
+  },
+})}
 </head>
 <body class="page-recipient">
 <div class="recipient-band">
