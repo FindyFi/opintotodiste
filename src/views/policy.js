@@ -30,7 +30,7 @@ const COPY = {
         body: `<ul>
 <li>Opintotodisteen rekisterinpitäjä on Findynet Osuuskunta. Yhteystiedot ovat alla.</li>
 <li>Palvelu tekee Koski-palvelun opintotiedoistasi osaamismerkkejä, jotka voit ladata, tallentaa lompakkoon tai jakaa linkillä.</li>
-<li>Koskesta haetut opintotietosi poistetaan palvelimelta tunnin kuluttua viimeisestä käynnistäsi, tai heti, kun valitset ${ui('Tyhjennä tiedot')}. Jos käytät palvelua kirjautumatta sisään, muutkin tietosi poistetaan viimeistään 24 tunnin kuluttua.</li>
+<li>Koskesta haetut opintotietosi poistetaan palvelimelta tunnin kuluttua viimeisestä käynnistäsi, tai heti, kun valitset ${ui('Tyhjennä tiedot')} tai ${ui('Kirjaudu ulos')}. Jos käytät palvelua kirjautumatta sisään, muutkin tietosi poistetaan viimeistään 24 tunnin kuluttua.</li>
 <li>Jos kirjaudut palveluun, käyttäjätilisi ja kokoelmasi säilyvät, kunnes poistat ne.</li>
 <li>Voit itse päättää, mitä palveluun tallennettuja tietoja jaat muille jakolinkkien avulla. Huomaa, että kuka tahansa jakolinkin saanut näkee kokoelman tai merkin, johon linkki johtaa.</li>
 <li>Voit tarkastaa ja poistaa tietosi. Katso <a href="#oikeudet">Oikeutesi</a>.</li>
@@ -96,7 +96,7 @@ const COPY = {
         title: 'Näin poistat tietosi',
         body: `<ul>
 <li><strong>Tili, osaamismerkit ja kokoelmat:</strong> Valitse palvelun yläreunassa näkyvä tilisi näyttönimi, niin saat ohjeet tilisi poistamiseen. Yksittäisiä merkkejä, kokoelmia ja jakolinkkejä voit poistaa <a href="/my/collections">Kokoelmani</a>-sivulla.</li>
-<li><strong>Istunto:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta tai ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten Koskesta saadut tiedot poistuvat tunnin ja muut istunnon tiedot 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
+<li><strong>Istunto:</strong> Valitse ${ui('Tyhjennä tiedot')} hakemiesi suoritusten alta (kun et ole kirjautunut sisään) tai ${ui('Kirjaudu ulos')}, niin istunnon tiedot poistetaan heti. Muuten Koskesta saadut tiedot poistuvat tunnin ja muut istunnon tiedot 24 tunnin kuluttua viimeisestä käynnistäsi.</li>
 <li><strong>Lompakkoon tallentamasi merkit:</strong> Poista ne lompakkosovelluksessa.</li>
 <li><strong>Koski-jakolinkki:</strong> Poista se Oma Opintopolussa. Se ei poista Opintotodisteeseen jo tallentamiasi merkkejä.</li>
 </ul>`,
@@ -132,7 +132,7 @@ const COPY = {
         body: `<ul>
 <li>The controller of Opintotodiste is Findynet Osuuskunta (Findynet Cooperative). Contact details are below.</li>
 <li>The service turns your study records from the Koski service into badges that you can download, save in a wallet or share with a link.</li>
-<li>Your study records fetched from Koski are deleted from the server an hour after your last visit, or at once when you choose ${ui('Clear my data')}. If you use the service without signing in, the rest of your data is deleted at most 24 hours after your last visit.</li>
+<li>Your study records fetched from Koski are deleted from the server an hour after your last visit, or at once when you choose ${ui('Clear my data')} or ${ui('Sign out')}. If you use the service without signing in, the rest of your data is deleted at most 24 hours after your last visit.</li>
 <li>If you sign in, your user account and your collections are kept until you delete them.</li>
 <li>You decide which of the data saved in the service you share with others through share links. Note that anyone who gets a share link can see the collection or the badge it leads to.</li>
 <li>You can check and delete your data. See <a href="#rights">Your rights</a>.</li>
@@ -198,7 +198,7 @@ const COPY = {
         title: 'How to delete your data',
         body: `<ul>
 <li><strong>Account, badges and collections:</strong> Choose your account’s display name at the top of the page to get instructions for deleting your account. You can delete single badges, collections and share links on the <a href="/my/collections">My collections</a> page.</li>
-<li><strong>Session:</strong> Choose ${ui('Clear my data')} below your fetched achievements, or ${ui('Sign out')}, and the session data is deleted at once. Otherwise the data from Koski is deleted an hour, and the rest of the session data 24 hours, after your last visit.</li>
+<li><strong>Session:</strong> Choose ${ui('Clear my data')} below your fetched achievements (when you are not signed in), or ${ui('Sign out')}, and the session data is deleted at once. Otherwise the data from Koski is deleted an hour, and the rest of the session data 24 hours, after your last visit.</li>
 <li><strong>Badges you saved in a wallet:</strong> Delete them in the wallet app.</li>
 <li><strong>Koski share link:</strong> Delete it in My Studyinfo. This doesn’t delete badges you have already saved in Opintotodiste.</li>
 </ul>`,

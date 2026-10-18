@@ -131,7 +131,7 @@ app.get('/', (req, res) => {
   // The page embeds the imported records: no copy for the next person at a
   // shared computer to find in the cache or with the back button.
   res.set('Cache-Control', 'no-store')
-  res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData }))
+  res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData, signedIn: Boolean(req.session.userId) }))
 })
 
 // Only what convert() and the page use is kept in the session: the learner

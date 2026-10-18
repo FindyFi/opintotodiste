@@ -120,6 +120,7 @@ describe('hardening', needsPostgres, () => {
     const client = createClient(app.baseUrl)
     await load(client, koskiUrl)
 
+    assert.match(await (await client.request('/')).text(), /<html lang="fi" data-auth="out">/)
     const cleared = await client.request('/credentials', { method: 'DELETE' })
     assert.equal(cleared.status, 200)
     assert.match(sessionCookie(cleared) ?? '', /Expires=Thu, 01 Jan 1970/)
@@ -137,6 +138,8 @@ describe('hardening', needsPostgres, () => {
     await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
     await load(client)
 
+    // The page hides the button from signed-in users; the route still works.
+    assert.match(await (await client.request('/')).text(), /<html lang="fi" data-auth="in">/)
     assert.equal((await client.json('/credentials', { method: 'DELETE' })).status, 200)
     assert.equal((await client.json('/credentials/lang', { method: 'POST', body: { lang: 'fi' } })).status, 404)
     assert.equal((await client.json('/auth/me')).body.loggedIn, true)
