@@ -44,20 +44,20 @@ export const OG_PAGES = {
   verify: {
     title: { fi: 'Tarkasta todiste – Opintotodiste', en: 'Verify a credential – Study credential' },
     description: {
-      fi: 'Tarkasta osaamismerkin aitous selaimessasi: kuka sen myönsi ja ettei sitä ole muutettu.',
-      en: 'Check a badge is genuine in your browser: who issued it and that it has not been altered.',
+      fi: 'Tarkasta osaamismerkin aitous: kuka sen myönsi ja ettei sitä ole muutettu.',
+      en: 'Verify a badge: who issued it and that it has not been altered.',
     },
   },
   studyinfo: {
     description: {
-      fi: 'Näin luot Oma Opintopolussa jakolinkin, jolla Opintotodiste hakee opintosi Koskesta.',
-      en: 'How to create a share link in My Studyinfo that lets Study credential fetch your studies from Koski.',
+      fi: 'Näin luot Oma Opintopolussa jakolinkin, jolla välität opintosi Koskesta.',
+      en: 'How to create a share link in My Studyinfo for sharing your studies from Koski.',
     },
   },
   wallet: {
     description: {
-      fi: 'Näin tallennat osaamismerkit puhelimen digitaaliseen lompakkoon ja mitä lompakkoa voit käyttää.',
-      en: 'How to save your badges in a digital wallet on your phone, and which wallets you can use.',
+      fi: 'Näin tallennat osaamismerkit digitaaliseen lompakkoon.',
+      en: 'How to save your badges in a digital wallet.',
     },
   },
   sharing: {
