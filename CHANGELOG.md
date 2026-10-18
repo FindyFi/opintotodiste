@@ -9,8 +9,32 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.5] - 2026-10-18
+
+Deploy with oid4vci-issuer 0.0.4 (selective disclosure). Deploying signs everyone out once (the
+session cookie is renamed) and ends the share links made before it; the schema changes are applied
+at startup.
+
 ### Added
 
+- `/policy`: privacy notice and terms of use in Finnish and English, linked from every page.
+- A signed-in user can delete their account from the account dialog (opened from the display name):
+  passkeys, collections, saved credentials and share links go with it, and where the browser has the
+  WebAuthn Signal API the passkey provider is asked to drop the passkey. The owner can also remove a
+  single credential from a collection.
+- Share links per recipient: the share dialog lists a credential's or a collection's links, creates
+  one named after the recipient and deletes one. A single credential is shared on its own
+  (`/i/:token`) instead of through a "Jaetut todisteet" collection. Nothing is recorded about who
+  opens a link.
+- did:web for the `ldp_vc` issuer: when signing-service's tenant signs as the did:web of the app's
+  `ORIGIN` (`TENANT_DIDMETHOD_<T>=web`, `TENANT_DID_URL_<T>`), the app serves
+  `/.well-known/did.json`. `/verify` trusts both that DID and the did:key of the same key, which
+  earlier credentials name. Without that signing-service config nothing changes.
+- PNG logo and favicons from the brand rosette (`public/icons/`, built by `scripts/build-icons.sh`).
+- Open Graph and Twitter card metadata on the views, with a 1200x630 image in Finnish and English
+  (`?lang=en`).
+- `docs/threat-analysis.md`: threats T1–T16 with their probability, impact, prevention and response;
+  SECURITY.md links to it.
 - Credentials name their holder: `credentialSubject.identifier` carries the name from Koski as a
   plain-text Open Badges `IdentityObject` (`identityType: name`), in downloads, collections and wallet
   offers (the SD-JWT VC gets it as an `identifier` claim). The name is the
@@ -26,6 +50,10 @@ version to pin.
 
 ### Changed
 
+- Signed credentials are stored once per account (new table `saved_credentials`) and collections
+  only point at them, so deleting a collection keeps its badges. `share_links` replaces
+  `collections.share_token`. Existing collection items are migrated at startup; **share links made
+  before this release stop working**.
 - One list of credentials (U18). A signed-in user's Koski data is kept in their account (new
   table `koski_imports`), not in the session: the list is there the next day, in whichever
   language the page is in. Later imports are merged in by study right; another person's data
