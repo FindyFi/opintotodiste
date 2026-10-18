@@ -49,7 +49,10 @@ CREATE TABLE IF NOT EXISTS collection_items (
 -- Until U9, collection_items held the snapshot itself (id, credential) and
 -- each collection had one share_token. Move every snapshot into
 -- saved_credentials under the same id, so the collections keep their contents;
--- the old share links stop working.
+-- the old share links stop working. Each step runs only while there is
+-- something to migrate: ALTER TABLE locks the table exclusively even when it
+-- has nothing to do, which on every boot would deadlock with a request
+-- deleting rows while another instance starts.
 DO $$
 BEGIN
   IF EXISTS (SELECT 1 FROM information_schema.columns
@@ -65,11 +68,14 @@ BEGIN
       ALTER COLUMN credential_id SET NOT NULL,
       ADD FOREIGN KEY (credential_id) REFERENCES saved_credentials(id) ON DELETE CASCADE,
       ADD PRIMARY KEY (collection_id, credential_id);
+    DROP INDEX IF EXISTS idx_collection_items_collection_id;
+  END IF;
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema() AND table_name = 'collections' AND column_name = 'share_token') THEN
+    ALTER TABLE collections DROP COLUMN share_token;
   END IF;
 END $$;
-DROP INDEX IF EXISTS idx_collection_items_collection_id;
 CREATE INDEX IF NOT EXISTS idx_collection_items_credential_id ON collection_items(credential_id);
-ALTER TABLE collections DROP COLUMN IF EXISTS share_token;
 
 -- One link per recipient (the label names them, e.g. an employer), to either a
 -- whole collection or one saved credential. Revoking a link deletes its row;
