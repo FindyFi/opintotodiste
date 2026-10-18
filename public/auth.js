@@ -64,11 +64,9 @@ async function renderAuthNav() {
       await logout()
       await renderAuthNav()
     })
-    nav.append(
-      el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani'),
-      el('span', { class: 'muted' }, currentMe.displayName),
-      logoutBtn
-    )
+    const accountBtn = el('button', { type: 'button', class: 'link-btn account-btn' }, currentMe.displayName)
+    accountBtn.addEventListener('click', openAccountDialog)
+    nav.append(el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani'), accountBtn, logoutBtn)
   } else {
     const loginBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu sisään'))
     loginBtn.addEventListener('click', () => openAuthFlow('login').catch(() => {}))
@@ -163,6 +161,86 @@ function openAuthFlow(initialMode) {
     render()
     dialog.showModal()
   })
+}
+
+async function deleteAccount() {
+  const res = await fetch('/auth/account', { method: 'DELETE' })
+  const data = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(data.error || 'Request failed')
+  return data
+}
+
+// Asks the browser's passkey provider to drop the passkey, where the WebAuthn
+// Signal API exists (Chrome and others); elsewhere the user removes it by hand.
+async function forgetPasskey(passkey) {
+  if (!passkey || typeof PublicKeyCredential?.signalAllAcceptedCredentials !== 'function') return
+  await PublicKeyCredential.signalAllAcceptedCredentials({
+    rpId: passkey.rpId,
+    userId: passkey.userId,
+    allAcceptedCredentialIds: [],
+  }).catch(() => {})
+}
+
+// The account dialog, opened from the display name in #authNav. Deleting asks
+// for an explicit confirmation (the checkbox) and then lands on the main page,
+// signed out.
+function openAccountDialog() {
+  const dialog = document.getElementById('authDialog')
+  const content = document.getElementById('authDialogContent')
+  if (!dialog || !content) return
+
+  const errorBox = el('div', { class: 'row-error' })
+  errorBox.hidden = true
+  const confirmBox = el('input', { type: 'checkbox' })
+  const deleteBtn = el('button', { type: 'button', class: 'danger' }, el('span', { lang: 'fi' }, 'Poista tili pysyvästi'))
+  deleteBtn.disabled = true
+  confirmBox.addEventListener('change', () => {
+    deleteBtn.disabled = !confirmBox.checked
+  })
+  deleteBtn.addEventListener('click', async () => {
+    errorBox.hidden = true
+    deleteBtn.disabled = true
+    deleteBtn.classList.add('busy')
+    try {
+      const { passkey } = await deleteAccount()
+      await forgetPasskey(passkey)
+      location.href = '/'
+    } catch (err) {
+      errorBox.textContent = err.message
+      errorBox.hidden = false
+      deleteBtn.disabled = !confirmBox.checked
+      deleteBtn.classList.remove('busy')
+    }
+  })
+
+  const closeBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Sulje'))
+  closeBtn.addEventListener('click', () => dialog.close())
+
+  const passkeyCount = currentMe.passkeys?.length ?? 0
+  content.replaceChildren(
+    el('h2', { lang: 'fi' }, 'Tili'),
+    el('dl', {}, [
+      el('dt', { lang: 'fi' }, 'Näyttönimi'),
+      el('dd', {}, currentMe.displayName),
+      el('dt', { lang: 'fi' }, 'Pääsyavaimia'),
+      el('dd', {}, String(passkeyCount)),
+    ]),
+    el('h3', { lang: 'fi' }, 'Poista tili'),
+    el(
+      'p',
+      { lang: 'fi' },
+      'Tili, sen pääsyavaimet ja kaikki kokoelmasi poistetaan. Kokoelmien ja todisteiden jakolinkit lakkaavat toimimasta. Lompakkoon lisätyt ja ladatut todisteet säilyvät, koska ne ovat sinulla. Poistoa ei voi perua.'
+    ),
+    el(
+      'p',
+      { lang: 'fi' },
+      'Pääsyavain voi jäädä laitteesi salasanojen hallintaan. Voit poistaa sen sieltä itse.'
+    ),
+    el('p', {}, el('label', {}, [confirmBox, el('span', { lang: 'fi' }, 'Ymmärrän, että poistoa ei voi perua.')])),
+    errorBox,
+    el('p', {}, [deleteBtn, closeBtn])
+  )
+  dialog.showModal()
 }
 
 function ensureLoggedIn() {

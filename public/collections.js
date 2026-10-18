@@ -45,6 +45,8 @@ const deleteCollectionRequest = (id) => requestJson(`/collections/${id}`, { meth
 const fetchItems = (id) => requestJson(`/collections/${id}/items`).then((data) => data.items)
 const requestWalletOffer = (collectionId, itemId) =>
   requestJson(`/collections/${collectionId}/items/${itemId}/offer`, { method: 'POST' })
+const removeItemRequest = (collectionId, itemId) =>
+  requestJson(`/collections/${collectionId}/items/${itemId}`, { method: 'DELETE' })
 const regenerateShareToken = (id) => requestJson(`/collections/${id}/share-token/regenerate`, { method: 'POST' })
 
 function openShare(target) {
@@ -76,10 +78,21 @@ function buildItemRow(collection, item) {
   const shareBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Jaa'))
   shareBtn.addEventListener('click', () => openShare({ collectionId: collection.id, itemId: item.id }))
 
+  const removeBtn = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
+  removeBtn.addEventListener('click', async () => {
+    if (!confirm(`Poistetaanko "${name}" kokoelmasta? Sen jakolinkki lakkaa toimimasta.`)) return
+    try {
+      await removeItemRequest(collection.id, item.id)
+      await refresh()
+    } catch (err) {
+      showError(err.message)
+    }
+  })
+
   return el('li', { class: 'credential' }, [
     Detail.badgeIcon(Detail.isMajor(achievement)),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
-    el('div', { class: 'credential-status' }, [shareBtn, walletBtn]),
+    el('div', { class: 'credential-status' }, [removeBtn, shareBtn, walletBtn]),
   ])
 }
 

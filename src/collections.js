@@ -93,6 +93,17 @@ export async function addItem(ownerId, collectionId, credential) {
   return { id: rows[0].id, addedAt: rows[0].added_at }
 }
 
+export async function removeItem(ownerId, collectionId, itemId) {
+  if (!UUID.test(itemId)) throw new NotFoundError('Credential not found.')
+  await assertOwnedCollection(ownerId, collectionId)
+  const { rowCount } = await pool.query('DELETE FROM collection_items WHERE id = $1 AND collection_id = $2', [
+    itemId,
+    collectionId,
+  ])
+  if (!rowCount) throw new NotFoundError('Credential not found.')
+  await pool.query('UPDATE collections SET updated_at = now() WHERE id = $1', [collectionId])
+}
+
 export async function listItems(ownerId, collectionId) {
   await assertOwnedCollection(ownerId, collectionId)
   const { rows } = await pool.query(
