@@ -62,6 +62,15 @@ ${header({ auth: false, current: 'verify' })}
       )}
     </div>
     <div class="verify-note">
+      ${pair('h2', '', 'Mitä ei tarkasteta', 'What is not checked')}
+      ${pair(
+        'ul',
+        '',
+        '<li>Kuka todisteen esittää. Opintotodiste ei tunnista henkilöä, joka tuo opintotietonsa palveluun, joten varmista hakijan henkilöllisyys tarvittaessa muulla tavoin.</li><li>Onko suoritusta korjattu Koskessa todisteen tekemisen jälkeen.</li>',
+        '<li>Who is presenting the credential. Opintotodiste does not identify the people who bring their study records into the service, so check the applicant\u2019s identity some other way if it matters.</li><li>Whether the record has been corrected in Koski since the credential was made.</li>'
+      )}
+    </div>
+    <div class="verify-note">
       ${pair('h2', '', 'Todiste mobiililompakossa?', 'A credential in a mobile wallet?')}
       ${pair(
         'p',
