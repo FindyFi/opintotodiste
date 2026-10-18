@@ -236,55 +236,10 @@ app.delete('/auth/account', requireAuth, async (req, res) => {
   }
 })
 
-// --- Collections -----------------------------------------------------------
-
-app.get('/collections', requireAuth, async (req, res) => {
-  res.json({ collections: await collections.listCollections(req.session.userId) })
-})
-
-app.post('/collections', requireAuth, async (req, res) => {
-  try {
-    res.json(await collections.createCollection(req.session.userId, req.body?.name))
-  } catch (err) {
-    res.status(400).json({ error: err.message })
-  }
-})
-
-app.patch('/collections/:id', requireAuth, async (req, res) => {
-  try {
-    res.json(await collections.renameCollection(req.session.userId, req.params.id, req.body?.name))
-  } catch (err) {
-    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
-  }
-})
-
-app.delete('/collections/:id', requireAuth, async (req, res) => {
-  try {
-    await collections.deleteCollection(req.session.userId, req.params.id)
-    res.status(204).end()
-  } catch (err) {
-    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
-  }
-})
-
-app.post('/collections/:id/share-token/regenerate', requireAuth, async (req, res) => {
-  try {
-    res.json(await collections.regenerateShareToken(req.session.userId, req.params.id))
-  } catch (err) {
-    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
-  }
-})
-
-// Auto-signs any unsigned selected credentials first (same as the "Add to
-// wallet" bulk action), then snapshots each signed VC into the collection.
-app.post('/collections/:id/items', requireAuth, async (req, res) => {
-  try {
-    await collections.assertOwnedCollection(req.session.userId, req.params.id)
-  } catch (err) {
-    return res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
-  }
-
-  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
+// Signs the session's Koski records at `indices` where needed (same as the
+// "Add to wallet" bulk action) and saves each signed VC for the signed-in user.
+// Per-index results, so one failure doesn't sink the rest.
+async function saveFromSession(req, indices) {
   const results = []
   for (const index of indices) {
     const record = req.session.credentials?.[index]
@@ -305,37 +260,44 @@ app.post('/collections/:id/items', requireAuth, async (req, res) => {
           suite: process.env.SIGNING_SERVICE_SUITE,
         })
       }
-      const item = await collections.addItem(req.session.userId, req.params.id, record.signed)
-      results.push({ index, name, itemId: item.id, signed: record.signed })
+      const saved = await collections.saveCredential(req.session.userId, record.signed)
+      results.push({ index, name, credentialId: saved.id, signed: record.signed })
     } catch (err) {
       results.push({ index, name, error: err.message })
     }
   }
-  res.json({ results })
+  return results
+}
+
+function sendCollectionsError(res, err) {
+  res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+}
+
+// --- Saved credentials -----------------------------------------------------
+
+app.get('/saved-credentials', requireAuth, async (req, res) => {
+  res.json({ credentials: await collections.listSavedCredentials(req.session.userId) })
 })
 
-app.delete('/collections/:id/items/:itemId', requireAuth, async (req, res) => {
+app.post('/saved-credentials', requireAuth, async (req, res) => {
+  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
+  res.json({ results: await saveFromSession(req, indices) })
+})
+
+app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
   try {
-    await collections.removeItem(req.session.userId, req.params.id, req.params.itemId)
+    await collections.deleteSavedCredential(req.session.userId, req.params.id)
     res.status(204).end()
   } catch (err) {
-    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
-  }
-})
-
-app.get('/collections/:id/items', requireAuth, async (req, res) => {
-  try {
-    res.json({ items: await collections.listItems(req.session.userId, req.params.id) })
-  } catch (err) {
-    res.status(err instanceof collections.NotFoundError ? 404 : 400).json({ error: err.message })
+    sendCollectionsError(res, err)
   }
 })
 
 // Owner only: with no holder binding, a public share link must not be able to
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
 // re-issued as a VCDM 2.0 credential for the wallet.
-app.post('/collections/:id/items/:itemId/offer', requireAuth, async (req, res) => {
-  const credential = await collections.findOwnedItem(req.session.userId, req.params.id, req.params.itemId)
+app.post('/saved-credentials/:id/offer', requireAuth, async (req, res) => {
+  const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
 
   try {
@@ -346,32 +308,154 @@ app.post('/collections/:id/items/:itemId/offer', requireAuth, async (req, res) =
   }
 })
 
+// --- Collections -----------------------------------------------------------
+
+app.get('/collections', requireAuth, async (req, res) => {
+  res.json({ collections: await collections.listCollections(req.session.userId) })
+})
+
+app.post('/collections', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.createCollection(req.session.userId, req.body?.name))
+  } catch (err) {
+    res.status(400).json({ error: err.message })
+  }
+})
+
+app.patch('/collections/:id', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.renameCollection(req.session.userId, req.params.id, req.body?.name))
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+app.delete('/collections/:id', requireAuth, async (req, res) => {
+  try {
+    await collections.deleteCollection(req.session.userId, req.params.id)
+    res.status(204).end()
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+// Adds saved credentials (`credentialIds`) and/or the session's Koski records
+// (`indices`, saved first) to the collection.
+app.post('/collections/:id/items', requireAuth, async (req, res) => {
+  try {
+    await collections.assertOwnedCollection(req.session.userId, req.params.id)
+  } catch (err) {
+    return sendCollectionsError(res, err)
+  }
+
+  const indices = Array.isArray(req.body?.indices) ? req.body.indices : []
+  const credentialIds = Array.isArray(req.body?.credentialIds) ? req.body.credentialIds : []
+  const results = [...(await saveFromSession(req, indices)), ...credentialIds.map((credentialId) => ({ credentialId }))]
+  for (const result of results) {
+    if (result.error) continue
+    try {
+      await collections.addItem(req.session.userId, req.params.id, result.credentialId)
+    } catch (err) {
+      result.error = err.message
+    }
+  }
+  res.json({ results })
+})
+
+app.delete('/collections/:id/items/:credentialId', requireAuth, async (req, res) => {
+  try {
+    await collections.removeItem(req.session.userId, req.params.id, req.params.credentialId)
+    res.status(204).end()
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+app.get('/collections/:id/items', requireAuth, async (req, res) => {
+  try {
+    res.json({ items: await collections.listItems(req.session.userId, req.params.id) })
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+// --- Share links -------------------------------------------------------------
+
+// One link per recipient, to a collection or to one saved credential:
+// ?collectionId= or ?credentialId= (in the body for POST).
+function shareTarget(source) {
+  const collectionId = typeof source?.collectionId === 'string' ? source.collectionId : undefined
+  const credentialId = typeof source?.credentialId === 'string' ? source.credentialId : undefined
+  return collectionId ? { collectionId } : { credentialId }
+}
+
+app.get('/share-links', requireAuth, async (req, res) => {
+  try {
+    res.json({ links: await collections.listShareLinks(req.session.userId, shareTarget(req.query)) })
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+app.post('/share-links', requireAuth, async (req, res) => {
+  try {
+    res.json(await collections.createShareLink(req.session.userId, shareTarget(req.body), req.body?.label))
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
+app.delete('/share-links/:id', requireAuth, async (req, res) => {
+  try {
+    await collections.deleteShareLink(req.session.userId, req.params.id)
+    res.status(204).end()
+  } catch (err) {
+    sendCollectionsError(res, err)
+  }
+})
+
 // --- Public share links -----------------------------------------------------
 
-// Shared collections are for the people the owner sends the link to, not for
-// search results, even if someone posts a link publicly.
-app.use('/c/', (req, res, next) => {
+// Shared collections and credentials are for the people the owner sends the
+// link to, not for search results, even if someone posts a link publicly.
+app.use(['/c/', '/i/'], (req, res, next) => {
   res.set('X-Robots-Tag', 'noindex, nofollow')
   next()
 })
 
+function sendCredentialDownload(res, credential, name) {
+  res.setHeader('Content-Disposition', `attachment; filename="credential-${name}.json"`)
+  res.json(credential)
+}
+
 app.get('/c/:token', async (req, res) => {
-  const found = await collections.findByShareToken(req.params.token)
+  const found = await collections.findSharedCollection(req.params.token)
   if (!found) return res.status(404).send('Collection not found.')
   res.send(views.sharedCollectionPage({ token: req.params.token, ...found }))
 })
 
 app.get('/c/:token/items/:itemId', async (req, res) => {
-  const found = await collections.findSharedItem(req.params.token, req.params.itemId)
-  if (!found) return res.status(404).send('Credential not found.')
-  res.send(views.sharedItemPage({ token: req.params.token, itemId: req.params.itemId, ...found }))
+  const credential = await collections.findSharedCollectionItem(req.params.token, req.params.itemId)
+  if (!credential) return res.status(404).send('Credential not found.')
+  res.send(views.sharedItemPage({ path: `/c/${req.params.token}/items/${req.params.itemId}`, credential }))
 })
 
 app.get('/c/:token/items/:itemId/download', async (req, res) => {
-  const credential = await collections.findItemByShareToken(req.params.token, req.params.itemId)
+  const credential = await collections.findSharedCollectionItem(req.params.token, req.params.itemId)
   if (!credential) return res.status(404).send('Credential not found.')
-  res.setHeader('Content-Disposition', `attachment; filename="credential-${req.params.itemId}.json"`)
-  res.json(credential)
+  sendCredentialDownload(res, credential, req.params.itemId)
+})
+
+app.get('/i/:token', async (req, res) => {
+  const credential = await collections.findSharedCredential(req.params.token)
+  if (!credential) return res.status(404).send('Credential not found.')
+  res.send(views.sharedItemPage({ path: `/i/${req.params.token}`, credential }))
+})
+
+app.get('/i/:token/download', async (req, res) => {
+  const credential = await collections.findSharedCredential(req.params.token)
+  if (!credential) return res.status(404).send('Credential not found.')
+  sendCredentialDownload(res, credential, 'shared')
 })
 
 app.get('/employer', (req, res) => {

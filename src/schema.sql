@@ -22,22 +22,69 @@ CREATE TABLE IF NOT EXISTS collections (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
-  share_token TEXT NOT NULL UNIQUE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_collections_owner_id ON collections(owner_id);
 
--- credential stores an immutable snapshot of the signed Verifiable
--- Credential at the time it was added, not a live pointer back to the
--- uploader's session/Koski data - see src/collections.js.
-CREATE TABLE IF NOT EXISTS collection_items (
+-- A user's saved credentials: each one an immutable snapshot of the signed
+-- Verifiable Credential at the time it was saved, not a live pointer back to
+-- the uploader's session/Koski data - see src/collections.js. A credential
+-- can sit in any number of collections, or in none.
+CREATE TABLE IF NOT EXISTS saved_credentials (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   credential JSONB NOT NULL,
   added_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS idx_collection_items_collection_id ON collection_items(collection_id);
+CREATE INDEX IF NOT EXISTS idx_saved_credentials_owner_id ON saved_credentials(owner_id);
+
+CREATE TABLE IF NOT EXISTS collection_items (
+  collection_id UUID NOT NULL REFERENCES collections(id) ON DELETE CASCADE,
+  credential_id UUID NOT NULL REFERENCES saved_credentials(id) ON DELETE CASCADE,
+  added_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (collection_id, credential_id)
+);
+
+-- Until U9, collection_items held the snapshot itself (id, credential) and
+-- each collection had one share_token. Move every snapshot into
+-- saved_credentials under the same id, so the collections keep their contents;
+-- the old share links stop working.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns
+             WHERE table_schema = current_schema() AND table_name = 'collection_items' AND column_name = 'credential') THEN
+    INSERT INTO saved_credentials (id, owner_id, credential, added_at)
+      SELECT i.id, c.owner_id, i.credential, i.added_at
+      FROM collection_items i JOIN collections c ON c.id = i.collection_id;
+    ALTER TABLE collection_items ADD COLUMN credential_id UUID;
+    UPDATE collection_items SET credential_id = id;
+    ALTER TABLE collection_items
+      DROP COLUMN credential,
+      DROP COLUMN id,
+      ALTER COLUMN credential_id SET NOT NULL,
+      ADD FOREIGN KEY (credential_id) REFERENCES saved_credentials(id) ON DELETE CASCADE,
+      ADD PRIMARY KEY (collection_id, credential_id);
+  END IF;
+END $$;
+DROP INDEX IF EXISTS idx_collection_items_collection_id;
+CREATE INDEX IF NOT EXISTS idx_collection_items_credential_id ON collection_items(credential_id);
+ALTER TABLE collections DROP COLUMN IF EXISTS share_token;
+
+-- One link per recipient (the label names them, e.g. an employer), to either a
+-- whole collection or one saved credential. Revoking a link deletes its row;
+-- nothing is recorded about who opens a link or when.
+CREATE TABLE IF NOT EXISTS share_links (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  token TEXT NOT NULL UNIQUE,
+  label TEXT NOT NULL,
+  collection_id UUID REFERENCES collections(id) ON DELETE CASCADE,
+  credential_id UUID REFERENCES saved_credentials(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CHECK ((collection_id IS NULL) <> (credential_id IS NULL))
+);
+CREATE INDEX IF NOT EXISTS idx_share_links_collection_id ON share_links(collection_id);
+CREATE INDEX IF NOT EXISTS idx_share_links_credential_id ON share_links(credential_id);
 
 -- The express-session store. connect-pg-simple can create this itself, but it
 -- checks with to_regclass and then creates without IF NOT EXISTS, so several

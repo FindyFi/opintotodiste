@@ -23,13 +23,14 @@ Signing keys are *not* here — they live in the `signing-service` this app dele
 
 Three properties are design decisions rather than oversights:
 
-- **Share links are unauthenticated bearer URLs.** A collection's `share_token` is 24 random bytes
-  (`randomBytes(24)`, base64url), and anyone holding the link can read that collection's credentials
-  without signing in. That is the feature. Rotating the token invalidates the old link, which is the
-  only revocation there is.
-- **Collection items are immutable snapshots.** `collection_items.credential` holds the signed
-  credential as it was when added, not a live pointer back into Koski. Removing an item is the way
-  to un-share the data in it.
+- **Share links are unauthenticated bearer URLs.** Each link (`share_links.token`) is 24 random bytes
+  (`randomBytes(24)`, base64url) and points at one collection (`/c/<token>`) or one saved credential
+  (`/i/<token>`); anyone holding it can read those credentials without signing in. That is the
+  feature. The owner makes one link per recipient and revokes a link by deleting it; nothing is
+  recorded about who opens a link.
+- **Saved credentials are immutable snapshots.** `saved_credentials.credential` holds the signed
+  credential as it was when saved, not a live pointer back into Koski; collections only point at
+  them. Deleting the saved credential (or its links) is the way to un-share the data in it.
 - **Koski fetches are restricted to `opintopolku.fi`**, by host match rather than substring, and to
   study-record paths. The user supplies the URL, so this is the app's SSRF boundary: it is what
   stops a pasted link from making the server fetch `169.254.169.254`, an internal address or a
