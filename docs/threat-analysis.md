@@ -36,7 +36,9 @@ signing DID.
 Our signature says: *"Opintotodiste fetched this study record from Koski through a share link on this
 date."* It does **not** say who imported it. The credential identifies the learner only by the Koski
 oppijanumero (`credentialSubject.id = urn:oid:…`, SD-JWT `sub`), which an employer cannot check, and
-carries no name. This is the root of the most important threat below (T1).
+by the name from Koski (`credentialSubject.identifier`, an Open Badges `IdentityObject` with
+`identityType: name`, in plain text), which an employer can compare with an ID. Nothing ties the
+importer to that person. This is the root of the most important threat below (T1).
 
 ## Rating scale
 
@@ -53,7 +55,7 @@ carries no name. This is the root of the most important threat below (T1).
 
 | Id | Threat | Probability | Impact | Risk | Status | Task |
 | --- | --- | --- | --- | --- | --- | --- |
-| [T1](#t1-someone-claims-another-persons-study-records) | Someone claims another person's study records (Bob uses Alice's Koski link) | High | High | **High** | Open | H2, H5, G8 |
+| [T1](#t1-someone-claims-another-persons-study-records) | Someone claims another person's study records (Bob uses Alice's Koski link) | High | High | **High** | Partly | H3, H5, H6 |
 | [T2](#t2-fake-or-tampered-koski-data) | Fake or tampered Koski data (fake Koski service, look-alike host, redirect) | Low | Critical | Medium | Partly | H3 |
 | [T3](#t3-forged-or-edited-credentials) | Forged or edited credentials shown to an employer | Medium | Medium | Medium | Partly | H5 |
 | [T4](#t4-the-signing-service-signs-for-someone-else) | The signing service or the issuer signs for someone else | Low–Medium | Critical | **High** | Open | H4 |
@@ -81,16 +83,17 @@ signs in with **their own** passkey, puts Alice's degree into **their** collecti
 wallet. They then show it to an employer as their own.
 
 Nothing in the app stops this today. Koski share links are bearer links by design, and our import
-trusts whoever holds one. The credential carries Alice's oppijanumero but no name, so the employer
-sees a genuine, correctly signed Opintotodiste badge. The wallet credential is even holder-bound
+trusts whoever holds one. The employer sees a genuine, correctly signed Opintotodiste badge. Since G8
+it carries Alice's name, so an employer who compares it with Bob's ID will notice; one who doesn't
+check will not. The wallet credential is even holder-bound
 (`cnf`), but bound to Bob's wallet key: holder binding proves that the presenter is the wallet the
 credential was issued to, not that they are the learner.
 
 The same works without stealing anything: Bob can import any share link they are given legitimately, for
 example as a recruiter who received dozens.
 
-Note that this makes our credential *weaker* than the Koski link it came from: an employer who opens
-Alice's Koski link sees Alice's name; an employer who sees Bob's badge sees no name.
+Before G8 our credential was *weaker* than the Koski link it came from: an employer who opened Alice's
+Koski link saw Alice's name, while Bob's badge showed none. Now both show the name.
 
 **Probability: High.** Koski share links are meant to be passed around; no skill is needed.
 **Impact: High.** An employer is misled about a qualification; Alice's study records and oppijanumero
@@ -100,18 +103,16 @@ end up in Bob's hands and in Bob's shares; once known, it undermines trust in ev
 
 - In place: nothing effective. The import accepts only real Koski data (T2), which limits Bob to
   records that exist, but not to their own.
-- Planned (H2, a design decision): tie the import to the person in the Koski data. Options, strongest
-  first:
-  1. Get the data through an authenticated channel instead of a bearer link: the learner signs in with
-     Suomi.fi (Koski's OmaData / OAuth2 consent flow, or Suomi.fi identification by us), and we import
-     only that person's own records. To be checked: availability, contract, cost.
-  2. Put the holder's name in the credential (G8), so an employer can compare it with an ID document.
-     Cheap, but shifts the check to the employer.
-  3. Interim, detection rather than prevention: record a keyed hash of each imported oppijanumero with
-     the account that imported it; refuse (or flag for review) a second account importing the same
-     oppijanumero. Bob can still win if they are first, but the collision is visible when Alice arrives.
+- In place (G8): the holder's name from Koski is in every credential (ldp_vc, the VCDM 2.0 offer and
+  the SD-JWT VC, where it is always disclosed for now) and on the shared pages, so an employer can
+  compare it with an ID document. Cheap, but it shifts the check to the employer.
+- Decided (H2): no limit of one account per oppijanumero, since a person may legitimately have several
+  accounts (passkeys on different devices), and so no import log either.
+- Planned (H6, later, costly): get the data through an authenticated channel instead of a bearer link:
+  the learner signs in through Koski's OAuth2 consent flow (Opintopolku / Suomi.fi), and we import only
+  that person's own records.
 - Planned: say on `/employer`, the shared pages and `/verify` what a badge proves and what it doesn't
-  ("the record comes from Koski; the holder's identity is not verified"), until option 1 exists.
+  ("the record comes from Koski; the holder's identity is not verified"), until H6 exists.
 
 **What we do if it happens anyway.**
 
@@ -388,8 +389,8 @@ credentials or a vulnerability.
 
 **What we do so that it doesn't happen.**
 
-- In place: data minimisation (the session keeps only what the converter needs; credentials carry no
-  name today; passkeys store only public keys); the database is on a private network with its own
+- In place: data minimisation (the session keeps only what the converter needs; credentials carry the
+  oppijanumero and the name, nothing more about the person; passkeys store only public keys); the database is on a private network with its own
   credentials; CloudWatch logs are kept 30 days (development); sessions expire after 24 hours idle;
   account deletion removes everything of the user, including other sessions.
 - Gaps: error messages from signing-service and oid4vci-issuer are logged as received and may contain

@@ -9,6 +9,15 @@ version to pin.
 
 ## [Unreleased]
 
+### Added
+
+- Credentials name their holder: `credentialSubject.identifier` carries the name from Koski as a
+  plain-text Open Badges `IdentityObject` (`identityType: name`), in downloads, collections and wallet
+  offers (the SD-JWT VC gets it as an `identifier` claim, always disclosed for now). The name is the
+  call name or all first names, then the surname. The credential detail dialog and the shared item
+  page show it as "Haltija" / "Holder"; link previews don't. Needs koski2openbadge 0.2.0, which also
+  accepts a Koski export without an oid.
+
 ## [0.0.4] - 2026-10-18
 
 ### Added
