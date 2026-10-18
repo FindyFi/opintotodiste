@@ -6,11 +6,15 @@ import { esc } from './layout.js'
 // chosen on the server from ?lang= (the parameter translate-element uses too),
 // and a link without it previews in Finnish.
 
-// The preview image, shown in LinkedIn, Teams, Slack. null leaves og:image out.
-// To switch it on, add U12's 1200×630 PNG under public/ and set the path:
-//   { path: '/icons/og-image.png', width: 1200, height: 630 }
-export const OG_IMAGE = null
-const OG_IMAGE_ALT = { fi: 'Opintotodiste', en: 'Study credential' }
+// The preview image, shown in LinkedIn, Teams, Slack, one per language. Set it
+// to null to leave og:image out. Built from public/icons/og-image-<lang>.svg by
+// scripts/build-icons.sh.
+export const OG_IMAGE = {
+  path: { fi: '/icons/og-image-fi.png', en: '/icons/og-image-en.png' },
+  alt: { fi: 'Opintotodiste – Osaaminen haltuun', en: 'Study credential – Own your skills' },
+  width: 1200,
+  height: 630,
+}
 
 const SITE_NAME = 'Opintotodiste'
 const LOCALES = { fi: 'fi_FI', en: 'en_GB' }
@@ -86,7 +90,7 @@ export function ogTags({ path = '/', title, description } = {}) {
   const url = absolute(lang === 'en' ? `${path}?lang=en` : path)
   const meta = (key, value) => (value ? `<meta ${key.startsWith('og:') ? 'property' : 'name'}="${key}" content="${esc(value)}">` : null)
   const text = pick(description, OG_PAGES.site.description)
-  const image = OG_IMAGE && absolute(OG_IMAGE.path)
+  const image = OG_IMAGE && absolute(OG_IMAGE.path[lang])
   const other = lang === 'fi' ? 'en' : 'fi'
 
   return [
@@ -99,7 +103,7 @@ export function ogTags({ path = '/', title, description } = {}) {
     meta('og:locale', LOCALES[lang]),
     meta('og:locale:alternate', LOCALES[other]),
     meta('og:image', image),
-    image && meta('og:image:alt', OG_IMAGE_ALT[lang]),
+    image && meta('og:image:alt', OG_IMAGE.alt[lang]),
     image && meta('og:image:width', String(OG_IMAGE.width)),
     image && meta('og:image:height', String(OG_IMAGE.height)),
     meta('twitter:card', image ? 'summary_large_image' : 'summary'),

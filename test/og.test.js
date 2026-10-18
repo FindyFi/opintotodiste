@@ -39,10 +39,12 @@ describe('Open Graph tags', () => {
     }
   })
 
-  test('og:image stays out until OG_IMAGE is set', () => {
+  test('og:image points at the 1200x630 PNG, absolute from ORIGIN', () => {
     const html = views.page()
-    assert.equal(tag(html, 'og:image'), undefined)
-    assert.equal(tag(html, 'twitter:card'), 'summary')
+    assert.equal(tag(html, 'og:image'), 'https://todiste.example/icons/og-image-fi.png')
+    assert.equal(tag(html, 'og:image:width'), '1200')
+    assert.equal(tag(html, 'og:image:height'), '630')
+    assert.equal(tag(html, 'twitter:card'), 'summary_large_image')
   })
 
   test('the private collections page gets only the generic site tags', () => {
@@ -56,6 +58,8 @@ describe('Open Graph tags', () => {
     assert.equal(tag(html, 'og:locale'), 'en_GB')
     assert.equal(tag(html, 'og:locale:alternate'), 'fi_FI')
     assert.equal(tag(html, 'og:url'), 'https://todiste.example/guide/wallet?lang=en')
+    assert.equal(tag(html, 'og:image'), 'https://todiste.example/icons/og-image-en.png')
+    assert.equal(tag(html, 'og:image:alt'), 'Study credential – Own your skills')
   })
 
   test('a shared item carries its name and issuer, nothing else', () => {
