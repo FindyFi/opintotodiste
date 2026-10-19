@@ -9,6 +9,18 @@ version to pin.
 
 ## [Unreleased]
 
+### Added
+
+- "Kokeile palvelua esittelytiedoilla" on the main page loads a synthetic study record (a fictional
+  person and institutions, 22 credentials) as if it came from Koski. The button shows only while
+  nothing has been loaded; `POST /demo` refuses when Koski data is there, and a real import replaces
+  the demo data.
+
+### Fixed
+
+- The confirmation and name prompts (clear data, delete, remove from a collection, rename, delete a
+  link) follow the interface language instead of always being in Finnish (`public/i18n.js`).
+
 ## [0.0.5] - 2026-10-18
 
 Deploy with oid4vci-issuer 0.0.4 (selective disclosure). Deploying signs everyone out once (the

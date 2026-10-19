@@ -31,6 +31,8 @@
 .lede { max-width: 38rem; font-size: 1.2rem; }
 
 .koski-form { display: flex; flex-direction: column; gap: 10px; }
+.demo-offer { margin: 14px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--muted); }
+.demo-offer .link-btn { padding: 4px 0; font-weight: 700; text-decoration: underline; }
 .koski-form label { font-weight: 700; color: var(--heading); }
 
 .steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; }
