@@ -42,6 +42,7 @@ ${header()}
 
 ${footer()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
+<script src="/i18n.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
 <script src="/share.js" defer></script>

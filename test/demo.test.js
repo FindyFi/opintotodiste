@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test, { after, before, describe } from 'node:test'
 
 import { convert } from 'koski2openbadge'
@@ -26,6 +27,19 @@ describe('the demo record', () => {
   })
 })
 
+describe('the demo texts', () => {
+  test('are in the dictionary, and the native dialogs get their language from i18n.js', async () => {
+    const dictionary = JSON.parse(await readFile(new URL('../public/translations.json', import.meta.url), 'utf8'))
+    for (const fi of ['Kokeile palvelua esittelytiedoilla', 'Esittelytiedot (kuvitteellinen henkilö)']) assert.ok(dictionary[fi]?.en, fi)
+    const helper = await readFile(new URL('../public/i18n.js', import.meta.url), 'utf8')
+    assert.match(helper, /function t\(fi, en\)/)
+    for (const file of ['app.js', 'collections.js', 'share.js']) {
+      const source = await readFile(new URL(`../public/${file}`, import.meta.url), 'utf8')
+      for (const [, args] of source.matchAll(/\b(?:confirm|prompt)\(([^\n]*)/g)) assert.match(args, /^t\(|^$|^question|^deleteConfirmation|^remove\.confirm/, `${file}: ${args}`)
+    }
+  })
+})
+
 describe('the demo button', needsPostgres, () => {
   let app
 
@@ -38,6 +52,8 @@ describe('the demo button', needsPostgres, () => {
     const client = createClient(app.baseUrl)
     const before = await (await client.request('/')).text()
     assert.match(before, /id="demoOffer"(?! hidden)/)
+    assert.doesNotMatch(before, /Eikö linkkiä/)
+    assert.match(before, /<script src="\/i18n\.js" defer>/)
 
     const res = await client.json('/demo', { method: 'POST', body: { lang: 'fi' } })
     assert.equal(res.status, 200)

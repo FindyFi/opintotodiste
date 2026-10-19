@@ -296,8 +296,14 @@ async function deleteRequest(url) {
 async function deleteEntry(entry) {
   const name = entryName(entry)
   const question = entry.credentialId
-    ? `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`
-    : `Poistetaanko "${name}" listalta? Se palaa, kun haet Koski-tiedot uudelleen.`
+    ? t(
+        `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`,
+        `Delete "${name}"? It is removed from all collections, and its links stop working.`
+      )
+    : t(
+        `Poistetaanko "${name}" listalta? Se palaa, kun haet Koski-tiedot uudelleen.`,
+        `Remove "${name}" from the list? It comes back when you fetch your Koski data again.`
+      )
   if (!confirm(question)) return
   if (entry.credentialId) await deleteRequest(`/saved-credentials/${entry.credentialId}`)
   if (entry.ref) await deleteRequest(`/credentials/${entry.ref}`)
@@ -529,8 +535,14 @@ async function fetchCredentials(koskiUrl) {
 clearDataBtn.addEventListener('click', async () => {
   const signedIn = document.documentElement.dataset.auth === 'in'
   const question = signedIn
-    ? 'Poistetaanko Koskesta haetut tiedot? Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät.'
-    : 'Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.'
+    ? t(
+        'Poistetaanko Koskesta haetut tiedot? Jakamasi ja kokoelmiin lisäämäsi todisteet säilyvät.',
+        'Delete the data fetched from Koski? The credentials you have shared or added to collections stay.'
+      )
+    : t(
+        'Poistetaanko Koskesta haetut suoritukset? Ne voi hakea uudelleen jakolinkillä.',
+        'Delete the credentials fetched from Koski? You can fetch them again with the share link.'
+      )
   if (!confirm(question)) return
   clearError()
   try {

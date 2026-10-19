@@ -37,7 +37,6 @@ ${header()}
       </div>
     </form>
     <p class="demo-offer" id="demoOffer"${initialData?.koskiUrl || initialData?.demo ? ' hidden' : ''}>
-      <span lang="fi">Eikö linkkiä vielä ole?</span>
       <button type="button" class="link-btn" id="demoBtn"><span lang="fi">Kokeile palvelua esittelytiedoilla</span></button>
     </p>
     <div id="errorBox" class="error" role="alert" hidden></div>
@@ -85,6 +84,7 @@ ${STEPS.map(
 ${footer()}
 <script>window.__INITIAL_DATA__ = ${embedJson(initialData)}</script>
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
+<script src="/i18n.js" defer></script>
 <script src="/auth.js" defer></script>
 <script src="/wallet-offer.js" defer></script>
 <script src="/share.js" defer></script>

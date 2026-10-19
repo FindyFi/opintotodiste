@@ -293,6 +293,12 @@
   "Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee tämän todisteen ja voi ladata sen. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.": {
     "en": "Create a link of its own for each recipient. Anyone with the link can see this credential and download it. When you delete a link it stops working, but the other links keep working. We don't track who opens a link."
   },
+  "Kokeile palvelua esittelytiedoilla": {
+    "en": "Try the service with demo data"
+  },
+  "Esittelytiedot (kuvitteellinen henkilö)": {
+    "en": "Demo data (fictional person)"
+  },
   "Tyhjennä tiedot": {
     "en": "Clear my data"
   },

@@ -60,7 +60,11 @@ function openShare(target) {
     .catch((err) => showError(err.message))
 }
 
-const deleteConfirmation = (name) => `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`
+const deleteConfirmation = (name) =>
+  t(
+    `Poistetaanko "${name}"? Se poistuu kaikista kokoelmista, ja sen linkit lakkaavat toimimasta.`,
+    `Delete "${name}"? It is removed from all collections, and its links stop working.`
+  )
 
 // The detail dialog's actions for a stored credential (the same as on the main
 // page). Poista deletes it everywhere; the row's own button only takes it out
@@ -134,7 +138,7 @@ function buildCollectionRow(collection) {
 
   const renameBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Nimeä uudelleen'))
   renameBtn.addEventListener('click', async () => {
-    const name = prompt('Uusi nimi', collection.name)
+    const name = prompt(t('Uusi nimi', 'New name'), collection.name)
     if (!name || !name.trim() || name.trim() === collection.name) return
     try {
       await renameCollection(collection.id, name.trim())
@@ -146,7 +150,12 @@ function buildCollectionRow(collection) {
 
   const deleteBtn = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
   deleteBtn.addEventListener('click', async () => {
-    if (!confirm(`Poistetaanko kokoelma "${collection.name}"? Sen linkit lakkaavat toimimasta. Todisteet säilyvät.`)) return
+    if (!confirm(
+        t(
+          `Poistetaanko kokoelma "${collection.name}"? Sen linkit lakkaavat toimimasta. Todisteet säilyvät.`,
+          `Delete the collection "${collection.name}"? Its links stop working. The credentials stay.`
+        )
+      )) return
     try {
       await deleteCollectionRequest(collection.id)
       await refresh()
@@ -162,7 +171,11 @@ function buildCollectionRow(collection) {
         ...items.map((item) =>
           buildItemRow(item, {
             label: 'Poista kokoelmasta',
-            confirm: (name) => `Poistetaanko "${name}" kokoelmasta? Todiste säilyy, ja sen omat linkit toimivat edelleen.`,
+            confirm: (name) =>
+              t(
+                `Poistetaanko "${name}" kokoelmasta? Todiste säilyy, ja sen omat linkit toimivat edelleen.`,
+                `Remove "${name}" from the collection? The credential stays, and its own links keep working.`
+              ),
             request: () => removeItemRequest(collection.id, item.id),
           })
         )

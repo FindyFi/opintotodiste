@@ -188,7 +188,7 @@ const Share = (() => {
       })
       const remove = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
       remove.addEventListener('click', async () => {
-        if (!confirm(`Poistetaanko linkki "${link.label}"? Se lakkaa toimimasta.`)) return
+        if (!confirm(t(`Poistetaanko linkki "${link.label}"? Se lakkaa toimimasta.`, `Delete the link "${link.label}"? It stops working.`))) return
         try {
           await requestJson(`/share-links/${link.id}`, { method: 'DELETE' })
           links = links.filter((l) => l.id !== link.id)
