@@ -1,6 +1,6 @@
 {
   "name": "opintotodiste",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "A service for issuing Open Badges from various sources",
   "homepage": "https://github.com/FindyFi/opintotodiste#readme",
   "bugs": {
