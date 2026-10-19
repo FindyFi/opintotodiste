@@ -9,6 +9,10 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.7] - 2026-10-19
+
+The image needs no new variables and no schema changes.
+
 ### Fixed
 
 - The "try the service with demo data" link now disappears once Koski data or demo data is loaded;
