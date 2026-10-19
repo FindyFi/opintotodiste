@@ -1,0 +1,1181 @@
+{
+  "henkilö": {
+    "oid": "1.2.246.562.24.00000000100",
+    "etunimet": "Eeva Maria",
+    "kutsumanimi": "Eeva",
+    "sukunimi": "Esimerkki"
+  },
+  "opiskeluoikeudet": [
+    {
+      "oid": "1.2.246.562.15.00000000201",
+      "tyyppi": {
+        "koodiarvo": "ylioppilastutkinto"
+      },
+      "koulutustoimija": {
+        "oid": "1.2.246.562.10.00000000103",
+        "nimi": {
+          "fi": "Ylioppilastutkintolautakunta (esimerkki)",
+          "sv": "Studentexamensnämnden (exempel)",
+          "en": "Matriculation Examination Board (example)"
+        }
+      },
+      "tila": {
+        "opiskeluoikeusjaksot": []
+      },
+      "suoritukset": [
+        {
+          "tyyppi": {
+            "koodiarvo": "ylioppilastutkinto"
+          },
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "301000",
+              "nimi": {
+                "fi": "Ylioppilastutkinto",
+                "sv": "Studentexamen",
+                "en": "Matriculation Examination"
+              }
+            }
+          },
+          "vahvistus": {
+            "päivä": "2018-05-31",
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.00000000103",
+              "nimi": {
+                "fi": "Ylioppilastutkintolautakunta (esimerkki)",
+                "sv": "Studentexamensnämnden (exempel)",
+                "en": "Matriculation Examination Board (example)"
+              }
+            }
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "A",
+                  "nimi": {
+                    "fi": "Äidinkieli, suomi",
+                    "sv": "Modersmål, finska",
+                    "en": "Mother tongue, Finnish"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2018K",
+                "vuosi": 2018,
+                "vuodenaika": {
+                  "fi": "kevät",
+                  "sv": "vår",
+                  "en": "spring"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "E",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "EA",
+                  "nimi": {
+                    "fi": "Englanti, pitkä oppimäärä",
+                    "sv": "Engelska, lång lärokurs",
+                    "en": "English, advanced syllabus"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2017S",
+                "vuosi": 2017,
+                "vuodenaika": {
+                  "fi": "syksy",
+                  "sv": "höst",
+                  "en": "autumn"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "L",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "M",
+                  "nimi": {
+                    "fi": "Matematiikka, pitkä oppimäärä",
+                    "sv": "Matematik, lång lärokurs",
+                    "en": "Mathematics, advanced syllabus"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2018K",
+                "vuosi": 2018,
+                "vuodenaika": {
+                  "fi": "kevät",
+                  "sv": "vår",
+                  "en": "spring"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "M",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "BB",
+                  "nimi": {
+                    "fi": "Ruotsi, keskipitkä oppimäärä",
+                    "sv": "Svenska, mellanlång lärokurs",
+                    "en": "Swedish, intermediate syllabus"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2017S",
+                "vuosi": 2017,
+                "vuodenaika": {
+                  "fi": "syksy",
+                  "sv": "höst",
+                  "en": "autumn"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "C",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FY",
+                  "nimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik",
+                    "en": "Physics"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2017S",
+                "vuosi": 2017,
+                "vuodenaika": {
+                  "fi": "syksy",
+                  "sv": "höst",
+                  "en": "autumn"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": false,
+                  "arvosana": {
+                    "koodiarvo": "I",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "FY",
+                  "nimi": {
+                    "fi": "Fysiikka",
+                    "sv": "Fysik",
+                    "en": "Physics"
+                  }
+                }
+              },
+              "tutkintokerta": {
+                "koodiarvo": "2018K",
+                "vuosi": 2018,
+                "vuodenaika": {
+                  "fi": "kevät",
+                  "sv": "vår",
+                  "en": "spring"
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "B",
+                    "koodistoUri": "koskiyoarvosanat"
+                  }
+                }
+              ],
+              "tyyppi": {
+                "koodiarvo": "ylioppilastutkinnonkoe"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oid": "1.2.246.562.15.00000000202",
+      "tyyppi": {
+        "koodiarvo": "korkeakoulutus"
+      },
+      "lähdejärjestelmänId": {
+        "id": "esimerkki-oo-kandi-0001",
+        "lähdejärjestelmä": {
+          "koodiarvo": "virta"
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.00000000101",
+        "nimi": {
+          "fi": "Esimerkkiyliopisto",
+          "sv": "Exempeluniversitetet",
+          "en": "Example University"
+        }
+      },
+      "alkamispäivä": "2018-08-01",
+      "päättymispäivä": "2021-06-15",
+      "lisätiedot": {
+        "virtaOpiskeluoikeudenTyyppi": {
+          "koodiarvo": "1",
+          "nimi": {
+            "fi": "ammattikorkeakoulututkinto tai alempi korkeakoulututkinto",
+            "sv": "yrkeshögskoleexamen eller lägre högskoleexamen",
+            "en": "polytechnic degree or lower university degree"
+          }
+        }
+      },
+      "suoritukset": [
+        {
+          "tyyppi": {
+            "koodiarvo": "korkeakoulututkinto"
+          },
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "655101",
+              "nimi": {
+                "fi": "Luonnontieteiden kandidaatti",
+                "sv": "Kandidat i naturvetenskaper",
+                "en": "Bachelor of Science"
+              }
+            },
+            "virtaNimi": {
+              "fi": "Tietojenkäsittelytieteen kandiohjelma",
+              "sv": "Kandidatprogrammet i datavetenskap",
+              "en": "Bachelor's Programme in Computer Science"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.00000000101",
+            "nimi": {
+              "fi": "Esimerkkiyliopisto",
+              "sv": "Exempeluniversitetet",
+              "en": "Example University"
+            }
+          },
+          "vahvistus": {
+            "päivä": "2021-06-15",
+            "myöntäjäOrganisaatio": {
+              "oid": "1.2.246.562.10.00000000101",
+              "nimi": {
+                "fi": "Esimerkkiyliopisto",
+                "sv": "Exempeluniversitetet",
+                "en": "Example University"
+              }
+            }
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT101",
+                  "nimi": {
+                    "fi": "Ohjelmoinnin perusteet",
+                    "sv": "Grunderna i programmering",
+                    "en": "Introduction to Programming"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2018-10-19"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2018-10-19"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT102",
+                  "nimi": {
+                    "fi": "Ohjelmoinnin jatkokurssi",
+                    "sv": "Fortsättningskurs i programmering",
+                    "en": "Advanced Course in Programming"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2018-12-14"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2018-12-14"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT201",
+                  "nimi": {
+                    "fi": "Tietorakenteet ja algoritmit",
+                    "sv": "Datastrukturer och algoritmer",
+                    "en": "Data Structures and Algorithms"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 10,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "3",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2019-05-10"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2019-05-10"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT202",
+                  "nimi": {
+                    "fi": "Tietokantojen perusteet",
+                    "sv": "Grunderna i databaser",
+                    "en": "Introduction to Databases"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2019-03-08"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2019-03-08"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT203",
+                  "nimi": {
+                    "fi": "Tietoliikenteen perusteet",
+                    "sv": "Grunderna i datakommunikation",
+                    "en": "Introduction to Computer Networks"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": false,
+                  "arvosana": {
+                    "koodiarvo": "0",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2019-10-25"
+                }
+              ],
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT203",
+                  "nimi": {
+                    "fi": "Tietoliikenteen perusteet",
+                    "sv": "Grunderna i datakommunikation",
+                    "en": "Introduction to Computer Networks"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "3",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2020-01-17"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2020-01-17"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT301",
+                  "nimi": {
+                    "fi": "Ohjelmistotuotanto",
+                    "sv": "Programvaruproduktion",
+                    "en": "Software Engineering"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2020-05-15"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2020-05-15"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT302",
+                  "nimi": {
+                    "fi": "Johdatus tekoälyyn",
+                    "sv": "Introduktion till artificiell intelligens",
+                    "en": "Introduction to Artificial Intelligence"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2020-12-11"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2020-12-11"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-TKT390",
+                  "nimi": {
+                    "fi": "Kandidaatin tutkielma",
+                    "sv": "Kandidatavhandling",
+                    "en": "Bachelor's Thesis"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 6,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2021-05-28"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2021-05-28"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-KK101",
+                  "nimi": {
+                    "fi": "Akateemiset viestintätaidot",
+                    "sv": "Akademiska kommunikationsfärdigheter",
+                    "en": "Academic Communication Skills"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 3,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "HYV",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2019-02-22"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2019-02-22"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oid": "1.2.246.562.15.00000000203",
+      "tyyppi": {
+        "koodiarvo": "korkeakoulutus"
+      },
+      "lähdejärjestelmänId": {
+        "id": "esimerkki-oo-maisteri-0001",
+        "lähdejärjestelmä": {
+          "koodiarvo": "virta"
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.00000000101",
+        "nimi": {
+          "fi": "Esimerkkiyliopisto",
+          "sv": "Exempeluniversitetet",
+          "en": "Example University"
+        }
+      },
+      "alkamispäivä": "2021-08-01",
+      "lisätiedot": {
+        "virtaOpiskeluoikeudenTyyppi": {
+          "koodiarvo": "3",
+          "nimi": {
+            "fi": "ylempi korkeakoulututkinto",
+            "sv": "högre högskoleexamen",
+            "en": "higher university degree"
+          }
+        }
+      },
+      "suoritukset": [
+        {
+          "tyyppi": {
+            "koodiarvo": "korkeakoulututkinto"
+          },
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "755101",
+              "nimi": {
+                "fi": "Filosofian maisteri",
+                "sv": "Filosofie magister",
+                "en": "Master of Science"
+              }
+            },
+            "virtaNimi": {
+              "fi": "Tietojenkäsittelytieteen maisteriohjelma",
+              "sv": "Magisterprogrammet i datavetenskap",
+              "en": "Master's Programme in Computer Science"
+            }
+          },
+          "toimipiste": {
+            "oid": "1.2.246.562.10.00000000101",
+            "nimi": {
+              "fi": "Esimerkkiyliopisto",
+              "sv": "Exempeluniversitetet",
+              "en": "Example University"
+            }
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-CS501",
+                  "nimi": {
+                    "fi": "Koneoppimisen perusteet",
+                    "sv": "Grunderna i maskininlärning",
+                    "en": "Introduction to Machine Learning"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2021-10-22"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2021-10-22"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-CS502",
+                  "nimi": {
+                    "fi": "Hajautetut järjestelmät",
+                    "sv": "Distribuerade system",
+                    "en": "Distributed Systems"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "3",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2021-12-17"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2021-12-17"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-CS510",
+                  "nimi": {
+                    "fi": "Tietoturvan perusteet",
+                    "sv": "Grunderna i informationssäkerhet",
+                    "en": "Foundations of Information Security"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "5",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2022-03-11"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2022-03-11"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-CS520",
+                  "nimi": {
+                    "fi": "Ohjelmistoarkkitehtuurit",
+                    "sv": "Programvaruarkitekturer",
+                    "en": "Software Architectures"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2022-05-13"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2022-05-13"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000101",
+                "nimi": {
+                  "fi": "Esimerkkiyliopisto",
+                  "sv": "Exempeluniversitetet",
+                  "en": "Example University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "oid": "1.2.246.562.15.00000000204",
+      "tyyppi": {
+        "koodiarvo": "korkeakoulutus"
+      },
+      "lähdejärjestelmänId": {
+        "id": "esimerkki-oo-avoin-0001",
+        "lähdejärjestelmä": {
+          "koodiarvo": "virta"
+        }
+      },
+      "oppilaitos": {
+        "oid": "1.2.246.562.10.00000000102",
+        "nimi": {
+          "fi": "Esimerkkiyliopiston avoin yliopisto",
+          "sv": "Exempeluniversitetets öppna universitet",
+          "en": "Example University Open University"
+        }
+      },
+      "suoritukset": [
+        {
+          "tyyppi": {
+            "koodiarvo": "muukorkeakoulunsuoritus"
+          },
+          "koulutusmoduuli": {
+            "tunniste": {
+              "koodiarvo": "MUU",
+              "nimi": {
+                "fi": "Muut opinnot",
+                "sv": "Övriga studier",
+                "en": "Other studies"
+              }
+            }
+          },
+          "osasuoritukset": [
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-AY110",
+                  "nimi": {
+                    "fi": "Projektinhallinnan perusteet",
+                    "sv": "Grunderna i projektledning",
+                    "en": "Introduction to Project Management"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 5,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "HYV",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2023-04-14"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2023-04-14"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000102",
+                "nimi": {
+                  "fi": "Esimerkkiyliopiston avoin yliopisto",
+                  "sv": "Exempeluniversitetets öppna universitet",
+                  "en": "Example University Open University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            },
+            {
+              "koulutusmoduuli": {
+                "tunniste": {
+                  "koodiarvo": "ESIM-AY120",
+                  "nimi": {
+                    "fi": "Työelämän vuorovaikutustaidot",
+                    "sv": "Interaktionsfärdigheter i arbetslivet",
+                    "en": "Interaction Skills for Working Life"
+                  }
+                },
+                "laajuus": {
+                  "arvo": 3,
+                  "yksikkö": {
+                    "koodiarvo": "2",
+                    "nimi": {
+                      "fi": "opintopistettä",
+                      "sv": "studiepoäng",
+                      "en": "ECTS credits"
+                    }
+                  }
+                }
+              },
+              "arviointi": [
+                {
+                  "hyväksytty": true,
+                  "arvosana": {
+                    "koodiarvo": "4",
+                    "koodistoUri": "virtaarvosana"
+                  },
+                  "päivä": "2023-11-24"
+                }
+              ],
+              "vahvistus": {
+                "päivä": "2023-11-24"
+              },
+              "toimipiste": {
+                "oid": "1.2.246.562.10.00000000102",
+                "nimi": {
+                  "fi": "Esimerkkiyliopiston avoin yliopisto",
+                  "sv": "Exempeluniversitetets öppna universitet",
+                  "en": "Example University Open University"
+                }
+              },
+              "tyyppi": {
+                "koodiarvo": "korkeakoulunopintojakso"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

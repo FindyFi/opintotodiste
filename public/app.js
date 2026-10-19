@@ -1,5 +1,7 @@
 const form = document.getElementById('koskiForm')
 const koskiUrlInput = document.getElementById('koskiUrlInput')
+const demoOffer = document.getElementById('demoOffer')
+const demoBtn = document.getElementById('demoBtn')
 const submitBtn = document.getElementById('submitBtn')
 const errorBox = document.getElementById('errorBox')
 const metaBox = document.getElementById('metaBox')
@@ -40,7 +42,12 @@ function clearError() {
   errorBox.textContent = ''
 }
 
-function setMeta(personName, koskiUrl) {
+function setMeta(personName, koskiUrl, demo) {
+  if (demo) {
+    metaBox.replaceChildren(personName ? personName + ' · ' : '', el('span', { lang: 'fi' }, 'Esittelytiedot (kuvitteellinen henkilö)'))
+    metaBox.hidden = false
+    return
+  }
   if (!koskiUrl) {
     metaBox.hidden = true
     return
@@ -227,8 +234,9 @@ async function reloadList() {
 function showList(data) {
   credentials = data.credentials ?? []
   selectedIndices.clear()
-  setMeta(data.personName, data.koskiUrl)
-  if (credentials.length || data.koskiUrl) renderTable()
+  setMeta(data.personName, data.koskiUrl, data.demo)
+  demoOffer.hidden = Boolean(data.koskiUrl || data.demo)
+  if (credentials.length || data.koskiUrl || data.demo) renderTable()
   else {
     resultsPanel.hidden = true
     updateBulkBar()
@@ -541,8 +549,30 @@ clearDataBtn.addEventListener('click', async () => {
   credentials = []
   selectedIndices.clear()
   setMeta(null, null)
+  demoOffer.hidden = false
   updateBulkBar()
   resultsPanel.hidden = true
+})
+
+demoBtn.addEventListener('click', async () => {
+  clearError()
+  demoBtn.disabled = true
+  try {
+    const res = await fetch('/demo', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ lang: currentLang() }),
+    })
+    const data = await res.json()
+    if (!res.ok) throw new Error(data.error || 'Request failed')
+    sortState.key = null
+    syncedLang = currentLang()
+    showList(data)
+  } catch (err) {
+    showError(err.message)
+  } finally {
+    demoBtn.disabled = false
+  }
 })
 
 form.addEventListener('submit', (e) => {

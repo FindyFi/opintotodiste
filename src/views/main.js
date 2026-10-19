@@ -36,6 +36,10 @@ ${header()}
         <button type="submit" class="primary" id="submitBtn"><span lang="fi">Hae opinnot</span></button>
       </div>
     </form>
+    <p class="demo-offer" id="demoOffer"${initialData?.koskiUrl || initialData?.demo ? ' hidden' : ''}>
+      <span lang="fi">Eikö linkkiä vielä ole?</span>
+      <button type="button" class="link-btn" id="demoBtn"><span lang="fi">Kokeile palvelua esittelytiedoilla</span></button>
+    </p>
     <div id="errorBox" class="error" role="alert" hidden></div>
   </div>
   <ol class="steps">

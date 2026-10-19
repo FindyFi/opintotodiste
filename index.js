@@ -1,6 +1,7 @@
 import 'dotenv/config'
 import './src/env-check.js'
 import { createHash } from 'node:crypto'
+import { readFileSync } from 'node:fs'
 import express from 'express'
 import session from 'express-session'
 import connectPgSimple from 'connect-pg-simple'
@@ -14,6 +15,7 @@ import { scheduleUnusedAccountSweep } from './src/retention.js'
 import * as auth from './src/auth.js'
 import * as collections from './src/collections.js'
 import * as koskiImports from './src/koski-imports.js'
+import { DEMO_KOSKI_URL, isDemoData } from './src/demo.js'
 import { didDocument, signingKey } from './src/issuer-did.js'
 import { trustedIssuers } from './src/trusted-issuers.js'
 import * as views from './src/views/index.js'
@@ -129,7 +131,8 @@ app.get('/', async (req, res) => {
   // The page embeds the imported records: no copy for the next person at a
   // shared computer to find in the cache or with the back button.
   res.set('Cache-Control', 'no-store')
-  res.send(views.page({ koskiUrl: req.session.koskiUrl, initialData, signedIn: Boolean(req.session.userId) }))
+  const koskiUrl = req.session.koskiUrl === DEMO_KOSKI_URL ? '' : req.session.koskiUrl
+  res.send(views.page({ koskiUrl, initialData, signedIn: Boolean(req.session.userId) }))
 })
 
 // Only what convert() and the page use is kept in the session: the learner
@@ -219,6 +222,7 @@ const storedEntry = (item) => ({ credentialId: item.id, ...recordFromCredential(
 async function credentialsResponse(req) {
   const source = await koskiSource(req)
   const records = source ? recordsOf(source, sessionLang(req)) : []
+  const demo = Boolean(source && isDemoData(source.data))
   const stored = req.session.userId ? await collections.listSavedCredentials(req.session.userId) : []
   const byRef = new Map(stored.filter((item) => item.recordRef).map((item) => [item.recordRef, item]))
   const byKey = new Map(stored.filter((item) => !item.recordRef).map((item) => [credentialKey(item.credential), item]))
@@ -231,7 +235,8 @@ async function credentialsResponse(req) {
   })
   return {
     personName: source ? holderName(source.data.henkilö) ?? '' : undefined,
-    koskiUrl: source?.koskiUrl,
+    koskiUrl: demo ? undefined : source?.koskiUrl,
+    demo,
     credentials: [...entries, ...stored.filter((item) => !shown.has(item.id)).map(storedEntry)],
   }
 }
@@ -278,6 +283,18 @@ app.post('/credentials', importLimit, async (req, res) => {
     const message = err instanceof InvalidKoskiUrlError ? err.message : `Could not load Koski data: ${err.message}`
     res.status(400).json({ error: message })
   }
+})
+
+// "Kokeile palvelua esittelytiedoilla": the bundled synthetic record goes in
+// like a Koski import. Only when there is no import yet, so it can never
+// replace someone's own data; a real import replaces it later (another
+// henkilö.oid, see mergeKoskiData).
+const demoData = JSON.parse(readFileSync(new URL('./src/demo-koski.json', import.meta.url), 'utf8'))
+app.post('/demo', importLimit, async (req, res) => {
+  if (await koskiSource(req)) return res.status(409).json({ error: 'Koski data has been loaded already.' })
+  await addImport(req, { koskiUrl: DEMO_KOSKI_URL, data: minimalKoskiData(demoData) })
+  req.session.lang = SUPPORTED_LANGS.includes(req.body?.lang) ? req.body.lang : 'fi'
+  res.json(await credentialsResponse(req))
 })
 
 // "Clear my data": the imported Koski data goes. An anonymous session has
