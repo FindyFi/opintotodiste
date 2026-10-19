@@ -319,5 +319,20 @@
   },
   "Linkit:": {
     "en": "Links:"
+  },
+  "Suodatettu:": {
+    "en": "Filtered:"
+  },
+  "tyyppi:": {
+    "en": "type:"
+  },
+  "myöntäjä:": {
+    "en": "issuer:"
+  },
+  "myönnetty:": {
+    "en": "awarded:"
+  },
+  "Mikään todiste ei vastaa suodatusta.": {
+    "en": "No credential matches the filter."
   }
 }

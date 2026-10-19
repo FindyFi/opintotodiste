@@ -15,6 +15,9 @@ version to pin.
   person and institutions, 22 credentials) as if it came from Koski. The button shows only while
   nothing has been loaded; `POST /demo` refuses when Koski data is there, and a real import replaces
   the demo data.
+- Main page: the type, issuer and date under each credential filter the list. Active filters show
+  above "Valitse kaikki", each removable; they are kept in the URL, so Back undoes one. Selected
+  credentials stay selected while a filter hides them.
 
 ### Fixed
 

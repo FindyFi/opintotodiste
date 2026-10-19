@@ -36,6 +36,15 @@ describe('the running app', needsPostgres, () => {
     assert.match(res.headers.get('content-type'), /text\/html/)
   })
 
+  test('loads the list filter before the page script and serves it', async () => {
+    const html = await (await fetch(app.baseUrl)).text()
+    const filter = html.indexOf('<script src="/list-filter.js"')
+    assert.ok(filter > 0 && filter < html.indexOf('<script src="/app.js"'))
+    const res = await fetch(`${app.baseUrl}/list-filter.js`)
+    assert.equal(res.status, 200)
+    assert.match(await res.text(), /const ListFilter = /)
+  })
+
   test('links the favicons from the head and serves them', async () => {
     const html = await (await fetch(app.baseUrl)).text()
     for (const href of ['/icons/icon.svg', '/icons/favicon-32.png', '/icons/apple-touch-icon.png']) {
