@@ -32,6 +32,7 @@
 
 .koski-form { display: flex; flex-direction: column; gap: 10px; }
 .demo-offer { margin: 14px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--muted); }
+.demo-offer[hidden] { display: none; }
 .demo-offer .link-btn { padding: 4px 0; font-weight: 700; text-decoration: underline; }
 .koski-form label { font-weight: 700; color: var(--heading); }
 
