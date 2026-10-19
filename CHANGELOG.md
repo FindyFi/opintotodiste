@@ -9,6 +9,10 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.6] - 2026-10-19
+
+The image needs no new variables and no schema changes. Pair it with oid4vci-issuer 0.0.4.
+
 ### Added
 
 - "Kokeile palvelua esittelytiedoilla" on the main page loads a synthetic study record (a fictional
