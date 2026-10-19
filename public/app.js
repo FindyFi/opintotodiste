@@ -28,6 +28,8 @@ const COLUMNS = [
 // credential no record matches (`credentialId` only).
 let credentials = []
 const sortState = { key: null, direction: 1 }
+// Selection survives filtering: rows a filter hides stay selected, so a user
+// can gather a batch from several filtered views.
 const selectedIndices = new Set()
 
 function showError(message) {
@@ -120,8 +122,35 @@ function columnValue(record, key) {
   }
 }
 
+// The date a record was awarded as YYYY-MM-DD in local time, so a fetched
+// record's date-only value and a signed copy's timestamp filter alike.
+function awardedDay(record) {
+  const iso = record.awardedOn
+  if (!iso || !iso.includes('T')) return iso ?? ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return iso
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+}
+
+const filterValue = (record, key) => (key === 'awarded' ? awardedDay(record) : columnValue(record, key))
+
+const listFilter = ListFilter.create({
+  fields: [
+    { key: 'type', label: 'tyyppi' },
+    { key: 'issuer', label: 'myöntäjä' },
+    { key: 'awarded', label: 'myönnetty', format: formatDate },
+  ],
+  onChange: () => {
+    if (!resultsPanel.hidden) renderTable()
+  },
+})
+
+// The rows on show: the filtered list, sorted.
 function sortedEntries() {
-  const entries = credentials.map((record, index) => ({ record, index }))
+  const entries = credentials
+    .map((record, index) => ({ record, index }))
+    .filter(({ record }) => listFilter.matches((key) => filterValue(record, key)))
   if (!sortState.key) return entries
   const { key, direction } = sortState
   return entries.sort(
@@ -155,6 +184,7 @@ function buildToolbar() {
   })
 
   return el('div', { class: 'list-toolbar' }, [
+    ...[listFilter.bar()].filter(Boolean),
     el('label', { class: 'select-all' }, [selectAllCb, el('span', { lang: 'fi' }, 'Valitse kaikki')]),
     el('div', { class: 'sort-control', role: 'group', 'aria-label': 'Järjestä' }, [el('span', { lang: 'fi' }, 'Järjestä:'), ...sortButtons]),
   ])
@@ -170,12 +200,15 @@ function renderTable() {
     return
   }
 
+  listFilter.prune((key, value) => credentials.some((record) => filterValue(record, key) === value))
+  const entries = sortedEntries()
   const list = el('ul', { class: 'credential-list' })
-  sortedEntries().forEach(({ record, index }) => {
+  entries.forEach(({ record, index }) => {
     list.appendChild(buildRow(record, index))
   })
 
   tableContainer.append(buildToolbar(), list)
+  if (!entries.length) tableContainer.append(el('p', { class: 'empty', lang: 'fi' }, 'Mikään todiste ei vastaa suodatusta.'))
   updateBulkBar()
 }
 
@@ -192,7 +225,14 @@ function buildRow(record, index) {
     renderTable()
   })
 
-  const meta = [achievement.achievementType, achievement.creator?.name, formatDate(record.awardedOn)].filter(Boolean).join(' · ')
+  // Each part of the meta line filters the list to rows with the same value.
+  const meta = [
+    achievement.achievementType && listFilter.link('type', achievement.achievementType),
+    achievement.creator?.name && listFilter.link('issuer', achievement.creator.name),
+    record.awardedOn && listFilter.link('awarded', awardedDay(record), formatDate(record.awardedOn)),
+  ]
+    .filter(Boolean)
+    .flatMap((part, i) => (i ? [' · ', part] : [part]))
 
   return el('li', { class: 'credential' }, [
     rowCb,

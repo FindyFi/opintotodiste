@@ -9,6 +9,12 @@ version to pin.
 
 ## [Unreleased]
 
+### Added
+
+- Main page: the type, issuer and date under each credential filter the list. Active filters show
+  above "Valitse kaikki", each removable; they are kept in the URL, so Back undoes one. Selected
+  credentials stay selected while a filter hides them.
+
 ## [0.0.5] - 2026-10-18
 
 Deploy with oid4vci-issuer 0.0.4 (selective disclosure). Deploying signs everyone out once (the
