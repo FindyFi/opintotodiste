@@ -9,6 +9,11 @@ version to pin.
 
 ## [Unreleased]
 
+### Fixed
+
+- The "try the service with demo data" link now disappears once Koski data or demo data is loaded;
+  its `display: flex` had been overriding the `hidden` attribute.
+
 ## [0.0.6] - 2026-10-19
 
 The image needs no new variables and no schema changes. Pair it with oid4vci-issuer 0.0.4.
