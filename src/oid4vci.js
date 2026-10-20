@@ -32,3 +32,27 @@ export async function createOffer(unsignedCredential, { baseUrl, tenant, token, 
   }
   return res.json()
 }
+
+// Whether each offer (by its pre-authorized code) is still waiting for a
+// wallet, was picked up, or is gone: 'waiting' | 'picked-up' | 'expired'. The
+// issuer forgets an offer when it expires, and a used one a minute after use,
+// so 'expired' can also mean picked up a while ago; the dialog remembers what
+// it saw. Throws if the issuer can't answer.
+export async function offerStatuses(codes, { baseUrl, tenant }) {
+  const statuses = await Promise.all(
+    codes.map(async (code) => {
+      const res = await fetch(new URL(`/instance/${tenant}/offers/${code}/status`, baseUrl))
+      if (res.status === 404) {
+        await res.body?.cancel()
+        return 'expired'
+      }
+      if (!res.ok) {
+        await res.body?.cancel()
+        throw new Error(`OID4VCI issuer responded with ${res.status} ${res.statusText}`)
+      }
+      const { used } = await res.json()
+      return used ? 'picked-up' : 'waiting'
+    })
+  )
+  return Object.fromEntries(codes.map((code, i) => [code, statuses[i]]))
+}

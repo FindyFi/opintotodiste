@@ -11,6 +11,9 @@ version to pin.
 
 ### Added
 
+- The "Add to wallet" dialog shows when each offer is picked up (or has expired), so you notice if
+  someone else scanned the code first. The app asks oid4vci-issuer's offer status endpoint through the
+  new `POST /wallet-offers/status`.
 - Hovi Wallet is listed on the wallet guide (/guide/wallet).
 - UniMe is listed on the wallet guide. It needs an oid4vci-issuer release with the W1 wallet
   tolerances (`/.well-known/did.json`, `did:jwk` proof keys).

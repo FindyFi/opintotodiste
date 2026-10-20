@@ -80,6 +80,18 @@
   "Voimassa:": {
     "en": "Valid for:"
   },
+  "Odottaa lompakkoa": {
+    "en": "Waiting for the wallet"
+  },
+  "✓ Lisätty lompakkoon": {
+    "en": "✓ Added to the wallet"
+  },
+  "Jos merkki ei tullut lompakkoosi, joku muu ehti skannata koodin.": {
+    "en": "If the badge didn't reach your wallet, someone else scanned the code first."
+  },
+  "Koodi vanheni. Valitse Lisää lompakkoon uudelleen.": {
+    "en": "The code expired. Choose Add to wallet again."
+  },
   "Kirjaudu sisään": {
     "en": "Sign in"
   },

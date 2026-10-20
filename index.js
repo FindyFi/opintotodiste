@@ -9,7 +9,7 @@ import QRCode from 'qrcode'
 import { convert, holderName } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError, mergedImport } from './src/koski.js'
 import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, recordFromCredential, signCredential, credentialKey } from './src/badges.js'
-import { createOffer } from './src/oid4vci.js'
+import { createOffer, offerStatuses } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import { scheduleUnusedAccountSweep } from './src/retention.js'
 import * as auth from './src/auth.js'
@@ -118,6 +118,8 @@ const FIVE_MINUTES = 5 * 60 * 1000
 const importLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 60 })
 const signingLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 200 })
 const authLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 100 })
+// The wallet dialog polls every few seconds while it is open.
+const offerStatusLimit = rateLimit({ windowMs: FIVE_MINUTES, max: 1000 })
 
 function requireAuth(req, res, next) {
   if (!req.session.userId) return res.status(401).json({ error: 'Please sign in with a passkey first.' })
@@ -346,7 +348,9 @@ app.post('/credentials/:ref/sign', signingLimit, async (req, res) => {
 })
 
 // Hands an unsigned credential for `record` to the OID4VCI issuer and returns
-// what the wallet dialog needs: the offer URI as a QR code, plus its lifetime.
+// what the wallet dialog needs: the offer URI as a QR code, its lifetime, and
+// the pre-authorized code to ask for its status with (the offer URI leads to
+// that code anyway).
 // With OID4VCI_CREDENTIAL_VCT set it's SD-JWT VC claims, with the holder's
 // name and oid selectively disclosable (G9), otherwise VCDM 2.0.
 async function createWalletOffer(record) {
@@ -357,7 +361,7 @@ async function createWalletOffer(record) {
         issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
         issuerName: process.env.ISSUER_NAME,
       })
-  const { offerUri, txCode, expiresIn } = await createOffer(vc, {
+  const { preAuthorizedCode, offerUri, txCode, expiresIn } = await createOffer(vc, {
     baseUrl: process.env.OID4VCI_ISSUER_URL,
     tenant: process.env.OID4VCI_ISSUER_INSTANCE,
     token: process.env.OID4VCI_ISSUER_TOKEN,
@@ -365,8 +369,37 @@ async function createWalletOffer(record) {
     disclosable: sdJwtVc ? sdJwtVcDisclosable(vc) : undefined,
   })
   const qrDataUrl = await QRCode.toDataURL(offerUri)
-  return { offerUri, qrDataUrl, txCode, expiresIn }
+  return { offerUri, qrDataUrl, txCode, expiresIn, code: preAuthorizedCode }
 }
+
+const OFFER_CODE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const MAX_OFFER_STATUS_CODES = 50
+
+// Lets the wallet dialog show when an offer is picked up, so the user notices
+// if someone else got to it first (threat analysis T11). Takes the codes from
+// createWalletOffer and answers { <code>: 'waiting' | 'picked-up' | 'expired' }.
+app.post('/wallet-offers/status', offerStatusLimit, async (req, res) => {
+  const { codes } = req.body ?? {}
+  if (
+    !Array.isArray(codes) ||
+    codes.length === 0 ||
+    codes.length > MAX_OFFER_STATUS_CODES ||
+    !codes.every((code) => typeof code === 'string' && OFFER_CODE.test(code))
+  ) {
+    return res.status(400).json({ error: `codes must be 1-${MAX_OFFER_STATUS_CODES} offer codes.` })
+  }
+  try {
+    res.json(
+      await offerStatuses(codes, {
+        baseUrl: process.env.OID4VCI_ISSUER_URL,
+        tenant: process.env.OID4VCI_ISSUER_INSTANCE,
+      })
+    )
+  } catch (err) {
+    console.error('Checking wallet offer status failed:', err.message)
+    res.status(502).json({ error: err.message })
+  }
+})
 
 // The offer itself never needs signCredential - it hands an unsigned VC to the
 // OID4VCI issuer, which signs it only once a wallet actually completes the

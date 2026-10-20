@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { createOffer } from '../src/oid4vci.js'
+import { createOffer, offerStatuses } from '../src/oid4vci.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const UNSIGNED_CREDENTIAL = {
@@ -99,5 +99,30 @@ describe('createOffer', () => {
       () => createOffer(UNSIGNED_CREDENTIAL, { baseUrl: 'http://localhost:4007' }),
       /OID4VCI_ISSUER_INSTANCE/
     )
+  })
+})
+
+describe('offerStatuses', () => {
+  test('maps the issuer offer status to waiting, picked-up or expired', async () => {
+    const issuer = await startStubServer((req) => {
+      if (req.url === '/instance/test/offers/a/status') return { json: { used: false } }
+      if (req.url === '/instance/test/offers/b/status') return { json: { used: true } }
+      return { status: 404, json: { error: 'Offer not found or expired.' } }
+    })
+    try {
+      const statuses = await offerStatuses(['a', 'b', 'c'], { baseUrl: issuer.url, tenant: 'test' })
+      assert.deepEqual(statuses, { a: 'waiting', b: 'picked-up', c: 'expired' })
+    } finally {
+      await issuer.stop()
+    }
+  })
+
+  test('fails when the issuer cannot answer', async () => {
+    const issuer = await startStubServer(() => ({ status: 500, text: 'down' }))
+    try {
+      await assert.rejects(() => offerStatuses(['a'], { baseUrl: issuer.url, tenant: 'test' }), /responded with 500/)
+    } finally {
+      await issuer.stop()
+    }
   })
 })

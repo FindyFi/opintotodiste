@@ -351,7 +351,8 @@ offer's lifetime can use it first, and that person's wallet gets Alice's badge b
 
 **What we do so that it doesn't happen.** In place: pre-authorized codes are single-use and expire
 after 10 minutes, so whoever uses the offer first takes it, and Alice notices when their own wallet
-then fails. Offers carry no transaction code (`tx_code`) since W4: the dialog would show it next to the
+then fails. While the dialog is open, it shows when each offer is picked up, with a note that someone
+else may have scanned the code if the badge didn't arrive. Offers carry no transaction code (`tx_code`) since W4: the dialog would show it next to the
 QR code, so it did not help against anyone who sees the QR code, and OID4VCI meant it for a second
 channel (e-mail, SMS) that we don't have. It did protect a leaked offer link on its own; we accept
 that, since the link is short-lived and single-use, and the code was friction for everyone and broke
