@@ -1,7 +1,6 @@
 # Student status credential
 
-**Status: K3 step 1. Approved by the user on 2026-10-20, except for one question (the level code set, see
-"The level").** The decisions are listed at the end.
+**Status: approved by the user on 2026-10-20 (K3).** The decisions are listed at the end.
 
 A separate Open Badge saying that the holder is enrolled at an educational institution. It names the
 institution and the level of the studies, so that a verifier can decide for itself whether, say, an upper
@@ -103,8 +102,7 @@ the `asOf` date. `validUntil` is a new plain sibling fact, like `awardedOn`; oth
     "alignment": [
       {
         "type": ["Alignment"],
-        "targetType": "ext:KoskiCode",
-        "targetFramework": "Koski: opiskeluoikeudentyyppi",
+        "targetFramework": "Koski: opiskeluoikeuden tyyppi",
         "targetCode": "lukiokoulutus",
         "targetName": "Lukiokoulutus",
         "targetUrl": "https://koski.opintopolku.fi/koski/dokumentaatio/koodisto/opiskeluoikeudentyyppi/latest"
@@ -158,9 +156,9 @@ each `koulutus` code to its level. For the four codes in the two exports
   18) carry their VIRTA type as the code, not a `koulutus` code. They are not enrolled by rule 3 anyway, so this
   costs nothing now. The sector and VIRTA type alignments are still there.
 
-**Open:** add the level alignment (`targetFramework` "Tilastokeskus: Koulutusluokitus 2016, koulutusaste",
-`targetCode` "3", `targetName` "Toinen aste") in K3 now, rather than as a follow-up? It is a few lines and
-removes most of the need for a verifier to know Finnish code sets.
+Added in K3 (user, 2026-10-20): `targetFramework` "Tilastokeskus: koulutusaste (ISCED 2011 -tasot)", `targetCode`
+"3", `targetName` "Toinen aste", `targetUrl` the Koski page of the code set. No alignment has a `targetType`:
+none of OB 3.0's values fits, and it is optional.
 
 - **`fieldOfStudy`:** the programme or syllabus name when Koski has one (the suoritus's `koulutusmoduuli`, VIRTA
   `virtaNimi`).
@@ -209,6 +207,6 @@ past. The issuer still sets every JWT time claim itself; nothing in the credenti
 5. No freshness limit: signing fetches Koski again (the user's suggestion).
 6. No revocation: like a plastic student card. "As of" in the description is enough.
 7. `achievementType: "ext:StudentStatus"` and `result.status: "Enrolled"`.
-8. The level: deducible from the education code (above). Whether it goes in now is still open.
+8. The level from the education code goes in now (above).
 9. No VCT of its own for now.
 10. oid4vci-issuer: the offer's optional `validUntil` sets `exp`.
