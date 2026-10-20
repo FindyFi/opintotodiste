@@ -55,7 +55,7 @@ const Detail = (() => {
   // translate-element's alternate mode: the lang="en" sibling right after
   // the lang="fi" element is its translation, so no translations.json entry
   // is needed.
-  const RESULT_TEXT_TRANSLATIONS = { Completed: 'Suoritettu' }
+  const RESULT_TEXT_TRANSLATIONS = { Completed: 'Suoritettu', Enrolled: 'Läsnä' }
   function bilingualText(text) {
     const fi = RESULT_TEXT_TRANSLATIONS[text]
     if (!fi) return text ?? ''
@@ -96,6 +96,9 @@ const Detail = (() => {
   function open(credential, actions = []) {
     const achievement = credential.credentialSubject?.achievement || {}
     const awardedIso = credential.awardedOn ?? credential.issuanceDate ?? credential.validFrom
+    // A student status expires (K3): a record's validUntil, a stored copy's
+    // expirationDate (ldp_vc) or validUntil.
+    const validUntilIso = credential.validUntil ?? credential.expirationDate
 
     const dl = el('dl')
     const addRow = (term, value) => {
@@ -105,6 +108,7 @@ const Detail = (() => {
     addRow('Haltija', holderName(credential.credentialSubject))
     addRow('Myöntäjä', achievement.creator?.name)
     addRow('Myönnetty', formatDate(awardedIso))
+    addRow('Voimassa asti', formatDate(validUntilIso))
     addRow('Koulutusala', achievement.fieldOfStudy)
     addRow('Koodi', achievement.humanCode)
 

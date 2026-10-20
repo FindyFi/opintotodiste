@@ -237,6 +237,7 @@ function buildRow(record, index) {
     achievement.achievementType && listFilter.link('type', achievement.achievementType),
     achievement.creator?.name && listFilter.link('issuer', achievement.creator.name),
     record.awardedOn && listFilter.link('awarded', awardedDay(record), formatDate(record.awardedOn)),
+    record.validUntil && validity(record.validUntil),
   ]
     .filter(Boolean)
     .flatMap((part, i) => (i ? [' · ', part] : [part]))
@@ -247,6 +248,12 @@ function buildRow(record, index) {
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, buildStatusCell(record)),
   ])
+}
+
+// A student status's expiry (K3): "Vanhenee <date>", or "Vanhentunut" once past.
+function validity(validUntil) {
+  if (Date.parse(validUntil) <= Date.now()) return el('span', { class: 'expired', lang: 'fi' }, 'Vanhentunut')
+  return el('span', {}, [el('span', { lang: 'fi' }, 'Vanhenee'), ' ', formatDate(validUntil)])
 }
 
 function buildStatusCell(record) {

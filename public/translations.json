@@ -44,6 +44,15 @@
   "Myönnetty": {
     "en": "Awarded"
   },
+  "Voimassa asti": {
+    "en": "Valid until"
+  },
+  "Vanhenee": {
+    "en": "Expires"
+  },
+  "Vanhentunut": {
+    "en": "Expired"
+  },
   "Tila": {
     "en": "Status"
   },

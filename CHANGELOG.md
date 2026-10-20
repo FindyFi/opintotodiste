@@ -11,6 +11,16 @@ version to pin.
 
 ### Added
 
+- A student status badge (`ext:StudentStatus`, result `Enrolled`) for each study right Koski shows
+  the person enrolled in, naming the institution and the level of studies; see
+  docs/student-status-credential.md. It expires at the expected end of the studies (in higher
+  education, at the end of the term registered present): `expirationDate` in downloads and
+  collections, `exp` in wallets. Signing it or sending it to a wallet fetches Koski again through the
+  import's share link, and is refused (409) when the link has lapsed or Koski no longer shows the
+  enrolment. An expired saved copy is signed again in its place. The demo person has one. Needs
+  koski2openbadge v0.5.0 and an oid4vci-issuer release that turns an offer's `validUntil` into
+  `exp` (K3); an older issuer ignores the field, and the wallet credential then doesn't expire.
+
 - The "Add to wallet" dialog shows when each offer is picked up (or has expired), so you notice if
   someone else scanned the code first. The app asks oid4vci-issuer's offer status endpoint through the
   new `POST /wallet-offers/status`.

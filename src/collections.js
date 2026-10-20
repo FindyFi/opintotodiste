@@ -47,6 +47,12 @@ export async function saveCredential(ownerId, credential, recordRef = null) {
   return { id: rows[0].id, addedAt: rows[0].added_at }
 }
 
+// A new signed copy in place of an expired one (a student status signed
+// again, K3). The id stays, so the copy stays in its collections and links.
+export async function replaceSavedCredential(ownerId, id, credential) {
+  await pool.query('UPDATE saved_credentials SET credential = $3 WHERE owner_id = $1 AND id = $2', [ownerId, id, credential])
+}
+
 export async function findSavedByRef(ownerId, recordRef) {
   const { rows } = await pool.query(
     `SELECT id, credential, added_at, record_ref FROM saved_credentials WHERE owner_id = $1 AND record_ref = $2

@@ -76,8 +76,10 @@ synthetic record.
     that makes the person present (rule 3). That is at most a term away. It follows the registration that
     actually makes someone a student, which the degree's normative time doesn't.
   - No end date at all: not issued.
-- **Never issued after `validUntil`.** A saved status credential sent to a wallet later is signed again, and
-  so fetched again, like any other.
+- **Never issued after `validUntil`.** A saved copy (downloads, collections) is kept while it is valid. Once it
+  has expired, the next signing makes a new one in its place (same saved credential, so its collections and
+  links follow). A saved copy sent to a wallet goes as it is, with its own date and expiry, like a copy of the
+  same card; an expired one is refused.
 
 ## Open Badges 3.0 shape
 
