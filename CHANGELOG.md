@@ -39,6 +39,10 @@ version to pin.
 - Wallet offers no longer ask for a confirmation code (`tx_code`). The code was shown next to the QR
   code, so it protected little, and some wallets (Toppan) can't enter one. Offers stay single-use and
   short-lived. The wallet guide's last step is now "Accept the badge". Threat analysis T11 is updated.
+- Wallet credentials use the Open Badge VCT v2
+  (`https://openbadge.digicredential.eu/credentials/v2/OpenBadgeVCT`), which labels the holder's
+  name claims. `OID4VCI_CREDENTIAL_VCT` and the oid4vci-issuer configuration's `vct` and
+  `vct#integrity` must change together, after v2 is published. Credentials already issued keep v1.
 
 ## [0.0.7] - 2026-10-19
 
