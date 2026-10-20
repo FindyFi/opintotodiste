@@ -600,15 +600,19 @@ describe('the Koski journey', needsPostgres, () => {
 describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
   const VCT = 'https://issuer.example/vct/OpenBadgeCredential'
   let app
+  let signer
   let issuer
 
   before(async () => {
+    signer = await startStubServer((req) => ({ json: SIGNED(req.body) }))
     issuer = await startStubServer(() => ({
       json: { offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
     }))
     app = await startApp({
       koskiFixture: FIXTURE,
       env: {
+        SIGNING_SERVICE_URL: signer.url,
+        SIGNING_SERVICE_INSTANCE_ID: 'test',
         OID4VCI_ISSUER_URL: issuer.url,
         OID4VCI_ISSUER_INSTANCE: 'test',
         OID4VCI_CREDENTIAL_CONFIGURATION_ID: 'OpenBadgeCredentialSdJwtVc',
@@ -619,8 +623,17 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
 
   after(async () => {
     await app?.stop()
+    await signer?.stop()
     await issuer?.stop()
   })
+
+  async function signUp(name) {
+    const client = createClient(app.baseUrl)
+    const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
+    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: name } })
+    await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
+    return client
+  }
 
   test('sends flat claims with the configured vct', async () => {
     const client = createClient(app.baseUrl)
@@ -632,11 +645,35 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
 
     const { credentialConfigurationId, unsignedCredential: claims, disclosable } = issuer.requests.at(-1).body
     assert.equal(credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
-    assert.deepEqual(disclosable, ['sub', 'identifier'].filter((claim) => claim in claims))
-    assert.ok(disclosable.includes('identifier'), 'the holder name is disclosable')
+    assert.deepEqual(disclosable, ['sub', 'identifier', 'given_name', 'family_name'])
+    assert.equal(claims.given_name, 'Testi Tapaus', 'all first names, not the call name')
+    assert.equal(claims.family_name, 'Opiskelija')
     assert.equal(claims.vct, VCT)
     assert.ok(claims.achievement?.name)
     assert.ok(!Number.isNaN(Date.parse(claims.awardedDate)))
     for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf', 'vct#integrity']) assert.equal(key in claims, false, key)
+  })
+
+  test('takes the name parts of a saved credential from its owner\'s import', async () => {
+    const client = await signUp('Lompakko')
+    const loaded = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    const saved = await client.json('/saved-credentials', { method: 'POST', body: { refs: [loaded.body.credentials[0].ref] } })
+    const { credentialId } = saved.body.results[0]
+
+    const offer = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+    assert.equal(offer.status, 200, JSON.stringify(offer.body))
+    const { unsignedCredential: claims, disclosable } = issuer.requests.at(-1).body
+    assert.equal(claims.given_name, 'Testi Tapaus')
+    assert.equal(claims.family_name, 'Opiskelija')
+    assert.deepEqual(disclosable, ['sub', 'identifier', 'given_name', 'family_name'])
+
+    // Without the import, the credential still goes out, with no name parts.
+    await client.request('/credentials', { method: 'DELETE' })
+    const again = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+    assert.equal(again.status, 200, JSON.stringify(again.body))
+    const bare = issuer.requests.at(-1).body.unsignedCredential
+    assert.equal('given_name' in bare, false)
+    assert.equal('family_name' in bare, false)
+    assert.ok(bare.identifier)
   })
 })

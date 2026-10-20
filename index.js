@@ -8,7 +8,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert, holderName } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError, mergedImport } from './src/koski.js'
-import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, recordFromCredential, signCredential, credentialKey } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, credentialPerson, recordFromCredential, signCredential, credentialKey } from './src/badges.js'
 import { createOffer, offerStatuses } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import { scheduleUnusedAccountSweep } from './src/retention.js'
@@ -183,7 +183,10 @@ const sessionLang = (req) => (SUPPORTED_LANGS.includes(req.session.lang) ? req.s
 
 async function findRecord(req, ref) {
   if (typeof ref !== 'string' || !RECORD_REF.test(ref)) return null
-  const source = await koskiSource(req)
+  return recordIn(req, await koskiSource(req), ref)
+}
+
+function recordIn(req, source, ref) {
   return (source && recordsOf(source, sessionLang(req)).find((r) => r.ref === ref)?.record) ?? null
 }
 
@@ -352,11 +355,12 @@ app.post('/credentials/:ref/sign', signingLimit, async (req, res) => {
 // the pre-authorized code to ask for its status with (the offer URI leads to
 // that code anyway).
 // With OID4VCI_CREDENTIAL_VCT set it's SD-JWT VC claims, with the holder's
-// name and oid selectively disclosable (G9), otherwise VCDM 2.0.
-async function createWalletOffer(record) {
+// name and oid selectively disclosable (G9) and the name's parts taken from
+// the Koski person `henkilö` (G10), otherwise VCDM 2.0.
+async function createWalletOffer(record, henkilö) {
   const sdJwtVc = Boolean(process.env.OID4VCI_CREDENTIAL_VCT)
   const vc = sdJwtVc
-    ? toSdJwtVcClaims(record, { vct: process.env.OID4VCI_CREDENTIAL_VCT })
+    ? toSdJwtVcClaims(record, { vct: process.env.OID4VCI_CREDENTIAL_VCT, henkilö })
     : toVcdm2Credential(record, {
         issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
         issuerName: process.env.ISSUER_NAME,
@@ -406,7 +410,8 @@ app.post('/wallet-offers/status', offerStatusLimit, async (req, res) => {
 // flow. A signed-in user's record is still signed and saved, like any record
 // that leaves the service; if that fails, the offer goes ahead without it.
 app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
-  const record = await findRecord(req, req.params.ref)
+  const source = RECORD_REF.test(req.params.ref) ? await koskiSource(req) : null
+  const record = recordIn(req, source, req.params.ref)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
 
   let credentialId
@@ -418,7 +423,7 @@ app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
     }
   }
   try {
-    res.json({ ...(await createWalletOffer(record)), credentialId })
+    res.json({ ...(await createWalletOffer(record, source.data.henkilö)), credentialId })
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
@@ -548,13 +553,16 @@ app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
 
 // Owner only: with no holder binding, a public share link must not be able to
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
-// re-issued as a VCDM 2.0 credential for the wallet.
+// re-issued as a VCDM 2.0 credential for the wallet. The name's parts come
+// from the owner's Koski import, if it is the credential's person.
 app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, res) => {
   const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
 
   try {
-    res.json(await createWalletOffer(recordFromCredential(credential)))
+    const source = await koskiSource(req)
+    const henkilö = credentialPerson(credential.credentialSubject, source?.data.henkilö)
+    res.json(await createWalletOffer(recordFromCredential(credential), henkilö))
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })

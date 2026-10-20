@@ -105,9 +105,11 @@ end up in Bob's hands and in Bob's shares; once known, it undermines trust in ev
   records that exist, but not to their own.
 - In place (G8): the holder's name from Koski is in every credential (ldp_vc, the VCDM 2.0 offer and
   the SD-JWT VC) and on the shared pages, so an employer can compare it with an ID document. Cheap, but
-  it shifts the check to the employer. In the SD-JWT VC the name and the oppijanumero are selectively
-  disclosable (G9): a wallet presents them only if the holder agrees, so a verifier that needs the
-  name must ask for it.
+  it shifts the check to the employer. The SD-JWT VC also carries it as flat `given_name` (all first
+  names) and `family_name` (G10), as the EU PID does, so a verifier can compare it with a PID and
+  wallets that don't show nested claims show it. In the SD-JWT VC the name and the oppijanumero are
+  selectively disclosable (G9): a wallet presents them only if the holder agrees, so a verifier that
+  needs the name must ask for it.
 - Decided (H2): no limit of one account per oppijanumero, since a person may legitimately have several
   accounts (passkeys on different devices), and so no import log either.
 - Planned (H6, later, costly): get the data through an authenticated channel instead of a bearer link:
