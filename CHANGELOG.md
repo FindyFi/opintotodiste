@@ -12,6 +12,12 @@ version to pin.
 ### Added
 
 - Hovi Wallet is listed on the wallet guide (/guide/wallet).
+- UniMe is listed on the wallet guide. It needs an oid4vci-issuer release with the W1 wallet
+  tolerances (`/.well-known/did.json`, `did:jwk` proof keys).
+
+### Changed
+
+- The wallet guide lists the wallets in alphabetical order.
 
 ## [0.0.7] - 2026-10-19
 

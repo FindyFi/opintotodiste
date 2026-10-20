@@ -24,6 +24,11 @@ describe('guide pages', () => {
     assert.match(html, /href="\/guide\/wallet" aria-current="page"/)
   })
 
+  test('list the wallets sorted by name', () => {
+    const names = WALLETS.map((w) => w.name)
+    assert.deepEqual(names, names.toSorted((a, b) => a.localeCompare(b, 'en')))
+  })
+
   test('list every wallet of a shown group with its store links, in both languages', () => {
     const html = guidePage('wallet')
     for (const wallet of WALLETS) {
