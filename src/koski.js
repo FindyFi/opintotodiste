@@ -82,14 +82,25 @@ function samePerson(a, b) {
   return JSON.stringify(a ?? null) === JSON.stringify(b ?? null)
 }
 
+// A study right's identity across imports: its Koski oid, or for one without
+// (higher education from Virta has none), its source system, its id there and
+// the institution. Only a study right with neither is matched by its whole
+// content, so any change to it makes a second copy.
+function studyRightKey(oo) {
+  if (oo?.oid) return JSON.stringify(['oid', oo.oid])
+  const source = oo?.lähdejärjestelmänId
+  if (source?.id) return JSON.stringify(['source', source.lähdejärjestelmä?.koodiarvo ?? null, source.id, oo.oppilaitos?.oid ?? null])
+  return JSON.stringify(oo)
+}
+
 // Adds a new import to an earlier one: a study right (opiskeluoikeus) in both
 // is taken from the new one, the rest of both are kept. Another person's data
-// replaces the earlier import instead of mixing with it (`replaced`).
+// replaces the earlier import instead of mixing with it (`replaced`). Copies
+// of one study right that earlier imports kept apart collapse into the latest.
 export function mergeKoskiData(previous, next) {
   if (!previous || !samePerson(previous.henkilö, next.henkilö)) return { data: next, replaced: Boolean(previous) }
-  const key = (oo) => oo?.oid ?? JSON.stringify(oo)
-  const studyRights = new Map((previous.opiskeluoikeudet ?? []).map((oo) => [key(oo), oo]))
-  for (const oo of next.opiskeluoikeudet ?? []) studyRights.set(key(oo), oo)
+  const studyRights = new Map((previous.opiskeluoikeudet ?? []).map((oo) => [studyRightKey(oo), oo]))
+  for (const oo of next.opiskeluoikeudet ?? []) studyRights.set(studyRightKey(oo), oo)
   return { data: { henkilö: next.henkilö, opiskeluoikeudet: [...studyRights.values()] }, replaced: false }
 }
 
