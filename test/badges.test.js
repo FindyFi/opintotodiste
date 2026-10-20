@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { credentialKey, credentialPerson, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { credentialKey, credentialPerson, hasExpired, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -257,5 +257,65 @@ describe('credentialKey', () => {
     const fi = { credentialSubject: subject('Kurssi', null), awardedOn: '2021-06-01' }
     assert.equal(credentialKey(fi), credentialKey({ credentialSubject: subject('Kurssi', null), awardedOn: '2021-06-01' }))
     assert.notEqual(credentialKey(fi), credentialKey({ credentialSubject: subject('Course', null), awardedOn: '2021-06-01' }))
+  })
+})
+
+// A student status (K3) as koski2openbadge emits it: no award date, a
+// validUntil, a start and an Enrolled result.
+describe('a student status', () => {
+  const STATUS = {
+    credentialSubject: {
+      type: ['AchievementSubject'],
+      id: 'urn:oid:1.2.3',
+      activityStartDate: '2024-08-07T21:00:00.000Z',
+      achievement: {
+        id: 'urn:x:status',
+        type: ['Achievement'],
+        achievementType: 'ext:StudentStatus',
+        name: 'Opiskelija: Lukiokoulutus',
+        alignment: [{ type: ['Alignment'], targetCode: 'lukiokoulutus', targetName: 'Lukiokoulutus', targetUrl: 'https://koski.example/x' }],
+        resultDescription: [{ id: 'urn:x:status#status', type: ['ResultDescription'], name: 'Opiskelutilanne', resultType: 'Status' }],
+      },
+      result: [{ type: ['Result'], resultDescription: 'urn:x:status#status', status: 'Enrolled' }],
+    },
+    validUntil: '2027-06-05T20:59:59.000Z',
+  }
+
+  test('expires in every envelope, dated when it is signed', () => {
+    const before = Date.now()
+    const vc = toVerifiableCredential(STATUS, ISSUER)
+    assert.equal(vc.expirationDate, STATUS.validUntil)
+    assert.ok(Date.parse(vc.issuanceDate) >= before)
+    const vc2 = toVcdm2Credential(STATUS, ISSUER)
+    assert.equal(vc2.validUntil, STATUS.validUntil)
+    assert.ok(Date.parse(vc2.validFrom) >= before)
+  })
+
+  test('other credentials get no expiry', () => {
+    assert.equal('expirationDate' in toVerifiableCredential(RECORD, ISSUER), false)
+    assert.equal('validUntil' in toVcdm2Credential(RECORD, ISSUER), false)
+  })
+
+  test('carries its start and result as SD-JWT VC claims, without JSON-LD types', () => {
+    const claims = toSdJwtVcClaims(STATUS, { vct: 'https://issuer.example/vct' })
+    assert.equal(claims.activityStartDate, STATUS.credentialSubject.activityStartDate)
+    assert.deepEqual(claims.result, [{ resultDescription: 'urn:x:status#status', status: 'Enrolled' }])
+    assert.deepEqual(claims.achievement.alignment, [{ targetCode: 'lukiokoulutus', targetName: 'Lukiokoulutus', targetUrl: 'https://koski.example/x' }])
+    for (const claim of ['awardedDate', 'validUntil', 'exp']) assert.equal(claim in claims, false, claim)
+  })
+
+  test('comes back from a stored credential with its expiry', () => {
+    const vc = toVerifiableCredential(STATUS, ISSUER)
+    assert.equal(recordFromCredential(vc).validUntil, STATUS.validUntil)
+    assert.equal(recordFromCredential({ credentialSubject: {}, validUntil: STATUS.validUntil }).validUntil, STATUS.validUntil)
+    assert.equal('validUntil' in recordFromCredential(toVerifiableCredential(RECORD, ISSUER)), false)
+  })
+
+  test('has expired once its validity has ended', () => {
+    const end = Date.parse(STATUS.validUntil)
+    assert.equal(hasExpired(STATUS, end - 1), false)
+    assert.equal(hasExpired(STATUS, end), true)
+    assert.equal(hasExpired({ expirationDate: STATUS.validUntil }, end + 1), true)
+    assert.equal(hasExpired(RECORD), false)
   })
 })
