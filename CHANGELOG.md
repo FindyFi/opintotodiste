@@ -44,6 +44,15 @@ version to pin.
   name claims. `OID4VCI_CREDENTIAL_VCT` and the oid4vci-issuer configuration's `vct` and
   `vct#integrity` must change together, after v2 is published. Credentials already issued keep v1.
 
+### Fixed
+
+- Basic and upper secondary education subjects no longer end in "undefined": they carry the date of
+  their grade year or syllabus, and name it in the description. Any value missing from Koski is left
+  out of the text (koski2openbadge v0.3.0).
+- Grades are shown on their own scale: school grades 4–10 (a passing 5 was shown as 5 on the 0–5
+  scale), suoritettu as completed. The extent names its unit from Koski, e.g. weekly lessons, instead
+  of always ECTS credits (koski2openbadge v0.4.0).
+
 ## [0.0.7] - 2026-10-19
 
 The image needs no new variables and no schema changes.
