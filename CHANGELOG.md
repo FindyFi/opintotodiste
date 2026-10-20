@@ -9,6 +9,10 @@ version to pin.
 
 ## [Unreleased]
 
+### Added
+
+- Hovi Wallet is listed on the wallet guide (/guide/wallet).
+
 ## [0.0.7] - 2026-10-19
 
 The image needs no new variables and no schema changes.
