@@ -1,6 +1,7 @@
 # Student status credential
 
-**Status: proposal (K3, step 1), waiting for approval.** Decisions still open are marked **Open**.
+**Status: K3 step 1. Approved by the user on 2026-10-20, except for one question (the level code set, see
+"The level").** The decisions are listed at the end.
 
 A separate Open Badge saying that the holder is enrolled at an educational institution. It names the
 institution and the level of the studies, so that a verifier can decide for itself whether, say, an upper
@@ -9,36 +10,34 @@ being valid at the expected end of the studies.
 
 ## What the credential says, and what it can't say
 
-It says: *on <the date the Koski data was fetched>, Koski recorded this person as enrolled in <level> at
-<institution>, with studies expected to end on <date>.*
+It says: *on <the date it was signed>, Koski recorded this person as enrolled in <level> at <institution>, with
+studies expected to end on <date>.*
 
-It cannot say that the person is still enrolled on the day it is presented. Someone who drops out keeps a
-credential that is valid until the expected end date, because we have no revocation (S1 is not planned). The
-description says "as of"; see Open 6.
+It works like a plastic student card: it is not revoked. Someone who drops out keeps a credential that stays
+valid until the expected end date. The description says "as of <date>", and that is enough (user,
+2026-10-20).
 
 ## Who gets one
 
-One credential per study right (`opiskeluoikeus`) that is **active on the fetch date**:
+One credential per study right (`opiskeluoikeus`) that is **active on the day it is signed**:
 
-1. **The study right has started and not ended:** `alkamispäivä` ≤ fetch date, and no `päättymispäivä` before
-   the fetch date.
+1. **The study right has started and not ended:** `alkamispäivä` ≤ that day, and no `päättymispäivä` before it.
 2. **The latest status period that has started is an enrolled one.** Take the last
-   `tila.opiskeluoikeusjaksot` entry with `alku` ≤ fetch date:
-   - Koski's own records (`koskiopiskeluoikeudentila`): `lasna`. **Open 1:** `loma` (on leave) and
-     `valiaikaisestikeskeytynyt` (temporarily interrupted). Proposal: not enrolled.
+   `tila.opiskeluoikeusjaksot` entry with `alku` ≤ that day:
+   - Koski's own records (`koskiopiskeluoikeudentila`): `lasna` only. `loma` (on leave) and `valiaikaisestikeskeytynyt`
+     (temporarily interrupted) don't count.
    - Higher education from VIRTA (`virtaopiskeluoikeudentila`): `1` (aktiivinen).
    - Anything else (graduated, resigned, time limit expired, invalidated `mitatoity`, and so on) means not
      enrolled. A record without status periods (the matriculation examination) never qualifies.
 3. **Higher education only: registered present for the current term.** The `lisätiedot.lukukausiIlmoittautuminen`
-   entry whose `alku`–`loppu` covers the fetch date must be `virtalukukausiilmtila/1` (Läsnä). VIRTA marks
+   entry whose `alku`–`loppu` covers that day must be `virtalukukausiilmtila/1` (Läsnä). VIRTA marks
    open-university and separate-right students `aktiivinen` without a registration ("Puuttuu"), and
    people who registered absent are not studying that term. This also matches who gets student benefits.
-4. **The level is one we issue for.** **Open 2:** which `opiskeluoikeudentyyppi` values count. Proposal: issue
-   for all levels and let the verifier decide from the level (the user's stated aim), but leave out
-   pre-primary education (`esiopetus`) and basic education (`perusopetus`, `aikuistenperusopetus`), since a
-   child's school enrolment is not what "student status" is for.
+4. **Not pre-primary or basic education.** All other `opiskeluoikeudentyyppi` values count, and the verifier
+   decides from the level. Pre-primary education (`esiopetus`) and basic education (`perusopetus`,
+   `aikuistenperusopetus`) are left out, since a child's school enrolment is not what "student status" is for.
 
-Checked against the two exports in the main checkout (fetch date 2026-10-20):
+Checked against the two exports in the main checkout, as of 2026-10-20:
 
 | Study right | Rule result |
 |---|---|
@@ -49,26 +48,42 @@ Checked against the two exports in the main checkout (fetch date 2026-10-20):
 | Touko: Otaniemen lukio | **enrolled** (`lasna` since 2024-08-08) |
 | Touko: Aalto separate right | ended 2026-01-01; a spring 2026 semester row ("Puuttuu") does not change that |
 
+## Koski is fetched again at signing
+
+The app keeps each user's Koski data and the share link it came from (`koski_imports.koski_url`, or the
+session's `koskiUrl`). It converts that stored data on every request, so the list can only say "enrolled
+according to the last fetch".
+
+So **signing a student status credential fetches Koski again** through the stored share link. That covers
+every kind of signing: the download, saving it to a collection, and an offer to a wallet. The fetch is merged
+into the import like any other, the record is converted again as of now, and the credential is signed only if
+the same study right is still enrolled. It is refused, with a reason, when:
+
+- the share link has expired (`jakolinkki.voimassaAsti`) or Koski doesn't answer. The user is asked for a new
+  share link from Oma Koski; stale data is never used as a fallback.
+- the new data no longer makes the person enrolled. The list then drops the credential.
+
+That makes every credential's "as of" the moment it was signed, so there is no freshness limit to enforce and
+no fetch time to store. The demo data (`demo:esittelytiedot`) has no link and is signed from the stored
+synthetic record.
+
 ## Validity
 
-- **`validFrom`:** when the Koski data was fetched. The app stores Koski data per user and converts it again
-  on every request, so koski2openbadge takes the fetch date as an option (`convert(data, { lang, asOf })`) and
-  judges enrolment as of then, not "now". The app needs to remember the fetch time; today `koski_imports` has
-  only `updated_at` for the whole merged data.
+- **`validFrom`:** the moment of signing, which is also the moment of the fetch. koski2openbadge takes the date
+  to judge enrolment by as an option (`convert(data, { lang, asOf })`, default now), so tests can pin it.
 - **`validUntil`:** the end of the expected end date, 23:59:59 Finnish time, in UTC.
   - Koski's own records: `arvioituPäättymispäivä`.
-  - Higher education: VIRTA rarely has an expected end date. **Open 3.** Proposal: the end (`loppu`) of the
-    semester registration that makes the person present (rule 3). That is at most a term away, and it follows
-    the registration that actually makes someone a student. The degree's normative time doesn't do that.
-  - No end date at all: **Open 4.** Proposal: don't issue (strict), rather than make up a date.
-- **Never issued after `validUntil`.** The app refuses to sign or send a status credential whose `validUntil`
-  has passed, including re-sending a saved one to a wallet. **Open 5:** also require a recent fetch, e.g. at
-  most 30 days old? Proposal: yes, so that "as of" is never ancient on a new credential.
+  - Higher education (VIRTA rarely has an expected end date): the end (`loppu`) of the semester registration
+    that makes the person present (rule 3). That is at most a term away. It follows the registration that
+    actually makes someone a student, which the degree's normative time doesn't.
+  - No end date at all: not issued.
+- **Never issued after `validUntil`.** A saved status credential sent to a wallet later is signed again, and
+  so fetched again, like any other.
 
 ## Open Badges 3.0 shape
 
 koski2openbadge emits one more kind of record, `{ credentialSubject, awardedOn, validUntil }`. `awardedOn` is
-the fetch date. `validUntil` is a new plain sibling fact, like `awardedOn`; other records don't have it.
+the `asOf` date. `validUntil` is a new plain sibling fact, like `awardedOn`; other records don't have it.
 
 ```json
 {
@@ -107,18 +122,46 @@ Field by field:
 
 - **`achievementType: "ext:StudentStatus"`.** OB 3.0's `AchievementType` is extensible: values outside the
   list must start with `ext:`. The closest standard value, `Membership`, means a membership in an organisation,
-  not enrolment. **Open 7:** the name (`ext:StudentStatus` or `ext:Enrolment`).
+  not enrolment.
 - **`result[].status: "Enrolled"`.** OB 3.0's `ResultStatusType` already has `Enrolled`, so the status itself
   needs no extension. This gives verifiers a machine-readable check alongside the achievement type.
 - **The institution:** `achievement.creator`, from `oppilaitos` (`urn:oid:` + its Koski oid), as the other
   records already do. Wallets show `achievement.creator.name` (it has a label in the Open Badge VCT).
 - **The level, for people:** in `name` ("Opiskelija: Lukiokoulutus") and `description`. It is in the name
   because some wallets show little else.
-- **The level, for machines:** `achievement.alignment` with the Koski code set `opiskeluoikeudentyyppi`.
-  Higher education gets a second alignment with `virtaopiskeluoikeudentyyppi`, e.g. `1` "Ammattikorkeakoulututkinto",
-  which tells a bachelor's student from a master's student. There, the human-readable level is the VIRTA name. **Open 8:** also an ISCED 2011
-  level alignment (from a small fixed table: upper secondary 3, vocational 3–4, higher education 6–8 by VIRTA type),
-  for verifiers outside Finland. Proposal: yes, but in a follow-up.
+- **The level, for machines:** `achievement.alignment`, one entry per code set:
+  - the sector, from Koski's `opiskeluoikeudentyyppi` (e.g. `lukiokoulutus`, `korkeakoulutus`). Every study
+    right has one.
+  - for higher education, VIRTA's `virtaopiskeluoikeudentyyppi` (e.g. `1` "Ammattikorkeakoulututkinto"), which
+    tells a bachelor's student from a master's student.
+  - the level of education, when the study right's suoritus has a `koulutus/<6 digits>` code (see below).
+
+### The level
+
+Can it be deduced reliably? **Yes, from the education code, when there is one.** Koski's code service relates
+each `koulutus` code to its level. For the four codes in the two exports
+(`koodisto-service/rest/json/relaatio/sisaltyy-alakoodit/koulutus_<code>`):
+
+| Code | Education | `kansallinenkoulutusluokitus2016koulutusastetaso1` | `isced2011koulutusastetaso1` | `eqf` |
+|---|---|---|---|---|
+| 309902 | Lukion oppimäärä | 3 Toinen aste | — | — |
+| 351101 | a vocational upper secondary qualification | 3 Toinen aste | 3 Toinen aste | 4 |
+| 651902 | Insinööri (AMK) | 6 Alempi korkeakouluaste | 6 | 6 |
+| 750803 | Insinööri (ylempi AMK) | 7 Ylempi korkeakouluaste | 7 | 7 |
+
+- **Statistics Finland's education classification (2016)** is the one that every code has, including the
+  lukio syllabus. Its levels 0–8 follow the ISCED 2011 levels, and the level is the code's first digit (9 =
+  unknown). So the converter can read it from the code with no lookup.
+- **ISCED and EQF relations are missing for some codes.** The lukio syllabus has neither: it isn't a
+  qualification, the matriculation examination is. So they can't be relied on.
+- **Without a `koulutus` code there is no level.** Open-university and separate study rights (VIRTA types 13,
+  18) carry their VIRTA type as the code, not a `koulutus` code. They are not enrolled by rule 3 anyway, so this
+  costs nothing now. The sector and VIRTA type alignments are still there.
+
+**Open:** add the level alignment (`targetFramework` "Tilastokeskus: Koulutusluokitus 2016, koulutusaste",
+`targetCode` "3", `targetName` "Toinen aste") in K3 now, rather than as a follow-up? It is a few lines and
+removes most of the need for a verifier to know Finnish code sets.
+
 - **`fieldOfStudy`:** the programme or syllabus name when Koski has one (the suoritus's `koulutusmoduuli`, VIRTA
   `virtaNimi`).
 - **`activityStartDate`:** `alkamispäivä`. There is no `activityEndDate`, because the activity hasn't ended;
@@ -139,11 +182,10 @@ OB 3.0 context test. The digitalcredentials signing service refuses unknown term
 | `dc+sd-jwt` (flat claims) | `awardedDate` | `exp`, set by the issuer |
 
 `dc+sd-jwt` claims are as for other badges (`toSdJwtVcClaims`), plus `activityStartDate` and `result`. Both
-already have labels in Open Badge VCT v2, so no new VCT is needed. **Open 9:** a VCT of its own
-(`StudentStatusVCT`, with a label for `alignment` and a `display` saying "student status") would let wallets
-show it as a different kind of card. Proposal: not now; same VCT.
+already have labels in Open Badge VCT v2, so the shared Open Badge VCT is kept. A VCT of its own (a label for
+`alignment`, a card saying "student status") is left for later.
 
-**Interface contract change in oid4vci-issuer (needs approval, it is another repo):** the issuer reserves
+**Interface contract change in oid4vci-issuer (approved 2026-10-20):** the issuer reserves
 `exp` and never sets it, so the app can't make a wallet credential expire. Proposal: the offer request
 gets an optional `validUntil` (ISO date-time). The issuer sets `exp` from it in both SD-JWT formats. For
 `vc+sd-jwt` it checks that the credential's own `validUntil` matches. It refuses a `validUntil` that is in the
@@ -154,18 +196,19 @@ past. The issuer still sets every JWT time claim itself; nothing in the credenti
 - The list shows the status credential with "valid until". It is not in the list when the import doesn't make
   the person enrolled.
 - The demo data (`src/demo-koski.json`) gets an enrolled study right, so the demo shows one.
-- After `validUntil`: the list marks the credential as expired, and signing or sending it is refused (Open 5).
+- Signing re-fetches Koski (see above). A refusal says why: the link expired, Koski is down, or the person is
+  no longer enrolled.
+- A saved credential past `validUntil` is marked as expired in the list.
 
-## Open questions, in short
+## Decisions (user, 2026-10-20)
 
-1. Does `loma` or `valiaikaisestikeskeytynyt` count as enrolled? Proposal: no.
-2. Which levels? Proposal: all except pre-primary and basic education.
-3. Higher education end date. Proposal: the end of the current present-registration term.
-4. No end date. Proposal: don't issue.
-5. Require a recent fetch to issue? Proposal: yes, at most 30 days old.
-6. The "as of" wording. The credential can outlive the enrolment. Is the description enough, or do we want
-   revocation (S1) first?
-7. `ext:StudentStatus` or `ext:Enrolment`.
-8. ISCED level alignment. Proposal: a follow-up.
-9. A separate VCT. Proposal: not now.
-10. The oid4vci-issuer `validUntil` → `exp` contract change. Proposal: yes, as above.
+1. `loma` and `valiaikaisestikeskeytynyt` don't count as enrolled.
+2. All levels except pre-primary and basic education.
+3. Higher education ends with the current present-registration term.
+4. No end date: not issued.
+5. No freshness limit: signing fetches Koski again (the user's suggestion).
+6. No revocation: like a plastic student card. "As of" in the description is enough.
+7. `achievementType: "ext:StudentStatus"` and `result.status: "Enrolled"`.
+8. The level: deducible from the education code (above). Whether it goes in now is still open.
+9. No VCT of its own for now.
+10. oid4vci-issuer: the offer's optional `validUntil` sets `exp`.
