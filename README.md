@@ -86,7 +86,7 @@ A wallet app on a phone has to reach `oid4vci-issuer` over public HTTPS: it fetc
 
 3. Check the tunnel from outside: `curl https://random-words.trycloudflare.com/.well-known/openid-credential-issuer` should return metadata whose `credential_issuer` is that same URL.
 
-4. Open <http://localhost:3000>, import a credential, choose "Add to wallet", and scan the QR code with the wallet. Enter the confirmation code when the wallet asks for it.
+4. Open <http://localhost:3000>, import a credential, choose "Add to wallet", and scan the QR code with the wallet.
 
 If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_ISSUER_ID` to the tunnel URL yourself (it's used only for the VCDM 2.0 payload) and keep `OID4VCI_ISSUER_URL=http://localhost:4007`; the app creates offers over the private URL.
 

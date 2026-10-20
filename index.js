@@ -346,7 +346,7 @@ app.post('/credentials/:ref/sign', signingLimit, async (req, res) => {
 })
 
 // Hands an unsigned credential for `record` to the OID4VCI issuer and returns
-// what the wallet dialog needs: the offer URI as a QR code, plus the tx code.
+// what the wallet dialog needs: the offer URI as a QR code, plus its lifetime.
 // With OID4VCI_CREDENTIAL_VCT set it's SD-JWT VC claims, with the holder's
 // name and oid selectively disclosable (G9), otherwise VCDM 2.0.
 async function createWalletOffer(record) {

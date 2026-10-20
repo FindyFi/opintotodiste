@@ -1,4 +1,4 @@
-// The "Add to wallet" dialog (QR code, deep link, tx code), shared by the
+// The "Add to wallet" dialog (QR code, deep link, tx code if any), shared by the
 // credential list and the collections page. Both pages provide
 // <dialog id="detailDialog"> with a #detailDialogContent child.
 const WalletOffer = (() => {

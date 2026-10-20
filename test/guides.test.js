@@ -24,6 +24,10 @@ describe('guide pages', () => {
     assert.match(html, /href="\/guide\/wallet" aria-current="page"/)
   })
 
+  test('do not ask for a confirmation code (W4: offers have no tx_code)', () => {
+    assert.doesNotMatch(guidePage('wallet'), /vahvistuskoo|confirmation code/i)
+  })
+
   test('list the wallets sorted by name', () => {
     const names = WALLETS.map((w) => w.name)
     assert.deepEqual(names, names.toSorted((a, b) => a.localeCompare(b, 'en')))

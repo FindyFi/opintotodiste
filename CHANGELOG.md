@@ -18,6 +18,9 @@ version to pin.
 ### Changed
 
 - The wallet guide lists the wallets in alphabetical order.
+- Wallet offers no longer ask for a confirmation code (`tx_code`). The code was shown next to the QR
+  code, so it protected little, and some wallets (Toppan) can't enter one. Offers stay single-use and
+  short-lived. The wallet guide's last step is now "Accept the badge". Threat analysis T11 is updated.
 
 ## [0.0.7] - 2026-10-19
 

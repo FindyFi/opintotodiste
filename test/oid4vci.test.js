@@ -12,7 +12,6 @@ const UNSIGNED_CREDENTIAL = {
 
 const OFFER_RESPONSE = {
   preAuthorizedCode: 'code-123',
-  txCode: '12345',
   offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fissuer.example%2Foffers%2Fcode-123',
   expiresIn: 600,
 }
@@ -33,7 +32,7 @@ describe('createOffer', () => {
       assert.equal(request.headers.authorization, 'Bearer coordinator-token')
       assert.equal(request.body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
       assert.deepEqual(request.body.unsignedCredential, UNSIGNED_CREDENTIAL)
-      assert.equal(request.body.txCode, true)
+      assert.equal(request.body.txCode, false)
       assert.equal('disclosable' in request.body, false)
       assert.deepEqual(offer, OFFER_RESPONSE)
     } finally {
@@ -71,11 +70,11 @@ describe('createOffer', () => {
     }
   })
 
-  test('can request an offer without a transaction code', async () => {
+  test('can still request an offer with a transaction code', async () => {
     const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
     try {
-      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', txCode: false })
-      assert.equal(issuer.requests[0].body.txCode, false)
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', txCode: true })
+      assert.equal(issuer.requests[0].body.txCode, true)
     } finally {
       await issuer.stop()
     }

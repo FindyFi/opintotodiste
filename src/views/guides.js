@@ -52,15 +52,15 @@ const STUDYINFO_STEPS = {
 const WALLET_STEPS = {
   fi: [
     { title: 'Valitse merkit', body: `Hae opintosi <a href="/guide/studyinfo">Koski-jakolinkillä</a> ja rastita etusivun listasta merkit, jotka haluat lompakkoon.` },
-    { title: `Valitse ${ui('Lisää lompakkoon')}`, body: 'Valinta on alareunan palkissa. Jokaiselle merkille näytetään oma QR-koodi ja vahvistuskoodi. Ne ovat voimassa vain hetken.' },
+    { title: `Valitse ${ui('Lisää lompakkoon')}`, body: 'Valinta on alareunan palkissa. Jokaiselle merkille näytetään oma QR-koodi. Se on voimassa vain hetken ja toimii vain kerran.' },
     { title: 'Skannaa QR-koodi', body: `Avaa lompakkosovellus ja skannaa koodi. Jos käytät Opintotodistetta samalla puhelimella, valitse koodin alta ${ui('Avaa lompakkosovelluksessa')}.` },
-    { title: 'Syötä vahvistuskoodi', body: 'Lompakko kysyy vahvistuskoodia. Kirjoita Opintotodisteen näyttämä koodi ja hyväksy merkki.' },
+    { title: 'Hyväksy merkki', body: 'Lompakko näyttää merkin tiedot. Hyväksy merkki, niin se tallentuu lompakkoon.' },
   ],
   en: [
     { title: 'Select badges', body: `Fetch your studies with a <a href="/guide/studyinfo">Koski share link</a> and tick the badges you want in your wallet on the front page.` },
-    { title: `Choose ${ui('Add to wallet')}`, body: 'You find it in the bar at the bottom. Each badge gets its own QR code and confirmation code. They are valid only for a short while.' },
+    { title: `Choose ${ui('Add to wallet')}`, body: 'You find it in the bar at the bottom. Each badge gets its own QR code. It is valid only for a short while and works only once.' },
     { title: 'Scan the QR code', body: `Open the wallet app and scan the code. If you are using this site on the same phone, choose ${ui('Open in wallet app')} below the code.` },
-    { title: 'Enter the confirmation code', body: 'The wallet asks for a confirmation code. Type the code shown on this site and accept the badge.' },
+    { title: 'Accept the badge', body: 'The wallet shows the badge. Accept it, and it is stored in the wallet.' },
   ],
 }
 

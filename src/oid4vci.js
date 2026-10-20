@@ -3,7 +3,9 @@
 // OID4VCI credential offer. Actual signing happens inside that service once a
 // wallet completes the flow - this only creates the offer. `disclosable`
 // (dc+sd-jwt only) names the top-level claims to make selectively disclosable.
-export async function createOffer(unsignedCredential, { baseUrl, tenant, token, txCode = true, credentialConfigurationId = 'OpenBadgeCredentialSdJwt', disclosable }) {
+// No transaction code by default: it would be shown next to the QR code, so
+// it adds friction without protecting the offer (W4, threat analysis T11).
+export async function createOffer(unsignedCredential, { baseUrl, tenant, token, txCode = false, credentialConfigurationId = 'OpenBadgeCredentialSdJwt', disclosable }) {
   if (!baseUrl || !tenant) {
     throw new Error('The OID4VCI issuer is not configured (set OID4VCI_ISSUER_URL and OID4VCI_ISSUER_INSTANCE).')
   }
