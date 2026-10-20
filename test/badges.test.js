@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { credentialKey, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { credentialKey, credentialPerson, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -36,6 +36,19 @@ describe('toSdJwtVcClaims', () => {
     assert.deepEqual(claims.identifier, [{ hashed: false, identityType: 'name', identityHash: 'Testi Opiskelija' }])
   })
 
+  test('carries the name parts as flat claims, all first names as given_name', () => {
+    const henkilö = { oid: '1', etunimet: ' Testi  Tapaus ', kutsumanimi: 'Tapaus', sukunimi: 'Opiskelija' }
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, henkilö })
+    assert.equal(claims.given_name, 'Testi Tapaus')
+    assert.equal(claims.family_name, 'Opiskelija')
+  })
+
+  test('falls back to the call name and leaves out a missing part', () => {
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, henkilö: { kutsumanimi: 'Tapaus', sukunimi: ' ' } })
+    assert.equal(claims.given_name, 'Tapaus')
+    assert.equal('family_name' in claims, false)
+  })
+
   test('leaves out what the record lacks', () => {
     assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, achievement: { name: 'A' } })
   })
@@ -48,6 +61,26 @@ describe('toSdJwtVcClaims', () => {
     assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, sub: 'urn:oid:1', identifier: [], achievement: {} }), ['sub', 'identifier'])
     assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, identifier: [], achievement: {} }), ['identifier'])
     assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, achievement: {} }), [])
+    assert.deepEqual(
+      sdJwtVcDisclosable({ vct: VCT, sub: 'urn:oid:1', identifier: [], given_name: 'T', family_name: 'O', achievement: {} }),
+      ['sub', 'identifier', 'given_name', 'family_name'],
+    )
+  })
+})
+
+describe('credentialPerson', () => {
+  const henkilö = { oid: '1.2.3', etunimet: 'Testi Tapaus', kutsumanimi: 'Tapaus', sukunimi: 'Opiskelija' }
+  const subject = (id, name) => ({ id, identifier: [{ type: 'IdentityObject', hashed: false, identityType: 'name', identityHash: name }] })
+
+  test('is the Koski person when the oid and the name match', () => {
+    assert.equal(credentialPerson(subject('urn:oid:1.2.3', 'Tapaus Opiskelija'), henkilö), henkilö)
+  })
+
+  test('is null for another oid, another name, or no import', () => {
+    assert.equal(credentialPerson(subject('urn:oid:9.9.9', 'Tapaus Opiskelija'), henkilö), null)
+    assert.equal(credentialPerson(subject('urn:oid:1.2.3', 'Toinen Opiskelija'), henkilö), null)
+    assert.equal(credentialPerson({ id: 'urn:oid:1.2.3' }, henkilö), null)
+    assert.equal(credentialPerson(subject('urn:oid:1.2.3', 'Tapaus Opiskelija'), undefined), null)
   })
 })
 

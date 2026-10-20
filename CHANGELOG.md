@@ -22,6 +22,11 @@ version to pin.
 - Hovi Wallet is listed on the wallet guide (/guide/wallet).
 - UniMe is listed on the wallet guide. It needs an oid4vci-issuer release with the W1 wallet
   tolerances (`/.well-known/did.json`, `did:jwk` proof keys).
+- The wallet credential (`dc+sd-jwt`) carries the holder's name also as flat `given_name` (all
+  first names from Koski) and `family_name` claims, as the EU PID does, so wallets that don't show
+  nested claims show the name. Both are selectively disclosable, like `sub` and `identifier`. A
+  credential sent from a collection gets them from the owner's Koski import, when it is the same
+  person; without the import it goes without them.
 
 - The compose issuer has an issuer `display` (`OID4VCI_ISSUER_METADATA`: Opintotodiste / Study credential and its logo),
   and every credential configuration a logo and the Open Badge card colours in

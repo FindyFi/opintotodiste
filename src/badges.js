@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { holderName } from 'koski2openbadge'
 
 const VC_CONTEXT = 'https://www.w3.org/2018/credentials/v1'
 const VC2_CONTEXT = 'https://www.w3.org/ns/credentials/v2'
@@ -56,10 +57,11 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // No top-level `name` here: SD-JWT VC has no registered claim for it, and a
 // wallet's display name for this vct comes from the type metadata (F1), not
 // per-instance data. The achievement's own `name` is still in `achievement`.
-// The holder's name travels as Open Badges' `identifier` (G8); the v1 type
-// defines no display for it. It and `sub` are selectively disclosable (see
-// sdJwtVcDisclosable).
-export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
+// The holder's name travels as Open Badges' `identifier` (G8), and also as
+// flat `given_name` / `family_name` (G10) from the Koski person `henkilö`, for
+// wallets that don't show nested claims. These and `sub` are selectively
+// disclosable (see sdJwtVcDisclosable).
+export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkilö }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
   }
@@ -67,6 +69,7 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
     vct,
     ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
     ...(credentialSubject.identifier ? { identifier: withoutJsonLdTypes(credentialSubject.identifier) } : {}),
+    ...holderNameClaims(henkilö),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
   }
@@ -76,10 +79,36 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct }) {
 // oid4vci-issuer as `disclosable` so the wallet asks before presenting them:
 // the holder's name and the oid. Only the ones the claims have, since the
 // issuer refuses a claim that isn't there.
-const HOLDER_CLAIMS = ['sub', 'identifier']
+const HOLDER_CLAIMS = ['sub', 'identifier', 'given_name', 'family_name']
 
 export function sdJwtVcDisclosable(claims) {
   return HOLDER_CLAIMS.filter((claim) => claim in claims)
+}
+
+// The holder's name as the EU PID in SD-JWT VC has it (OpenID Connect claim
+// names), so a verifier can compare it with a PID: all first names
+// (etunimet), unlike the identifier's call name, and the surname. Each only
+// when Koski has it.
+function holderNameClaims(henkilö) {
+  const given = nonEmpty(henkilö?.etunimet) ?? nonEmpty(henkilö?.kutsumanimi)
+  const family = nonEmpty(henkilö?.sukunimi)
+  return {
+    ...(given ? { given_name: given } : {}),
+    ...(family ? { family_name: family } : {}),
+  }
+}
+
+function nonEmpty(value) {
+  return typeof value === 'string' && value.trim() ? value.trim().replace(/\s+/g, ' ') : undefined
+}
+
+// The Koski person `henkilö` if a stored credential's subject is them: the
+// same oid and the same name koski2openbadge put in the identifier. Otherwise
+// null, and the credential gets no name parts that might not be its holder's.
+export function credentialPerson(credentialSubject, henkilö) {
+  if (!henkilö?.oid || credentialSubject?.id !== `urn:oid:${henkilö.oid}`) return null
+  const name = credentialSubject.identifier?.find((identifier) => identifier.identityType === 'name')?.identityHash
+  return name && name === holderName(henkilö) ? henkilö : null
 }
 
 function withoutJsonLdTypes(value) {
