@@ -23,7 +23,7 @@ const WalletOffer = (() => {
   const STATUS_TEXT = {
     waiting: () => [el('span', { lang: 'fi' }, 'Odottaa lompakkoa')],
     'picked-up': () => [
-      el('strong', { lang: 'fi' }, '✓ Lisätty lompakkoon'),
+      el('strong', { lang: 'fi' }, '✓ Koodi skannattiin'),
       el('br'),
       el('span', { class: 'muted', lang: 'fi' }, 'Jos merkki ei tullut lompakkoosi, joku muu ehti skannata koodin.'),
     ],
@@ -37,7 +37,7 @@ const WalletOffer = (() => {
     declined: () => [
       el('strong', { lang: 'fi' }, 'Merkkiä ei tallennettu'),
       el('br'),
-      el('span', { class: 'muted', lang: 'fi' }, 'Lompakossa valittiin, ettei merkkiä tallenneta. Valitse Lisää lompakkoon uudelleen, jos haluat sen sittenkin.'),
+      el('span', { class: 'muted', lang: 'fi' }, 'Todiste hylättiin lompakossa. Valitse Lisää lompakkoon uudelleen, jos haluat sen sittenkin.'),
     ],
   }
 
