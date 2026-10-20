@@ -35,6 +35,15 @@ version to pin.
   code, so it protected little, and some wallets (Toppan) can't enter one. Offers stay single-use and
   short-lived. The wallet guide's last step is now "Accept the badge". Threat analysis T11 is updated.
 
+### Fixed
+
+- Basic and upper secondary education subjects no longer end in "undefined": they carry the date of
+  their grade year or syllabus, and name it in the description. Any value missing from Koski is left
+  out of the text (koski2openbadge v0.3.0).
+- Grades are shown on their own scale: school grades 4–10 (a passing 5 was shown as 5 on the 0–5
+  scale), suoritettu as completed. The extent names its unit from Koski, e.g. weekly lessons, instead
+  of always ECTS credits (koski2openbadge v0.4.0).
+
 ## [0.0.7] - 2026-10-19
 
 The image needs no new variables and no schema changes.
