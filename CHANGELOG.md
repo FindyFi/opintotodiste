@@ -14,6 +14,11 @@ version to pin.
 - The "Add to wallet" dialog shows when each offer is picked up (or has expired), so you notice if
   someone else scanned the code first. The app asks oid4vci-issuer's offer status endpoint through the
   new `POST /wallet-offers/status`.
+- The dialog also shows "Saved in the wallet", that the wallet reported an error, or that the badge was
+  declined in the wallet, when the wallet sends an OID4VCI notification (section 11) and oid4vci-issuer
+  passes it on as `notification.event` in the offer status. Most wallets send none; their offers stay
+  "picked up". Needs an oid4vci-issuer release with `notification_endpoint` (W5); an older issuer
+  simply never reports one.
 - Hovi Wallet is listed on the wallet guide (/guide/wallet).
 - UniMe is listed on the wallet guide. It needs an oid4vci-issuer release with the W1 wallet
   tolerances (`/.well-known/did.json`, `did:jwk` proof keys).

@@ -29,12 +29,17 @@ describe('the Koski journey', needsPostgres, () => {
   let signer
   let issuer
   const offersUsed = new Map() // pre-authorized code -> used, as the issuer's offer status reports it
+  const notifications = new Map() // pre-authorized code -> the wallet's notification event
 
   before(async () => {
     signer = await startStubServer((req) => ({ json: SIGNED(req.body) }))
     issuer = await startStubServer((req) => {
       const [, statusOf] = req.url.match(/^\/instance\/test\/offers\/([^/]+)\/status$/) ?? []
-      if (statusOf) return offersUsed.has(statusOf) ? { json: { used: offersUsed.get(statusOf) } } : { status: 404 }
+      if (statusOf) {
+        if (!offersUsed.has(statusOf)) return { status: 404 }
+        const event = notifications.get(statusOf)
+        return { json: { used: offersUsed.get(statusOf), ...(event && { notification: { event } }) } }
+      }
       const preAuthorizedCode = randomUUID()
       offersUsed.set(preAuthorizedCode, false)
       return {
@@ -189,6 +194,10 @@ describe('the Koski journey', needsPostgres, () => {
     offersUsed.set(code, true)
     const pickedUp = await client.json('/wallet-offers/status', { method: 'POST', body: { codes: [code] } })
     assert.deepEqual(pickedUp.body, { [code]: 'picked-up' })
+
+    notifications.set(code, 'credential_accepted')
+    const stored = await client.json('/wallet-offers/status', { method: 'POST', body: { codes: [code] } })
+    assert.deepEqual(stored.body, { [code]: 'stored' })
   })
 
   test('accepts only offer codes when asked for offer status', async () => {
