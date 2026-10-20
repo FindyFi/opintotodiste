@@ -42,6 +42,12 @@ export const WALLETS = [
     googlePlay: 'https://play.google.com/store/apps/details?id=id.paradym.wallet',
   },
   {
+    name: 'Hovi Wallet',
+    group: 'eudi',
+    appStore: 'https://apps.apple.com/app/id6736700908',
+    googlePlay: 'https://play.google.com/store/apps/details?id=droidwallet.hovi.id',
+  },
+  {
     name: 'Learner Credential Wallet',
     group: 'openbadge',
   },
