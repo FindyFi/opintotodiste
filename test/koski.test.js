@@ -164,6 +164,32 @@ describe('merging imports', () => {
     assert.equal(mergeKoskiData(data, structuredClone(data)).data.opiskeluoikeudet.length, 1)
   })
 
+  // Virta (higher education) study rights have no oid; their status and
+  // semester registrations change between imports (K4).
+  const virtaRight = (id, institution, status) => ({
+    lähdejärjestelmänId: { id, lähdejärjestelmä: { koodiarvo: 'virta' } },
+    oppilaitos: { oid: institution },
+    tila: { opiskeluoikeusjaksot: [{ alku: '2025-09-01', tila: { koodiarvo: status } }] },
+  })
+  const statuses = (data) => data.opiskeluoikeudet.map((oo) => oo.tila.opiskeluoikeusjaksot[0].tila.koodiarvo)
+
+  test('takes a changed Virta study right from the new import, once', () => {
+    const before = { henkilö: person, opiskeluoikeudet: [virtaRight('0602703', 'u1', '1')] }
+    const after = { henkilö: person, opiskeluoikeudet: [virtaRight('0602703', 'u1', '3')] }
+    assert.deepEqual(statuses(mergeKoskiData(before, after).data), ['3'])
+  })
+
+  test('keeps apart Virta study rights with the same id at two institutions', () => {
+    const before = { henkilö: person, opiskeluoikeudet: [virtaRight('0602703', 'u1', '1')] }
+    const after = { henkilö: person, opiskeluoikeudet: [virtaRight('0602703', 'u2', '3')] }
+    assert.deepEqual(statuses(mergeKoskiData(before, after).data), ['1', '3'])
+  })
+
+  test('collapses copies that earlier imports kept apart into the latest', () => {
+    const stale = { henkilö: person, opiskeluoikeudet: [virtaRight('0602703', 'u1', '1'), virtaRight('0602703', 'u1', '6')] }
+    assert.deepEqual(statuses(mergeKoskiData(stale, { henkilö: person, opiskeluoikeudet: [] }).data), ['6'])
+  })
+
   test('brings the new import’s records back onto the list, and forgets removals on another person', () => {
     const data = { henkilö: person, opiskeluoikeudet: [] }
     const previous = { data, removed: ['r1', 'r2'] }

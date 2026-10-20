@@ -46,6 +46,11 @@ version to pin.
 
 ### Fixed
 
+- Loading Koski data again updates a higher-education study right instead of keeping the old copy
+  next to the new one. Study rights from Virta have no Koski oid, so the merge matched them by their
+  whole content, and any change (a new status, a semester registration) made a second copy. They are
+  now matched by their source system id and institution, and copies kept by earlier imports collapse
+  into the latest on the next import.
 - Basic and upper secondary education subjects no longer end in "undefined": they carry the date of
   their grade year or syllabus, and name it in the description. Any value missing from Koski is left
   out of the text (koski2openbadge v0.3.0).
