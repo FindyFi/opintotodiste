@@ -33,9 +33,19 @@ export async function createOffer(unsignedCredential, { baseUrl, tenant, token, 
   return res.json()
 }
 
+// What a wallet's notification (OID4VCI 1.0 section 11) says happened to the
+// credential it picked up. An event we don't know leaves the offer picked up.
+const NOTIFICATION_STATES = new Map([
+  ['credential_accepted', 'stored'],
+  ['credential_failure', 'failed'],
+  ['credential_deleted', 'declined'],
+])
+
 // Whether each offer (by its pre-authorized code) is still waiting for a
-// wallet, was picked up, or is gone: 'waiting' | 'picked-up' | 'expired'. The
-// issuer forgets an offer when it expires, and a used one a minute after use,
+// wallet, was picked up, or is gone: 'waiting' | 'picked-up' | 'expired', or,
+// when the wallet sent a notification, 'stored' | 'failed' | 'declined'. Most
+// wallets send none, so a picked-up offer may never become stored. The issuer
+// forgets an offer when it expires, and a used one a few minutes after use,
 // so 'expired' can also mean picked up a while ago; the dialog remembers what
 // it saw. Throws if the issuer can't answer.
 export async function offerStatuses(codes, { baseUrl, tenant }) {
@@ -50,8 +60,9 @@ export async function offerStatuses(codes, { baseUrl, tenant }) {
         await res.body?.cancel()
         throw new Error(`OID4VCI issuer responded with ${res.status} ${res.statusText}`)
       }
-      const { used } = await res.json()
-      return used ? 'picked-up' : 'waiting'
+      const { used, notification } = await res.json()
+      if (!used) return 'waiting'
+      return NOTIFICATION_STATES.get(notification?.event) ?? 'picked-up'
     })
   )
   return Object.fromEntries(codes.map((code, i) => [code, statuses[i]]))

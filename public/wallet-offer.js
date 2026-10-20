@@ -3,7 +3,8 @@
 // <dialog id="detailDialog"> with a #detailDialogContent child. While it is
 // open, it polls POST /wallet-offers/status and shows each offer as waiting,
 // picked up or expired, so the user notices if someone else scanned a code
-// first (threat analysis T11).
+// first (threat analysis T11). A wallet that sends OID4VCI notifications also
+// tells whether it stored the badge, failed to, or the user declined it.
 const WalletOffer = (() => {
   function el(tag, props = {}, children = []) {
     const node = document.createElement(tag)
@@ -16,20 +17,38 @@ const WalletOffer = (() => {
 
   const POLL_MS = 3000
 
-  // The issuer forgets a used offer a minute after use, so a picked-up offer
-  // later reads as expired: once picked up, it stays picked up here.
+  // The issuer forgets a used offer a few minutes after use, so a picked-up
+  // offer later reads as expired: once picked up, it stays picked up here
+  // unless a notification arrives. A notification is final.
   const STATUS_TEXT = {
     waiting: () => [el('span', { lang: 'fi' }, 'Odottaa lompakkoa')],
     'picked-up': () => [
-      el('strong', { lang: 'fi' }, '✓ Lisätty lompakkoon'),
+      el('strong', { lang: 'fi' }, '✓ Koodi skannattiin'),
       el('br'),
       el('span', { class: 'muted', lang: 'fi' }, 'Jos merkki ei tullut lompakkoosi, joku muu ehti skannata koodin.'),
     ],
     expired: () => [el('span', { lang: 'fi' }, 'Koodi vanheni. Valitse Lisää lompakkoon uudelleen.')],
+    stored: () => [el('strong', { lang: 'fi' }, '✓ Tallennettu lompakkoon')],
+    failed: () => [
+      el('strong', { lang: 'fi' }, 'Lompakko ilmoitti virheestä'),
+      el('br'),
+      el('span', { class: 'muted', lang: 'fi' }, 'Merkki ei tallentunut. Valitse Lisää lompakkoon uudelleen tai kokeile toista lompakkoa.'),
+    ],
+    declined: () => [
+      el('strong', { lang: 'fi' }, 'Merkkiä ei tallennettu'),
+      el('br'),
+      el('span', { class: 'muted', lang: 'fi' }, 'Todiste hylättiin lompakossa. Valitse Lisää lompakkoon uudelleen, jos haluat sen sittenkin.'),
+    ],
+  }
+
+  // From each state, the states the dialog moves on to; the rest are final.
+  const NEXT = {
+    waiting: ['picked-up', 'expired', 'stored', 'failed', 'declined'],
+    'picked-up': ['stored', 'failed', 'declined'],
   }
 
   function setStatus(offer, state) {
-    if (offer.state === state || offer.state === 'picked-up' || offer.state === 'expired') return
+    if (offer.state && !NEXT[offer.state]?.includes(state)) return
     offer.state = state
     offer.node.dataset.state = state
     offer.status.replaceChildren(...STATUS_TEXT[state]())
@@ -37,10 +56,12 @@ const WalletOffer = (() => {
 
   function watch(dialog, offers) {
     let timer
-    const pending = () => offers.filter((o) => o.state === 'waiting')
+    // A picked-up offer is asked about until a notification arrives or the
+    // issuer forgets the offer (expired), which ends its polling.
+    const pending = () => offers.filter((o) => NEXT[o.state] && !o.gone)
     async function poll() {
       const now = Date.now()
-      pending().forEach((o) => o.expiresAt && now >= o.expiresAt && setStatus(o, 'expired'))
+      pending().forEach((o) => o.state === 'waiting' && o.expiresAt && now >= o.expiresAt && setStatus(o, 'expired'))
       const codes = pending().map((o) => o.code)
       if (!codes.length || !dialog.open || !offers[0].node.isConnected) return
       try {
@@ -51,7 +72,10 @@ const WalletOffer = (() => {
         })
         if (res.ok) {
           const statuses = await res.json()
-          offers.forEach((o) => statuses[o.code] && setStatus(o, statuses[o.code]))
+          offers.forEach((o) => {
+            if (statuses[o.code] === 'expired') o.gone = true
+            if (statuses[o.code]) setStatus(o, statuses[o.code])
+          })
         }
       } catch {
         // A missed poll is not worth an error message; try again next time.

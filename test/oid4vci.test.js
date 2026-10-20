@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { readFile } from 'node:fs/promises'
 import test, { describe } from 'node:test'
 
 import { createOffer, offerStatuses } from '../src/oid4vci.js'
@@ -117,6 +118,32 @@ describe('offerStatuses', () => {
     }
   })
 
+  test("maps the wallet's notification to stored, failed or declined, and an unknown event to picked-up", async () => {
+    const events = {
+      accepted: 'credential_accepted',
+      failure: 'credential_failure',
+      deleted: 'credential_deleted',
+      unknown: 'credential_lost',
+      proto: 'constructor',
+    }
+    const issuer = await startStubServer((req) => {
+      const [, code] = req.url.match(/^\/instance\/test\/offers\/([^/]+)\/status$/)
+      return { json: { used: true, notification: { event: events[code] } } }
+    })
+    try {
+      const statuses = await offerStatuses(Object.keys(events), { baseUrl: issuer.url, tenant: 'test' })
+      assert.deepEqual(statuses, {
+        accepted: 'stored',
+        failure: 'failed',
+        deleted: 'declined',
+        unknown: 'picked-up',
+        proto: 'picked-up',
+      })
+    } finally {
+      await issuer.stop()
+    }
+  })
+
   test('fails when the issuer cannot answer', async () => {
     const issuer = await startStubServer(() => ({ status: 500, text: 'down' }))
     try {
@@ -124,5 +151,17 @@ describe('offerStatuses', () => {
     } finally {
       await issuer.stop()
     }
+  })
+})
+
+describe('the wallet dialog', () => {
+  test('has a text for every offer state, in the dictionary', async () => {
+    const dialog = await readFile(new URL('../public/wallet-offer.js', import.meta.url), 'utf8')
+    const dictionary = JSON.parse(await readFile(new URL('../public/translations.json', import.meta.url), 'utf8'))
+    const table = dialog.slice(dialog.indexOf('const STATUS_TEXT = {'), dialog.indexOf('const NEXT = {'))
+    for (const state of ['waiting', 'picked-up', 'expired', 'stored', 'failed', 'declined']) {
+      assert.match(table, new RegExp(`^    '?${state}'?: \\(\\) =>`, 'm'), state)
+    }
+    for (const [, fi] of table.matchAll(/lang: 'fi' \}, '([^']+)'\)/g)) assert.ok(dictionary[fi]?.en, fi)
   })
 })

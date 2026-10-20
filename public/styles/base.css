@@ -336,9 +336,9 @@ dt { font-weight: 700; color: var(--heading); }
 dd { margin: 0; }
 
 .wallet-offer + .wallet-offer { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--line); }
-.wallet-offer[data-state="picked-up"] img,
-.wallet-offer[data-state="expired"] img { opacity: .25; }
-.wallet-offer[data-state="picked-up"] .offer-status strong { color: var(--success-fg); }
+.wallet-offer[data-state]:not([data-state="waiting"]) img { opacity: .25; }
+.wallet-offer:is([data-state="picked-up"], [data-state="stored"]) .offer-status strong { color: var(--success-fg); }
+.wallet-offer[data-state="failed"] .offer-status strong { color: var(--error-fg); }
 
 /* ---------- footer ---------- */
 

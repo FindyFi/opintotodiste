@@ -83,14 +83,29 @@
   "Odottaa lompakkoa": {
     "en": "Waiting for the wallet"
   },
-  "✓ Lisätty lompakkoon": {
-    "en": "✓ Added to the wallet"
+  "✓ Koodi skannattiin": {
+    "en": "✓ The code was scanned"
   },
   "Jos merkki ei tullut lompakkoosi, joku muu ehti skannata koodin.": {
     "en": "If the badge didn't reach your wallet, someone else scanned the code first."
   },
   "Koodi vanheni. Valitse Lisää lompakkoon uudelleen.": {
     "en": "The code expired. Choose Add to wallet again."
+  },
+  "✓ Tallennettu lompakkoon": {
+    "en": "✓ Saved in the wallet"
+  },
+  "Lompakko ilmoitti virheestä": {
+    "en": "The wallet reported an error"
+  },
+  "Merkki ei tallentunut. Valitse Lisää lompakkoon uudelleen tai kokeile toista lompakkoa.": {
+    "en": "The badge wasn't saved. Choose Add to wallet again, or try another wallet."
+  },
+  "Merkkiä ei tallennettu": {
+    "en": "The badge wasn't saved"
+  },
+  "Todiste hylättiin lompakossa. Valitse Lisää lompakkoon uudelleen, jos haluat sen sittenkin.": {
+    "en": "The credential was declined in the wallet. Choose Add to wallet again if you want it after all."
   },
   "Kirjaudu sisään": {
     "en": "Sign in"
