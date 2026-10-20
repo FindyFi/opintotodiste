@@ -5,9 +5,21 @@ const VC_CONTEXT = 'https://www.w3.org/2018/credentials/v1'
 const VC2_CONTEXT = 'https://www.w3.org/ns/credentials/v2'
 const OB3_CONTEXT = 'https://purl.imsglobal.org/spec/ob/v3p0/context-3.0.3.json'
 
+// koski2openbadge's achievementType for a student status (K3). Its record has
+// a `validUntil` and no `awardedOn`: it is dated when it is signed.
+export const STUDENT_STATUS = 'ext:StudentStatus'
+
+export const isStudentStatus = (credentialSubject) => credentialSubject?.achievement?.achievementType === STUDENT_STATUS
+
+// Whether a record's or a stored credential's validity has ended.
+export function hasExpired({ validUntil, expirationDate }, now = Date.now()) {
+  const end = validUntil ?? expirationDate
+  return Boolean(end) && Date.parse(end) <= now
+}
+
 // Wraps a koski2openbadge `credentialSubject` in the envelope a signing
 // service expects: a full, unsigned Open Badges 3.0 Verifiable Credential.
-export function toVerifiableCredential({ credentialSubject, awardedOn }, { issuerId, issuerName }) {
+export function toVerifiableCredential({ credentialSubject, awardedOn, validUntil }, { issuerId, issuerName }) {
   if (!issuerId) {
     throw new Error('The issuer is not configured (set ISSUER_ID).')
   }
@@ -22,6 +34,7 @@ export function toVerifiableCredential({ credentialSubject, awardedOn }, { issue
     },
     ...(credentialSubject.achievement?.name ? { name: credentialSubject.achievement.name } : {}),
     issuanceDate: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
+    ...(validUntil ? { expirationDate: validUntil } : {}),
     credentialSubject,
   }
 }
@@ -29,7 +42,7 @@ export function toVerifiableCredential({ credentialSubject, awardedOn }, { issue
 // Like toVerifiableCredential, but a VCDM 2.0 credential (`validFrom`, v2
 // context) for oid4vci-issuer to secure as an SD-JWT. Still unsigned, and
 // `issuerId` must be the issuer's HTTPS URL, which the issuer checks.
-export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, issuerName }) {
+export function toVcdm2Credential({ credentialSubject, awardedOn, validUntil }, { issuerId, issuerName }) {
   if (!issuerId) {
     throw new Error('The wallet issuer is not configured (set OID4VCI_CREDENTIAL_ISSUER_ID).')
   }
@@ -44,6 +57,7 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
     },
     ...(credentialSubject.achievement?.name ? { name: credentialSubject.achievement.name } : {}),
     validFrom: awardedOn ? new Date(awardedOn).toISOString() : new Date().toISOString(),
+    ...(validUntil ? { validUntil } : {}),
     credentialSubject,
   }
 }
@@ -61,6 +75,9 @@ export function toVcdm2Credential({ credentialSubject, awardedOn }, { issuerId, 
 // flat `given_name` / `family_name` (G10) from the Koski person `henkilö`, for
 // wallets that don't show nested claims. These and `sub` are selectively
 // disclosable (see sdJwtVcDisclosable).
+// A student status also carries its start (`activityStartDate`) and its
+// `Enrolled` result; its expiry is no claim here but the offer's `validUntil`,
+// which the issuer turns into `exp`.
 export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkilö }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
@@ -72,6 +89,12 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkil�
     ...holderNameClaims(henkilö),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
+    ...(isStudentStatus(credentialSubject)
+      ? {
+          ...(credentialSubject.activityStartDate ? { activityStartDate: credentialSubject.activityStartDate } : {}),
+          result: withoutJsonLdTypes(credentialSubject.result),
+        }
+      : {}),
   }
 }
 
@@ -120,7 +143,8 @@ function withoutJsonLdTypes(value) {
 // Inverse of toVerifiableCredential for a stored (signed) ldp_vc, so it can be
 // rebuilt as another kind of credential.
 export function recordFromCredential(vc) {
-  return { credentialSubject: vc.credentialSubject, awardedOn: vc.issuanceDate ?? vc.validFrom }
+  const validUntil = vc.expirationDate ?? vc.validUntil
+  return { credentialSubject: vc.credentialSubject, awardedOn: vc.issuanceDate ?? vc.validFrom, ...(validUntil ? { validUntil } : {}) }
 }
 
 // When two credentials are the same achievement of the same person: the same

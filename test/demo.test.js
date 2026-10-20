@@ -22,7 +22,7 @@ describe('the demo record', () => {
       const ids = records.map((r) => r.credentialSubject.achievement.id)
       assert.equal(new Set(ids).size, ids.length, 'every credential has its own id')
       const types = new Set(records.map((r) => r.credentialSubject.achievement.achievementType))
-      for (const type of ['Course', 'BachelorDegree', 'SecondarySchoolDiploma', 'Assessment']) assert.ok(types.has(type), type)
+      for (const type of ['Course', 'BachelorDegree', 'SecondarySchoolDiploma', 'Assessment', 'ext:StudentStatus']) assert.ok(types.has(type), type)
     }
   })
 })
@@ -60,7 +60,7 @@ describe('the demo button', needsPostgres, () => {
     assert.equal(res.body.demo, true)
     assert.equal(res.body.koskiUrl, undefined)
     assert.equal(res.body.personName, 'Eeva Esimerkki')
-    assert.equal(res.body.credentials.length, 22)
+    assert.equal(res.body.credentials.length, 23)
 
     const after = await (await client.request('/')).text()
     assert.match(after, /id="demoOffer" hidden/)

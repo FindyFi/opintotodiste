@@ -796,7 +796,12 @@
     {
       "oid": "1.2.246.562.15.00000000203",
       "tyyppi": {
-        "koodiarvo": "korkeakoulutus"
+        "koodiarvo": "korkeakoulutus",
+        "nimi": {
+          "fi": "Korkeakoulutus",
+          "sv": "Högskoleutbildning",
+          "en": "Higher education"
+        }
       },
       "lähdejärjestelmänId": {
         "id": "esimerkki-oo-maisteri-0001",
@@ -821,6 +826,244 @@
             "sv": "högre högskoleexamen",
             "en": "higher university degree"
           }
+        },
+        "lukukausiIlmoittautuminen": {
+          "ilmoittautumisjaksot": [
+            {
+              "alku": "2021-08-01",
+              "loppu": "2021-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2022-01-01",
+              "loppu": "2022-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2022-08-01",
+              "loppu": "2022-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2023-01-01",
+              "loppu": "2023-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2023-08-01",
+              "loppu": "2023-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2024-01-01",
+              "loppu": "2024-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2024-08-01",
+              "loppu": "2024-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2025-01-01",
+              "loppu": "2025-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2025-08-01",
+              "loppu": "2025-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2026-01-01",
+              "loppu": "2026-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2026-08-01",
+              "loppu": "2026-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2027-01-01",
+              "loppu": "2027-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2027-08-01",
+              "loppu": "2027-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2028-01-01",
+              "loppu": "2028-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2028-08-01",
+              "loppu": "2028-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2029-01-01",
+              "loppu": "2029-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2029-08-01",
+              "loppu": "2029-12-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            },
+            {
+              "alku": "2030-01-01",
+              "loppu": "2030-07-31",
+              "tila": {
+                "koodiarvo": "1",
+                "nimi": {
+                  "fi": "Läsnä",
+                  "sv": "Närvarande",
+                  "en": "Present"
+                },
+                "koodistoUri": "virtalukukausiilmtila"
+              }
+            }
+          ]
         }
       },
       "suoritukset": [
@@ -835,7 +1078,8 @@
                 "fi": "Filosofian maisteri",
                 "sv": "Filosofie magister",
                 "en": "Master of Science"
-              }
+              },
+              "koodistoUri": "koulutus"
             },
             "virtaNimi": {
               "fi": "Tietojenkäsittelytieteen maisteriohjelma",
@@ -1042,7 +1286,23 @@
             }
           ]
         }
-      ]
+      ],
+      "tila": {
+        "opiskeluoikeusjaksot": [
+          {
+            "alku": "2021-08-01",
+            "tila": {
+              "koodiarvo": "1",
+              "nimi": {
+                "fi": "aktiivinen",
+                "sv": "aktiv",
+                "en": "active"
+              },
+              "koodistoUri": "virtaopiskeluoikeudentila"
+            }
+          }
+        ]
+      }
     },
     {
       "oid": "1.2.246.562.15.00000000204",

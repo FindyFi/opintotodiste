@@ -71,6 +71,18 @@ describe('createOffer', () => {
     }
   })
 
+  test('sends the expiry when there is one, and none otherwise', async () => {
+    const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
+    try {
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', validUntil: '2027-06-05T20:59:59.000Z' })
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test' })
+      assert.equal(issuer.requests[0].body.validUntil, '2027-06-05T20:59:59.000Z')
+      assert.equal('validUntil' in issuer.requests[1].body, false)
+    } finally {
+      await issuer.stop()
+    }
+  })
+
   test('can still request an offer with a transaction code', async () => {
     const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
     try {
