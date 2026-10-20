@@ -92,6 +92,10 @@ If you run the app with `npm start` instead of Compose, set `OID4VCI_CREDENTIAL_
 
 [ngrok](https://ngrok.com/) works too (`ngrok http 4007`) and gives a free account one fixed domain, so the URL survives restarts. Its free plan shows a warning page to browser user agents, which can break wallets that fetch with a browser-like client.
 
+### Issuer and credential display
+
+The compose file gives the issuer a `display` (`OID4VCI_ISSUER_METADATA`: "Opintotodiste" in Finnish and "Study credential" in English, with the app's `icons/logo-512.png`), which wallets show as who issued the credential. Every credential configuration also has a `credential_metadata.display` with the same logo and the colours of the Open Badge card template (`#1f3a5f` background, white text). Wallets need an https URL they can reach, so the logo comes from `OPINTOTODISTE_PUBLIC_URL` (set it in `.env` to the app's public URL, e.g. a tunnel), and from the development deployment when that is unset. Deployed environments use their own app (aws-environment, `opintotodiste_fqdn`). To change the issuer display, make the JSON with `node "$OID4VCI_ISSUER_REPO/scripts/issuer-metadata.js" --json` (it asks for the languages first) and replace the value in `docker-compose.yml`. Federation's `display_name` and `logo_uri` default to it.
+
 ### OpenID Federation
 
 `oid4vci-issuer` can publish an OpenID Federation Entity Configuration at `/.well-known/openid-federation` (for DIIP v5 and the OpenID Federation wallet architectures), and then adds a `fed` claim to the credentials it issues. It is off until `FEDERATION_ENTITY_METADATA` is set. Compose passes `FEDERATION_ENTITY_METADATA`, `FEDERATION_AUTHORITY_HINTS` and `FEDERATION_TRUST_MARKS` from your environment or `.env` to the issuer, so you only have to produce the values. You don't have to write the JSON: the script in a checkout of [oid4vci-issuer](https://github.com/FindyFi/oid4vci-issuer) asks for them and writes the lines into the `.env` in this repository's main checkout (Compose reads it from there; a worktree has no `.env`). It needs no `npm install`. Run it from this repository's root:
