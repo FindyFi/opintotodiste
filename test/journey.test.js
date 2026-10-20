@@ -28,12 +28,19 @@ describe('the Koski journey', needsPostgres, () => {
   let app
   let signer
   let issuer
+  const offersUsed = new Map() // pre-authorized code -> used, as the issuer's offer status reports it
 
   before(async () => {
     signer = await startStubServer((req) => ({ json: SIGNED(req.body) }))
-    issuer = await startStubServer(() => ({
-      json: { offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
-    }))
+    issuer = await startStubServer((req) => {
+      const [, statusOf] = req.url.match(/^\/instance\/test\/offers\/([^/]+)\/status$/) ?? []
+      if (statusOf) return offersUsed.has(statusOf) ? { json: { used: offersUsed.get(statusOf) } } : { status: 404 }
+      const preAuthorizedCode = randomUUID()
+      offersUsed.set(preAuthorizedCode, false)
+      return {
+        json: { preAuthorizedCode, offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
+      }
+    })
     app = await startApp({
       koskiFixture: FIXTURE,
       env: {
@@ -164,6 +171,32 @@ describe('the Koski journey', needsPostgres, () => {
     assert.ok(vc.validFrom)
     assert.equal(vc.issuanceDate, undefined)
     assert.equal('disclosable' in sent.body, false, 'vc+sd-jwt has no disclosures')
+  })
+
+  test('tells the wallet dialog whether an offer was picked up', async () => {
+    const client = createClient(app.baseUrl)
+    const { refs } = await loadCredentials(client)
+    const offer = await client.json(`/credentials/${refs[0]}/offer`, { method: 'POST' })
+    const { code } = offer.body
+    assert.ok(offersUsed.has(code), 'the dialog gets the pre-authorized code')
+    const gone = randomUUID()
+
+    const waiting = await client.json('/wallet-offers/status', { method: 'POST', body: { codes: [code, gone] } })
+    assert.equal(waiting.status, 200, JSON.stringify(waiting.body))
+    assert.deepEqual(waiting.body, { [code]: 'waiting', [gone]: 'expired' })
+    assert.ok(issuer.requests.some((r) => r.url === `/instance/test/offers/${code}/status`))
+
+    offersUsed.set(code, true)
+    const pickedUp = await client.json('/wallet-offers/status', { method: 'POST', body: { codes: [code] } })
+    assert.deepEqual(pickedUp.body, { [code]: 'picked-up' })
+  })
+
+  test('accepts only offer codes when asked for offer status', async () => {
+    const client = createClient(app.baseUrl)
+    for (const codes of [undefined, [], ['../../offers'], [42], Array.from({ length: 51 }, () => randomUUID())]) {
+      const res = await client.json('/wallet-offers/status', { method: 'POST', body: { codes } })
+      assert.equal(res.status, 400, JSON.stringify(codes))
+    }
   })
 
   test('re-translates already-loaded records without calling Koski again', async () => {

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { createOffer } from '../src/oid4vci.js'
+import { createOffer, offerStatuses } from '../src/oid4vci.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const UNSIGNED_CREDENTIAL = {
@@ -12,7 +12,6 @@ const UNSIGNED_CREDENTIAL = {
 
 const OFFER_RESPONSE = {
   preAuthorizedCode: 'code-123',
-  txCode: '12345',
   offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fissuer.example%2Foffers%2Fcode-123',
   expiresIn: 600,
 }
@@ -33,7 +32,7 @@ describe('createOffer', () => {
       assert.equal(request.headers.authorization, 'Bearer coordinator-token')
       assert.equal(request.body.credentialConfigurationId, 'OpenBadgeCredentialSdJwt')
       assert.deepEqual(request.body.unsignedCredential, UNSIGNED_CREDENTIAL)
-      assert.equal(request.body.txCode, true)
+      assert.equal(request.body.txCode, false)
       assert.equal('disclosable' in request.body, false)
       assert.deepEqual(offer, OFFER_RESPONSE)
     } finally {
@@ -71,11 +70,11 @@ describe('createOffer', () => {
     }
   })
 
-  test('can request an offer without a transaction code', async () => {
+  test('can still request an offer with a transaction code', async () => {
     const issuer = await startStubServer(() => ({ json: OFFER_RESPONSE }))
     try {
-      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', txCode: false })
-      assert.equal(issuer.requests[0].body.txCode, false)
+      await createOffer(UNSIGNED_CREDENTIAL, { baseUrl: issuer.url, tenant: 'test', txCode: true })
+      assert.equal(issuer.requests[0].body.txCode, true)
     } finally {
       await issuer.stop()
     }
@@ -100,5 +99,30 @@ describe('createOffer', () => {
       () => createOffer(UNSIGNED_CREDENTIAL, { baseUrl: 'http://localhost:4007' }),
       /OID4VCI_ISSUER_INSTANCE/
     )
+  })
+})
+
+describe('offerStatuses', () => {
+  test('maps the issuer offer status to waiting, picked-up or expired', async () => {
+    const issuer = await startStubServer((req) => {
+      if (req.url === '/instance/test/offers/a/status') return { json: { used: false } }
+      if (req.url === '/instance/test/offers/b/status') return { json: { used: true } }
+      return { status: 404, json: { error: 'Offer not found or expired.' } }
+    })
+    try {
+      const statuses = await offerStatuses(['a', 'b', 'c'], { baseUrl: issuer.url, tenant: 'test' })
+      assert.deepEqual(statuses, { a: 'waiting', b: 'picked-up', c: 'expired' })
+    } finally {
+      await issuer.stop()
+    }
+  })
+
+  test('fails when the issuer cannot answer', async () => {
+    const issuer = await startStubServer(() => ({ status: 500, text: 'down' }))
+    try {
+      await assert.rejects(() => offerStatuses(['a'], { baseUrl: issuer.url, tenant: 'test' }), /responded with 500/)
+    } finally {
+      await issuer.stop()
+    }
   })
 })
