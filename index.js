@@ -196,8 +196,8 @@ class StudentStatusError extends Error {}
 // A student status is confirmed against Koski whenever it is signed or sent to
 // a wallet (K3): the import's share link is fetched again, and the status is
 // signed only if the fresh data still has it, as of now. Only the fresh data
-// counts, since a merge can keep an older copy of a study right next to the
-// new one (Virta study rights have no oid). The fetch is still merged into
+// counts, since the merged import also keeps study rights that Koski no
+// longer returns (mergeKoskiData). The fetch is still merged into
 // the import, like any other but without bringing removed records back. The
 // demo data has no link and is taken as it is.
 async function confirmedStatus(req, ref, record) {
