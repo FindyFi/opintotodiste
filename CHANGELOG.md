@@ -18,9 +18,10 @@ version to pin.
 - UniMe is listed on the wallet guide. It needs an oid4vci-issuer release with the W1 wallet
   tolerances (`/.well-known/did.json`, `did:jwk` proof keys).
 
-- The compose issuer has an issuer `display` (`OID4VCI_ISSUER_METADATA`: Opintotodiste and its logo),
+- The compose issuer has an issuer `display` (`OID4VCI_ISSUER_METADATA`: Opintotodiste / Study credential and its logo),
   and every credential configuration a logo and the Open Badge card colours in
-  `credential_metadata.display`. Needs an oid4vci-issuer release with `OID4VCI_ISSUER_METADATA`.
+  `credential_metadata.display`. The logo URL comes from `OPINTOTODISTE_PUBLIC_URL` (default: the
+  development deployment). Needs an oid4vci-issuer release with `OID4VCI_ISSUER_METADATA`.
 
 ### Changed
 
