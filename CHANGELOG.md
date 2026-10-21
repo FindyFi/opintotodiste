@@ -9,6 +9,21 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.10] - 2026-10-21
+
+No schema, env or oid4vci-issuer changes; UI text only. The privacy notice and terms are unchanged.
+
+### Added
+
+- "Näin palvelu toimii" box on the studyinfo and wallet guides (U27): what the service does with the
+  share link, how long data is kept signed out, and what an account and a passkey are, with a link to
+  the privacy notice and terms.
+
+### Changed
+
+- The main page lede is longer and links to Oma Opintopolku and the privacy notice; the Finnish title
+  drops "todennettaviksi" (U28).
+
 ## [0.0.9] - 2026-10-21
 
 No schema, env or oid4vci-issuer changes; UI only.
