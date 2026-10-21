@@ -11,6 +11,11 @@ version to pin.
 
 ### Added
 
+- "Lataa tietosi" / "Download your data" in the account dialog (U24): `GET /auth/account/export` returns a JSON
+  file with everything stored about the signed-in user: display name, passkeys (public keys as base64url),
+  the Koski import, saved credentials, collections and share links (tokens included). A copy request by
+  email can't be verified, since an account has no email or name.
+
 - Wallet credentials carry their grades and extents (W6). Every badge's `result` goes to the wallet
   as it is, as it already did for the student status. Its values have no scale or unit (a bare "9"),
   so the grade and the extent also go as flat text claims, `grade` ("9 (4–10)", "E (I–L)") and

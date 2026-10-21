@@ -164,6 +164,19 @@ function openAuthFlow(initialMode) {
   })
 }
 
+// Fetched rather than linked, so a failure (signed out, server error) shows in
+// the dialog instead of replacing the page with an error body.
+async function downloadAccountData() {
+  const res = await fetch('/auth/account/export')
+  if (!res.ok) throw responseError(await res.json().catch(() => ({})))
+  const url = URL.createObjectURL(await res.blob())
+  const link = el('a', { href: url, download: 'opintotodiste-tiedot.json' })
+  document.body.append(link)
+  link.click()
+  link.remove()
+  URL.revokeObjectURL(url)
+}
+
 async function deleteAccount() {
   const res = await fetch('/auth/account', { method: 'DELETE' })
   const data = await res.json().catch(() => ({}))
@@ -214,6 +227,22 @@ function openAccountDialog() {
     }
   })
 
+  const exportBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Lataa tietosi'))
+  exportBtn.addEventListener('click', async () => {
+    errorBox.hidden = true
+    exportBtn.disabled = true
+    exportBtn.classList.add('busy')
+    try {
+      await downloadAccountData()
+    } catch (err) {
+      errorBox.replaceChildren(...errorContent(err))
+      errorBox.hidden = false
+    } finally {
+      exportBtn.disabled = false
+      exportBtn.classList.remove('busy')
+    }
+  })
+
   const closeBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Sulje'))
   closeBtn.addEventListener('click', () => dialog.close())
 
@@ -226,6 +255,13 @@ function openAccountDialog() {
       el('dt', { lang: 'fi' }, 'Pääsyavaimia'),
       el('dd', {}, String(passkeyCount)),
     ]),
+    el('h3', { lang: 'fi' }, 'Lataa tietosi'),
+    el(
+      'p',
+      { lang: 'fi' },
+      'Saat kopion kaikista tiliisi tallennetuista tiedoista JSON-tiedostona: pääsyavaimet, Koski-tiedot, tallennetut todisteet, kokoelmat ja jakolinkit.'
+    ),
+    el('p', {}, exportBtn),
     el('h3', { lang: 'fi' }, 'Poista tili'),
     el(
       'p',

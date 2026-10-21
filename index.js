@@ -614,6 +614,19 @@ app.post('/auth/logout', (req, res) => {
   req.session.destroy(() => res.json({ ok: true }))
 })
 
+app.get('/auth/account/export', requireAuth, async (req, res) => {
+  try {
+    const data = await auth.exportAccount(req.session.userId)
+    if (!data) return refuse(res, 401, 'Kirjaudu ensin sisään pääsyavaimella.')
+    res.set('Cache-Control', 'no-store')
+    res.set('Content-Disposition', 'attachment; filename="opintotodiste-tiedot.json"')
+    res.type('application/json').send(JSON.stringify(data, null, 2))
+  } catch (err) {
+    console.error('Exporting an account failed:', err.message)
+    refuse(res, 500, 'Tietojasi ei voitu ladata. Yritä uudelleen.')
+  }
+})
+
 app.delete('/auth/account', requireAuth, async (req, res) => {
   try {
     const deleted = await auth.deleteAccount(req.session.userId)

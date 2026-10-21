@@ -290,6 +290,15 @@
   "Pääsyavaimia": {
     "en": "Passkeys"
   },
+  "Lataa tietosi": {
+    "en": "Download your data"
+  },
+  "Saat kopion kaikista tiliisi tallennetuista tiedoista JSON-tiedostona: pääsyavaimet, Koski-tiedot, tallennetut todisteet, kokoelmat ja jakolinkit.": {
+    "en": "You get a copy of all the data stored in your account as a JSON file: passkeys, Koski data, saved credentials, collections and share links."
+  },
+  "Tietojasi ei voitu ladata. Yritä uudelleen.": {
+    "en": "Your data could not be downloaded. Try again."
+  },
   "Poista tili": {
     "en": "Delete account"
   },
