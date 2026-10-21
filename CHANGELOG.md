@@ -11,6 +11,14 @@ version to pin.
 
 ### Added
 
+- Wallet credentials carry their grades and extents (W6). Every badge's `result` goes to the wallet
+  as it is, as it already did for the student status. Its values have no scale or unit (a bare "9"),
+  so the grade and the extent also go as flat text claims, `grade` ("9 (4–10)", "E (I–L)") and
+  `extent` ("25 vuosiviikkotuntia", the unit as Koski names it). A completed status without a value
+  gets no `grade`. The compose `dc+sd-jwt` configuration labels `grade`, `extent`, `result`,
+  `result[].value` and `result[].status` in Finnish and English. Deployed issuer configurations need
+  the same labels.
+
 - A student status badge (`ext:StudentStatus`, result `Enrolled`) for each study right Koski shows
   the person enrolled in, naming the institution and the level of studies; see
   docs/student-status-credential.md. It expires at the expected end of the studies (in higher
