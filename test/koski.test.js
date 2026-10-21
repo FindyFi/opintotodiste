@@ -85,7 +85,7 @@ describe('fetchKoskiData', () => {
   test('throws when Koski returns an error', async () => {
     const koski = await startStubServer(() => ({ status: 404, text: 'not found' }))
     try {
-      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/missing`), /Koski responded with 404/)
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/missing`), (err) => err.detail === 'Koski responded with 404 Not Found' && /Jakolinkki voi olla vanhentunut/.test(err.message))
     } finally {
       await koski.stop()
     }
@@ -95,7 +95,7 @@ describe('fetchKoskiData', () => {
     const elsewhere = await startStubServer(() => ({ json: { henkilö: { oid: 'attacker' } } }))
     const koski = await startStubServer(() => ({ status: 302, text: '', headers: { location: `${elsewhere.url}/data` } }))
     try {
-      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /Could not reach Koski/)
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /Koskeen ei saatu yhteyttä/)
       assert.equal(elsewhere.requests.length, 0)
     } finally {
       await koski.stop()
@@ -109,7 +109,7 @@ describe('fetchKoskiData', () => {
       return { json: {} }
     })
     try {
-      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { timeoutMs: 50 }), /did not respond in time/)
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { timeoutMs: 50 }), /Koski ei vastannut ajoissa/)
     } finally {
       await koski.stop()
     }
@@ -118,7 +118,7 @@ describe('fetchKoskiData', () => {
   test('refuses a response over the size limit', async () => {
     const koski = await startStubServer(() => ({ json: { padding: 'x'.repeat(2000) } }))
     try {
-      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { maxBytes: 1000 }), /too large/)
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`, { maxBytes: 1000 }), /odottamattoman suuri/)
     } finally {
       await koski.stop()
     }
@@ -127,7 +127,7 @@ describe('fetchKoskiData', () => {
   test('refuses a response that is not JSON', async () => {
     const koski = await startStubServer(() => ({ text: '<html>maintenance</html>' }))
     try {
-      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /did not return a study record/)
+      await assert.rejects(() => fetchKoskiData(`${koski.url}/koski/api/opinnot/abc123`), /Koski ei palauttanut opintotietoja/)
     } finally {
       await koski.stop()
     }

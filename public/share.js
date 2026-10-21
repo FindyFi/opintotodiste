@@ -111,7 +111,7 @@ const Share = (() => {
     })
     if (res.status === 204) return null
     const data = await res.json().catch(() => ({}))
-    if (!res.ok) throw new Error(data.error || 'Request failed')
+    if (!res.ok) throw responseError(data)
     return data
   }
 
@@ -129,13 +129,13 @@ const Share = (() => {
     if (collectionId) {
       const { collections } = await requestJson('/collections')
       const collection = collections.find((c) => c.id === collectionId)
-      if (!collection) throw new Error('Collection not found.')
+      if (!collection) throw responseError({ error: 'Kokoelmaa ei löytynyt.', lang: 'fi' })
       title = collection.name
       items = (await requestJson(`/collections/${collectionId}/items`)).items
     } else {
       const { credentials } = await requestJson('/saved-credentials')
       const item = credentials.find((c) => c.id === credentialId)
-      if (!item) throw new Error('Credential not found.')
+      if (!item) throw responseError({ error: 'Todistetta ei löytynyt.', lang: 'fi' })
       title = item.credential?.credentialSubject?.achievement?.name ?? ''
       items = [item]
     }
@@ -146,8 +146,9 @@ const Share = (() => {
     let lang = document.documentElement.lang === 'en' ? 'en' : 'fi'
     const errorEl = el('p', { class: 'error', role: 'alert', hidden: '' })
 
-    function showError(message) {
-      errorEl.textContent = message
+    // `err`: an Error, or a server error's { message, lang, link } (i18n.js).
+    function showError(err) {
+      errorEl.replaceChildren(...errorContent(err))
       errorEl.hidden = false
     }
 
@@ -174,7 +175,7 @@ const Share = (() => {
         errorEl.hidden = true
         render()
       } catch (err) {
-        showError(err.message)
+        showError(err)
       }
     })
 
@@ -195,7 +196,7 @@ const Share = (() => {
           if (selected) selectedId = links[0]?.id
           render()
         } catch (err) {
-          showError(err.message)
+          showError(err)
         }
       })
       return el('li', { class: selected ? 'share-link-item selected' : 'share-link-item' }, [

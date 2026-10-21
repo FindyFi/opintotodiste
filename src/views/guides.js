@@ -250,6 +250,7 @@ ${guideNav(name)}
 
 ${footer()}
 <script src="/vendor/simplewebauthn-browser/index.umd.min.js" defer></script>
+<script src="/i18n.js" defer></script>
 <script src="/auth.js" defer></script>
 </body>
 </html>`

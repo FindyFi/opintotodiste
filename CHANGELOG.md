@@ -65,6 +65,12 @@ version to pin.
 
 ### Changed
 
+- Error messages from the server are in Finnish and translated into English like the rest of the UI
+  (`lang: 'fi'` in the response, English in translations.json), including Koski, sign-in, collections
+  and rate limit errors. Technical failures (an upstream service's answer, missing configuration) no longer
+  reach the user as they are: they get a Finnish message, and the details go to the log. Missing pages,
+  expired share links and unknown addresses show a page instead of plain English text. A lapsed share link
+  is reported as such. A test fails on UI text or server messages without English (U22).
 - The wallet guide lists the wallets in alphabetical order.
 - Wallet offers no longer ask for a confirmation code (`tx_code`). The code was shown next to the QR
   code, so it protected little, and some wallets (Toppan) can't enter one. Offers stay single-use and

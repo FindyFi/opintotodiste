@@ -58,16 +58,39 @@ describe('translations', () => {
     assert.deepEqual(problems, [])
   })
 
-  test('the Finnish messages the server sends are in the dictionary, with their links', async () => {
-    const index = await readFile(new URL('../index.js', import.meta.url), 'utf8')
-    const messages = [...index.matchAll(/new StudentStatusError\(\s*'([^']+)'(?:\s*,\s*\{\s*link:\s*\{\s*text:\s*'([^']+)',\s*href:\s*'([^']+)'\s*\}\s*\})?/g)]
-    assert.ok(messages.length >= 4, 'found the student status refusals')
-    for (const [, fi, linkText, href] of messages) {
-      assert.ok(dictionary[fi]?.en, `"${fi}" is not in translations.json`)
-      if (linkText) {
-        assert.ok(fi.includes(linkText), `"${linkText}" is not in "${fi}"`)
-        assert.match(dictionary[fi].en, new RegExp(`<a href="${href}">[^<]+</a>`), `the English of "${fi}" links to ${href}`)
+  // The server's messages for the user (src/user-error.js, U22): every error
+  // it sends carries `lang`, and every Finnish message it can send is in the
+  // dictionary. The messages are the literals passed to the user error
+  // classes, refuse(), `fallback:` and notFoundPage(), and the constants
+  // those take (UPPER_CASE = '...').
+  test('every error the server sends is marked Finnish', async () => {
+    const problems = []
+    for (const { file, text } of [...(await sources('src')), { file: 'index.js', text: await readFile(new URL('../index.js', import.meta.url), 'utf8') }]) {
+      for (const match of text.matchAll(/\{\s*error:[^}\n]*\}/g)) {
+        if (!/lang: 'fi'/.test(match[0])) problems.push(`${file}:${lineOf(text, match.index)}: ${match[0]} has no lang`)
       }
+      if (/\.send\(\s*['`]/.test(text)) problems.push(`${file}: sends plain text; use views.notFoundPage() or a view`)
+    }
+    assert.deepEqual(problems, [])
+  })
+
+  test("the server's Finnish messages are in the dictionary, with their links", async () => {
+    const files = [...(await sources('src')), { file: 'index.js', text: await readFile(new URL('../index.js', import.meta.url), 'utf8') }]
+    const messages = new Map()
+    const add = (file, text, index, message) => messages.set(message, `${file}:${lineOf(text, index)}`)
+    for (const { file, text } of files) {
+      const call = /(?:new (?:UserError|StudentStatusError|NotFoundError|InvalidKoskiUrlError)\(|refuse\(res, \d+, |fallback: |notFoundPage\(|message = )\s*'([^']+)'/g
+      for (const match of text.matchAll(call)) add(file, text, match.index, match[1])
+      for (const match of text.matchAll(/^(?:export )?const [A-Z_]+ = '([^']*\s[^']*)'$/gm)) add(file, text, match.index, match[1])
+    }
+    assert.ok(messages.size >= 40, `found the server's messages (${messages.size})`)
+    const missing = [...messages].filter(([fi]) => !dictionary[fi]?.en).map(([fi, where]) => `${where}: "${fi}"`)
+    assert.deepEqual(missing, [])
+
+    const index = files.at(-1).text
+    for (const [, fi, linkText, href] of index.matchAll(/new StudentStatusError\(\s*'([^']+)',\s*\{\s*link:\s*\{\s*text:\s*'([^']+)',\s*href:\s*'([^']+)'\s*\}\s*\}/g)) {
+      assert.ok(fi.includes(linkText), `"${linkText}" is not in "${fi}"`)
+      assert.match(dictionary[fi].en, new RegExp(`<a href="${href}">[^<]+</a>`), `the English of "${fi}" links to ${href}`)
     }
   })
 })

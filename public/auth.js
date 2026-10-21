@@ -25,7 +25,7 @@ async function postJson(url, body) {
     body: JSON.stringify(body || {}),
   })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  if (!res.ok) throw responseError(data)
   return data
 }
 
@@ -122,7 +122,7 @@ function openAuthFlow(initialMode) {
           const me = await renderAuthNav()
           finish(resolve, me)
         } catch (err) {
-          errorBox.textContent = err.message
+          errorBox.replaceChildren(...errorContent(err))
           errorBox.hidden = false
           submitBtn.disabled = false
           submitBtn.classList.remove('busy')
@@ -167,7 +167,7 @@ function openAuthFlow(initialMode) {
 async function deleteAccount() {
   const res = await fetch('/auth/account', { method: 'DELETE' })
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  if (!res.ok) throw responseError(data)
   return data
 }
 
@@ -207,7 +207,7 @@ function openAccountDialog() {
       await forgetPasskey(passkey)
       location.href = '/'
     } catch (err) {
-      errorBox.textContent = err.message
+      errorBox.replaceChildren(...errorContent(err))
       errorBox.hidden = false
       deleteBtn.disabled = !confirmBox.checked
       deleteBtn.classList.remove('busy')

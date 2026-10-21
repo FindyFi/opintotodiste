@@ -34,8 +34,9 @@ const sortState = { key: null, direction: 1 }
 // can gather a batch from several filtered views.
 const selectedIndices = new Set()
 
-function showError(message) {
-  errorBox.textContent = message
+// `err`: an Error, or a server error's { message, lang, link } (i18n.js).
+function showError(err) {
+  errorBox.replaceChildren(...errorContent(err))
   errorBox.hidden = false
 }
 
@@ -278,7 +279,7 @@ const entryName = (entry) => columnValue(entry, 'name')
 async function reloadList() {
   const res = await fetch('/credentials')
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  if (!res.ok) throw responseError(data)
   showList(data)
 }
 
@@ -321,7 +322,7 @@ async function shareOne(entry) {
   let credentialId = entry.credentialId
   if (!credentialId) {
     const [result] = (await postJson('/saved-credentials', { refs: [entry.ref] })).results
-    if (result.error) throw new Error(result.error)
+    if (result.error) throw responseError(result)
     credentialId = result.credentialId
   }
   await reloadList()
@@ -339,7 +340,7 @@ async function walletOne(entry) {
 
 async function deleteRequest(url) {
   const res = await fetch(url, { method: 'DELETE' })
-  if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
+  if (!res.ok) throw responseError(await res.json().catch(() => ({})))
 }
 
 // A saved copy is deleted everywhere, links included; the record leaves the
@@ -401,11 +402,11 @@ async function bulkAddToWallet() {
     try {
       results.push({ name, ...(await requestOffer(entry)) })
     } catch (err) {
-      results.push({ name, error: err.message, errorLink: err.link, errorLang: err.lang })
+      results.push({ name, error: err.message, lang: err.lang, link: err.link })
     }
   }
   bulkWalletBtn.classList.remove('busy')
-  await reloadList().catch((err) => showError(err.message))
+  await reloadList().catch((err) => showError(err))
   WalletOffer.show(results)
 }
 
@@ -428,10 +429,10 @@ function pickOrCreateCollection() {
     try {
       const res = await fetch('/collections')
       const data = await res.json()
-      if (!res.ok) throw new Error(data.error || 'Could not load collections')
+      if (!res.ok) throw responseError(data, 'Kokoelmia ei voitu ladata.')
       collections = data.collections
     } catch (err) {
-      showError(err.message)
+      showError(err)
       finish(null)
       return
     }
@@ -465,11 +466,11 @@ function pickOrCreateCollection() {
           body: JSON.stringify({ name }),
         })
         const data = await res.json()
-        if (!res.ok) throw new Error(data.error || 'Could not create the collection')
+        if (!res.ok) throw responseError(data, 'Kokoelmaa ei voitu luoda.')
         finish(data.id)
       } catch (err) {
         confirmBtn.disabled = false
-        showError(err.message)
+        showError(err)
       }
     })
     const cancelBtn = el('button', { type: 'button' }, el('span', { lang: 'fi' }, 'Peruuta'))
@@ -488,7 +489,7 @@ function showCollectionResults(results) {
       el(
         'div',
         { class: 'wallet-offer' },
-        r.error ? [el('strong', {}, r.name), el('div', { class: 'row-error' }, r.error)] : el('strong', {}, r.name)
+        r.error ? [el('strong', {}, r.name), el('div', { class: 'row-error' }, errorContent({ message: r.error, lang: r.lang, link: r.link }))] : el('strong', {}, r.name)
       )
     )
   })
@@ -504,7 +505,7 @@ async function postJson(url, body = {}) {
     body: JSON.stringify(body),
   })
   const data = await res.json()
-  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
+  if (!res.ok) throw responseError(data)
   return data
 }
 
@@ -540,7 +541,7 @@ async function bulkAddToCollection({ share = false } = {}) {
     if (share && results.every((r) => !r.error)) await Share.open({ collectionId })
     else showCollectionResults(results)
   } catch (err) {
-    if (err.message !== 'cancelled') showError(err.message)
+    if (err.message !== 'cancelled') showError(err)
   } finally {
     button.classList.remove('busy')
     updateBulkBar()
@@ -565,14 +566,14 @@ async function fetchCredentials(koskiUrl) {
       body: JSON.stringify({ koskiUrl, lang: currentLang() }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Request failed')
+    if (!res.ok) throw responseError(data)
 
     sortState.key = null
     syncedLang = currentLang()
     showList(data)
   } catch (err) {
     // A failed import leaves the session as it was, and so the list.
-    showError(err.message)
+    showError(err)
   } finally {
     submitBtn.disabled = false
     submitBtn.classList.remove('busy')
@@ -598,15 +599,15 @@ clearDataBtn.addEventListener('click', async () => {
   clearError()
   try {
     const res = await fetch('/credentials', { method: 'DELETE' })
-    if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Request failed')
+    if (!res.ok) throw responseError(await res.json().catch(() => ({})))
   } catch (err) {
-    showError(err.message)
+    showError(err)
     return
   }
   if (detailDialog.open) detailDialog.close()
   koskiUrlInput.value = ''
   if (signedIn) {
-    await reloadList().catch((err) => showError(err.message))
+    await reloadList().catch((err) => showError(err))
     return
   }
   credentials = []
@@ -627,12 +628,12 @@ demoBtn.addEventListener('click', async () => {
       body: JSON.stringify({ lang: currentLang() }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Request failed')
+    if (!res.ok) throw responseError(data)
     sortState.key = null
     syncedLang = currentLang()
     showList(data)
   } catch (err) {
-    showError(err.message)
+    showError(err)
   } finally {
     demoBtn.disabled = false
   }
@@ -664,7 +665,7 @@ async function syncLanguage(lang) {
       body: JSON.stringify({ lang }),
     })
     const data = await res.json()
-    if (!res.ok) throw new Error(data.error || 'Request failed')
+    if (!res.ok) throw responseError(data)
 
     if (detailDialog.open) detailDialog.close()
     showList(data)
@@ -686,7 +687,7 @@ new MutationObserver(() => {
 // public/auth.js sets the attribute on every render, so only a change counts.
 new MutationObserver((mutations) => {
   if (mutations.every((m) => m.oldValue === document.documentElement.dataset.auth)) return
-  reloadList().catch((err) => showError(err.message))
+  reloadList().catch((err) => showError(err))
 }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-auth'], attributeOldValue: true })
 
 const initial = window.__INITIAL_DATA__

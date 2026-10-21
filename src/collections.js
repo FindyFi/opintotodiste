@@ -1,10 +1,16 @@
 import { randomBytes } from 'node:crypto'
 import { pool } from './db.js'
 
-export class NotFoundError extends Error {}
+import { UserError } from './user-error.js'
+
+export class NotFoundError extends UserError {
+  constructor(message) {
+    super(message, { status: 404 })
+  }
+}
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-const LABEL_MAX_LENGTH = 100
+const LABEL_MAX_LENGTH = 100 // also in the message below
 
 function newShareToken() {
   return randomBytes(24).toString('base64url')
@@ -98,12 +104,12 @@ export async function findSavedCredential(ownerId, credentialId) {
 
 // Removes it from every collection and breaks every link to it.
 export async function deleteSavedCredential(ownerId, credentialId) {
-  if (!UUID.test(credentialId ?? '')) throw new NotFoundError('Credential not found.')
+  if (!UUID.test(credentialId ?? '')) throw new NotFoundError('Todistetta ei löytynyt.')
   const { rowCount } = await pool.query('DELETE FROM saved_credentials WHERE id = $1 AND owner_id = $2', [
     credentialId,
     ownerId,
   ])
-  if (!rowCount) throw new NotFoundError('Credential not found.')
+  if (!rowCount) throw new NotFoundError('Todistetta ei löytynyt.')
 }
 
 // --- Collections -------------------------------------------------------------
@@ -123,7 +129,7 @@ export async function listCollections(ownerId) {
 
 export async function createCollection(ownerId, name) {
   const trimmed = (name || '').trim()
-  if (!trimmed) throw new Error('Please enter a collection name.')
+  if (!trimmed) throw new UserError('Anna kokoelmalle nimi.')
   const { rows } = await pool.query(
     `INSERT INTO collections (owner_id, name) VALUES ($1, $2)
      RETURNING id, name, created_at, updated_at`,
@@ -136,17 +142,17 @@ export async function createCollection(ownerId, name) {
 // otherwise - shared by every mutation below so a stranger's collection id
 // reads as "not found" rather than leaking whether it exists.
 export async function assertOwnedCollection(ownerId, collectionId) {
-  if (!UUID.test(collectionId ?? '')) throw new NotFoundError('Collection not found.')
+  if (!UUID.test(collectionId ?? '')) throw new NotFoundError('Kokoelmaa ei löytynyt.')
   const { rows } = await pool.query('SELECT id FROM collections WHERE id = $1 AND owner_id = $2', [
     collectionId,
     ownerId,
   ])
-  if (!rows[0]) throw new NotFoundError('Collection not found.')
+  if (!rows[0]) throw new NotFoundError('Kokoelmaa ei löytynyt.')
 }
 
 export async function renameCollection(ownerId, collectionId, name) {
   const trimmed = (name || '').trim()
-  if (!trimmed) throw new Error('Please enter a collection name.')
+  if (!trimmed) throw new UserError('Anna kokoelmalle nimi.')
   await assertOwnedCollection(ownerId, collectionId)
   const { rows } = await pool.query(
     `UPDATE collections SET name = $1, updated_at = now() WHERE id = $2
@@ -166,7 +172,7 @@ export async function deleteCollection(ownerId, collectionId) {
 // twice is a no-op.
 export async function addItem(ownerId, collectionId, credentialId) {
   await assertOwnedCollection(ownerId, collectionId)
-  if (!(await findSavedCredential(ownerId, credentialId))) throw new NotFoundError('Credential not found.')
+  if (!(await findSavedCredential(ownerId, credentialId))) throw new NotFoundError('Todistetta ei löytynyt.')
   await pool.query(
     'INSERT INTO collection_items (collection_id, credential_id) VALUES ($1, $2) ON CONFLICT DO NOTHING',
     [collectionId, credentialId]
@@ -177,13 +183,13 @@ export async function addItem(ownerId, collectionId, credentialId) {
 // Takes the credential out of the collection; it stays saved, and its own
 // links keep working.
 export async function removeItem(ownerId, collectionId, credentialId) {
-  if (!UUID.test(credentialId ?? '')) throw new NotFoundError('Credential not found.')
+  if (!UUID.test(credentialId ?? '')) throw new NotFoundError('Todistetta ei löytynyt.')
   await assertOwnedCollection(ownerId, collectionId)
   const { rowCount } = await pool.query(
     'DELETE FROM collection_items WHERE collection_id = $1 AND credential_id = $2',
     [collectionId, credentialId]
   )
-  if (!rowCount) throw new NotFoundError('Credential not found.')
+  if (!rowCount) throw new NotFoundError('Todistetta ei löytynyt.')
   await pool.query('UPDATE collections SET updated_at = now() WHERE id = $1', [collectionId])
 }
 
@@ -218,7 +224,7 @@ function toShareLink(row) {
 async function assertOwnedTarget(ownerId, { collectionId, credentialId }) {
   if (collectionId) return assertOwnedCollection(ownerId, collectionId)
   if (credentialId && (await findSavedCredential(ownerId, credentialId))) return
-  throw new NotFoundError('Credential not found.')
+  throw new NotFoundError('Todistetta ei löytynyt.')
 }
 
 export async function listShareLinks(ownerId, target) {
@@ -254,8 +260,8 @@ export async function listAllShareLinks(ownerId) {
 
 export async function createShareLink(ownerId, target, label) {
   const trimmed = (label || '').trim()
-  if (!trimmed) throw new Error('Please name the recipient.')
-  if (trimmed.length > LABEL_MAX_LENGTH) throw new Error(`Keep the name under ${LABEL_MAX_LENGTH} characters.`)
+  if (!trimmed) throw new UserError('Anna vastaanottajalle nimi.')
+  if (trimmed.length > LABEL_MAX_LENGTH) throw new UserError('Nimessä voi olla enintään 100 merkkiä.')
   await assertOwnedTarget(ownerId, target)
   const { rows } = await pool.query(
     `INSERT INTO share_links (token, label, collection_id, credential_id) VALUES ($1, $2, $3, $4)
@@ -266,7 +272,7 @@ export async function createShareLink(ownerId, target, label) {
 }
 
 export async function deleteShareLink(ownerId, linkId) {
-  if (!UUID.test(linkId ?? '')) throw new NotFoundError('Link not found.')
+  if (!UUID.test(linkId ?? '')) throw new NotFoundError('Linkkiä ei löytynyt.')
   const { rowCount } = await pool.query(
     `DELETE FROM share_links l
      WHERE l.id = $1 AND (
@@ -274,7 +280,7 @@ export async function deleteShareLink(ownerId, linkId) {
        EXISTS (SELECT 1 FROM saved_credentials s WHERE s.id = l.credential_id AND s.owner_id = $2))`,
     [linkId, ownerId]
   )
-  if (!rowCount) throw new NotFoundError('Link not found.')
+  if (!rowCount) throw new NotFoundError('Linkkiä ei löytynyt.')
 }
 
 // --- Public pages ----------------------------------------------------------------
