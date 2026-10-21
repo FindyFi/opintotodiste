@@ -17,8 +17,8 @@
   "Tarkasta": {
     "en": "Verify"
   },
-  "Syötä Koski-opintotietojesi linkki nähdäksesi, mitkä osaamismerkit tiedoista voidaan myöntää.": {
-    "en": "Enter the link to your Koski study records to see which badges can be issued from them."
+  "Muodosta Oma Opintopolku -palvelussa opintotietojesi jakolinkki ja syötä se alle. Palvelu hakee linkin takaiset opintotietosi ja muodostaa niistä digitaalisia osaamismerkkejä. Tietoja käsitellään palvelun tarjoamiseksi ja niitä säilytetään tietosuojaselosteessa kuvatulla tavalla.": {
+    "en": "In <a href=\"https://opintopolku.fi/koski/omattiedot\"><em>Oma Opintopolku</em></a>, create a share link to your study records and enter it below. The service fetches the study records behind the link and turns them into digital badges. Your data is processed to provide the service and kept as described in the <a href=\"/policy\"><em>privacy notice</em></a>."
   },
   "Hae opinnot": {
     "en": "Fetch credentials"
