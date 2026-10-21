@@ -440,8 +440,10 @@ describe('passkeys and collections', needsPostgres, () => {
     }
 
     test('is the user’s own rows as an attachment, and none of another user’s', async () => {
-      const mine = await withData('Export Mine', 'MineBadge')
-      await withData('Export Other', 'OtherBadge')
+      // Unique names: the database may hold rows from an earlier run.
+      const tag = Math.random().toString(36).slice(2, 8)
+      const mine = await withData(`Export Mine ${tag}`, `MineBadge${tag}`)
+      await withData(`Export Other ${tag}`, `OtherBadge${tag}`)
 
       const res = await mine.client.request('/auth/account/export')
       assert.equal(res.status, 200)
@@ -449,19 +451,19 @@ describe('passkeys and collections', needsPostgres, () => {
       assert.equal(res.headers.get('cache-control'), 'no-store')
       const data = JSON.parse(await res.text())
 
-      assert.equal(data.user.displayName, 'Export Mine')
+      assert.equal(data.user.displayName, `Export Mine ${tag}`)
       assert.equal(data.passkeys.length, 1)
       assert.ok(data.passkeys[0].credentialId && data.passkeys[0].publicKey)
-      assert.equal(data.koskiImport.koskiUrl, 'https://koski.example/MineBadge')
+      assert.equal(data.koskiImport.koskiUrl, `https://koski.example/MineBadge${tag}`)
       assert.deepEqual(
         data.savedCredentials.map((c) => c.credential.credentialSubject.achievement.name),
-        ['MineBadge']
+        [`MineBadge${tag}`]
       )
       assert.equal(data.collections.length, 1)
-      assert.equal(data.collections[0].name, 'MineBadge set')
+      assert.equal(data.collections[0].name, `MineBadge${tag} set`)
       assert.deepEqual(data.collections[0].credentialIds, [mine.credentialId])
-      assert.deepEqual(data.shareLinks.map((l) => [l.label, l.token]), [['MineBadge link', mine.link.path.split("/").pop()]])
-      assert.ok(!JSON.stringify(data).includes('Other'))
+      assert.deepEqual(data.shareLinks.map((l) => [l.label, l.token]), [[`MineBadge${tag} link`, mine.link.path.split("/").pop()]])
+      assert.ok(!JSON.stringify(data).includes(`OtherBadge${tag}`))
     })
 
     test('refuses a caller who is not signed in', async () => {
