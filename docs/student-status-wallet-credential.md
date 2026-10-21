@@ -1,6 +1,6 @@
 # Student status in wallets: "Opiskelijatodiste"
 
-**Status: proposal (K5), waiting for the user's decisions.** The open questions are listed at the end.
+**Status: approved by the user on 2026-10-21 (K5).** The decisions are listed at the end.
 
 The student status credential (see [student-status-credential.md](student-status-credential.md)) goes to
 wallets as an SD-JWT VC type of its own, not as an Open Badge. Downloads and collections stay the Open Badge
@@ -40,11 +40,12 @@ later, it becomes a new version of this type.
   type. No `extends`: this isn't an Open Badge profile.
 - **Display name:** fi "Opiskelijatodiste", en "Student status", sv "Studieintyg", de "Studienbescheinigung",
   fr "Attestation de scolarité", es "Certificado de matrícula", nl "Inschrijvingsbewijs". These are the same
-  locales as the Open Badge VCT. Native speakers should check the sv, de, fr, es and nl names.
+  locales as the Open Badge VCT.
 - **Description:** fi "Koski-tietovarannon mukaan läsnä oleva opiskelija", en "Enrolled as a student according
   to the Finnish national study records (Koski)".
-- **`simple` rendering:** background `#00695c` (dark teal), text `#ffffff` (contrast 6.6:1), so it differs from
-  the Open Badge's navy `#1f3a5f`. Most wallets show only these colours and the name.
+- **`simple` rendering:** background `#ff1493` (a bold hot pink), text `#0d0342` (Findynet navy, `--fn-navy` in
+  the Findynet design system), contrast 5.2:1. That is as far from the Open Badge's navy card with white text
+  as it gets. Most wallets show only these colours and the name. The SVG card uses the same two colours.
 - **SVG card** (`templates/svg/StudentStatus_v1.svg`): a student card rather than a medal. It shows the
   holder's name, the institution, the level and programme, and "valid until". As with the Open Badge card, the
   template has no fixed text, so one file serves every language. "Valid until" would need fixed text, so the
@@ -150,18 +151,15 @@ every language. The VCT has no way to label a value, so the label carries the me
 - Student statuses come first in the list, with K3's "Vanhenee" / expired.
 - The wallet guide gets a sentence on the student status if real wallets show it differently.
 
-## Open questions for the user
+## Decisions (user, 2026-10-21)
 
-1. **The claim names:** PID-style snake_case as above, or the Open Badge camelCase names
-   (`awardedDate` style)? Proposed: snake_case, because the type isn't an Open Badge and verifiers will
-   compare it with the PID.
-2. **What is disclosable:** as in the table (identity and institution yes; the level, the type, the status and
-   the dates no), or every claim?
-3. **`birthdate`:** include it? Many student discounts also depend on age, and existing Finnish student cards
-   show the birth date. It is personal data, though, and the age can come from the PID instead. Proposed:
-   include it, disclosable.
-4. **`institution_code`** (the school number), which needs a koski2openbadge change (`otherIdentifier` on the
-   creator): in K5, or later?
-5. **Where the VCT lives:** `credentials/student-status/v1/StudentStatusVCT` on openbadge.digicredential.eu
-   (the same repository and domain, though it isn't an Open Badge), or somewhere else?
-6. **The display names** in sv, de, fr, es and nl, and the colour `#00695c`.
+1. PID-style snake_case claim names, as above.
+2. Disclosable: the identity (`sub`, the name, `birthdate`), the institution and the programme. The level, the
+   type, the status and the dates are always shown.
+3. `birthdate` is included, disclosable.
+4. `institution_code` (the school number) is added in K5: koski2openbadge puts it in
+   `achievement.creator.otherIdentifier`.
+5. The VCT lives in openbadge-vct, in a directory of its own:
+   `credentials/student-status/v1/StudentStatusVCT`.
+6. The display names as proposed. Colours: hot pink `#ff1493` with Findynet navy `#0d0342` text (the user
+   wanted the card to stand out more than dark teal would).
