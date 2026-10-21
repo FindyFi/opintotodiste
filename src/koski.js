@@ -58,7 +58,7 @@ export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, max
     await res.body?.cancel()
     const detail = `Koski responded with ${res.status} ${res.statusText}`
     if (res.status === 404) {
-      throw new UserError('Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu: luo uusi Oma Opintopolussa.', { status: 400, detail })
+      throw new UserError('Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu. Luo uusi Oma Opintopolussa.', { status: 400, detail })
     }
     throw new UserError('Koski vastasi virheellä. Yritä hetken päästä uudelleen.', { status: 502, detail })
   }

@@ -401,8 +401,8 @@
   "Koskeen ei saatu yhteyttä. Yritä hetken päästä uudelleen.": {
     "en": "Could not reach Koski. Please try again in a moment."
   },
-  "Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu: luo uusi Oma Opintopolussa.": {
-    "en": "Koski did not find the shared data. The share link may have expired or been removed: create a new one in My Studyinfo."
+  "Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu. Luo uusi Oma Opintopolussa.": {
+    "en": "Koski did not find the shared data. The share link may have expired or been removed. Create a new one in My Studyinfo."
   },
   "Koski vastasi virheellä. Yritä hetken päästä uudelleen.": {
     "en": "Koski responded with an error. Please try again in a moment."
