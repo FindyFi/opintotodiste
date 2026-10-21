@@ -9,7 +9,16 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.9] - 2026-10-21
+
+No schema, env or oid4vci-issuer changes; UI only.
+
 ### Changed
+
+- "Järjestä: tyyppi" sorts by level, highest first (U26): student status, then doctoral, licentiate,
+  master's, bachelor's and other degrees, diplomas, certificates and licences, other or unknown
+  types, and courses and assessments last; ties by newest award date, then name. A second click
+  reverses the order.
 
 - The top bar keeps its layout whatever the page and the sign-in state (U25). The site links
   (now with "Kokoelmani", always shown; signed out, its page asks to sign in) follow the brand; the
