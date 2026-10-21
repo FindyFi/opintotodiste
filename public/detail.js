@@ -49,6 +49,29 @@ const Detail = (() => {
   const MAJOR_ACHIEVEMENT_TYPES = /Degree|Diploma|Certificate|Certification|License/
   const isMajor = (achievement) => MAJOR_ACHIEVEMENT_TYPES.test(achievement?.achievementType ?? '')
 
+  // Where an achievement type sits when sorting by type: 0 is the highest
+  // level. Qualifications first, then any other or unknown type, then courses
+  // and assessments. Keep the qualification patterns consistent with
+  // MAJOR_ACHIEVEMENT_TYPES above.
+  const TYPE_LEVELS = [
+    /Doctor/,
+    /Licentiate/,
+    /Master/,
+    /Bachelor/,
+    /Associate/,
+    /Degree/,
+    /Diploma/,
+    /Certificate|Certification|License/,
+  ]
+  const typeRank = (achievementType) => {
+    const type = achievementType ?? ''
+    const level = TYPE_LEVELS.findIndex((pattern) => pattern.test(type))
+    if (level >= 0) return level
+    if (/Course/.test(type)) return TYPE_LEVELS.length + 1
+    if (/Assessment/.test(type)) return TYPE_LEVELS.length + 2
+    return TYPE_LEVELS.length
+  }
+
   function currentLang() {
     return document.documentElement.lang === 'en' ? 'en' : 'fi'
   }
@@ -151,5 +174,5 @@ const Detail = (() => {
     dialog.showModal()
   }
 
-  return { open, badgeIcon, credentialIcon, isMajor, isStudentStatus, formatDate }
+  return { open, badgeIcon, credentialIcon, isMajor, isStudentStatus, typeRank, formatDate }
 })()

@@ -154,6 +154,17 @@ const listFilter = ListFilter.create({
   },
 })
 
+// Highest level first, then the newest award, then the name.
+function compareByLevel(a, b) {
+  const levelA = Detail.typeRank(a.credentialSubject.achievement.achievementType)
+  const levelB = Detail.typeRank(b.credentialSubject.achievement.achievementType)
+  return (
+    levelA - levelB ||
+    String(columnValue(b, 'awarded')).localeCompare(String(columnValue(a, 'awarded'))) ||
+    String(columnValue(a, 'name')).localeCompare(String(columnValue(b, 'name')), 'fi', { sensitivity: 'base' })
+  )
+}
+
 // The rows on show: the filtered list, sorted, with student statuses first
 // (K5) whatever the order.
 function sortedEntries() {
@@ -163,6 +174,11 @@ function sortedEntries() {
   const statusFirst = (a, b) => Detail.isStudentStatus(b.record.credentialSubject.achievement) - Detail.isStudentStatus(a.record.credentialSubject.achievement)
   if (!sortState.key) return entries.sort(statusFirst)
   const { key, direction } = sortState
+  // By type: highest level first (ties: newest first, then name), the
+  // direction flips the whole order.
+  if (key === 'type') {
+    return entries.sort((a, b) => statusFirst(a, b) || direction * compareByLevel(a.record, b.record))
+  }
   return entries.sort(
     (a, b) =>
       statusFirst(a, b) ||
