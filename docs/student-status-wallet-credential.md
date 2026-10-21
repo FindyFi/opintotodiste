@@ -151,9 +151,14 @@ every language. The VCT has no way to label a value, so the label carries the me
   - Koski doesn't answer or the share link has lapsed: create a new share link and load the data again.
   - Koski answers, but the study right's details that make up the status's id (its oid or Virta source id, the
     institution's oid, the start date) have changed. The status then has a new ref, so the saved copy will never
-    match again; retrying can't help. The fetch has already updated the list, where the new status is: "The data
-    for these studies has changed. See the updated list.", with "list" a link to the main page (the 409 carries
-    `link: { text, href }`, which the pages render with `Detail.errorContent`).
+    match again; retrying can't help. The fetch has already updated the list, where the new status is: "Näiden
+    opintojen tiedot ovat muuttuneet. Katso päivitetty lista." ("The data for these studies has changed. See the
+    updated list."), with "lista" a link to the main page.
+
+  The refusals are in Finnish, the UI's source language, and their English is in public/translations.json: the
+  409 carries `lang: 'fi'` and, for a link, `link: { text, href }`, and the pages render it with
+  `Detail.errorContent` as a lang="fi" element, which translate-element translates like any other text. The
+  technical reason for a failed Koski fetch goes to the log, not to the user.
   - Koski no longer shows any enrolment.
 - **The birth date is never stored.** The app drops `syntymäaika` at import (`minimalKoskiData`), as /policy
   says. Every wallet offer of a student status fetches Koski (above), so `birthdate` comes from that fetch and

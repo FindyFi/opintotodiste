@@ -401,7 +401,7 @@ async function bulkAddToWallet() {
     try {
       results.push({ name, ...(await requestOffer(entry)) })
     } catch (err) {
-      results.push({ name, error: err.message, errorLink: err.link })
+      results.push({ name, error: err.message, errorLink: err.link, errorLang: err.lang })
     }
   }
   bulkWalletBtn.classList.remove('busy')
@@ -504,7 +504,7 @@ async function postJson(url, body = {}) {
     body: JSON.stringify(body),
   })
   const data = await res.json()
-  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link })
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
   return data
 }
 

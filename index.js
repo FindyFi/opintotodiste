@@ -191,7 +191,10 @@ function recordIn(req, source, ref) {
 }
 
 // Refusing to sign a student status, with a message for the user (409).
-// `link` ({ text, href }) makes `text` in the message a link in the UI.
+// Its message is Finnish, the UI's source language: the pages mark it
+// lang="fi" and translate-element finds its English in
+// public/translations.json, like any other text. `link` ({ text, href })
+// makes `text` in the message a link.
 class StudentStatusError extends Error {
   constructor(message, { link } = {}) {
     super(message)
@@ -211,7 +214,7 @@ class StudentStatusError extends Error {
 // so it is never stored.
 async function confirmedStatus(req, ref) {
   const source = await koskiSource(req)
-  if (!source) throw new StudentStatusError('Your Koski data is not loaded, so the student status could not be checked. Load your data again.')
+  if (!source) throw new StudentStatusError('Koski-tietojasi ei ole ladattu, joten opiskelijatilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.')
   if (source.koskiUrl === DEMO_KOSKI_URL) {
     return freshStatus(source.data, ref, sessionLang(req), { ...source.data.henkilö, syntymäaika: demoData.henkilö.syntymäaika })
   }
@@ -219,8 +222,11 @@ async function confirmedStatus(req, ref) {
   try {
     fetched = await fetchKoskiData(toApiUrl(source.koskiUrl))
   } catch (err) {
+    // The reason (e.g. "Koski responded with 404") goes to the log: the user's
+    // next step is the same whatever it is.
+    console.warn('Confirming a student status in Koski failed:', err.message)
     throw new StudentStatusError(
-      `Your student status could not be checked in Koski (${err.message}). If your Koski share link has expired, create a new one in Oma Opintopolku and load your data again.`
+      'Opiskelijatilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.'
     )
   }
   const data = minimalKoskiData(fetched)
@@ -237,9 +243,9 @@ function freshStatus(data, ref, lang, henkilö) {
   const fresh = records.find((r) => r.ref === ref)?.record
   if (fresh) return { record: fresh, henkilö }
   if (records.some((r) => isStudentStatus(r.record.credentialSubject))) {
-    throw new StudentStatusError('The data for these studies has changed. See the updated list.', { link: { text: 'list', href: '/' } })
+    throw new StudentStatusError('Näiden opintojen tiedot ovat muuttuneet. Katso päivitetty lista.', { link: { text: 'lista', href: '/' } })
   }
-  throw new StudentStatusError('Koski no longer shows you as enrolled in these studies, so the student status was not signed.')
+  throw new StudentStatusError('Koskessa et ole enää läsnä näissä opinnoissa, joten opiskelijatodistetta ei allekirjoitettu.')
 }
 
 // The record as it is signed: a student status confirmed first, anything else
@@ -249,7 +255,7 @@ async function recordToSign(req, ref, record) {
 }
 
 function sendSigningError(res, err, what) {
-  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message, ...(err.link ? { link: err.link } : {}) })
+  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message, lang: 'fi', ...(err.link ? { link: err.link } : {}) })
   // A 502 here means a dependency refused the request, not that the user
   // did anything wrong - log it, or the only trace is a message in the
   // browser that nobody operating the service ever sees.

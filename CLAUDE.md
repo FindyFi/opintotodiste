@@ -101,6 +101,13 @@ If there is no PLAN.md, work normally.
   signed by digitalcredentials/signing-service. The issuer's own checkout may
   sit anywhere on a developer's machine; find its path (`git worktree list` in
   that repository, or ask) instead of assuming one.
+- User-visible text is written in Finnish (the source language) and translated with the existing mechanism:
+  mark it `lang="fi"` (`el(tag, { lang: 'fi' }, text)` in public/*.js) and add its English to
+  `public/translations.json` (translate-element swaps it in, HTML such as a link included), or hand-author
+  the pair (a `lang="en"` sibling, or i18n.js's `t(fi, en)` for native dialogs). Messages the server sends
+  for the UI to show are Finnish too, with `lang: 'fi'` in the response (see `StudentStatusError` and
+  `Detail.errorContent`). Don't add English-only UI text; `test/translations.test.js` fails on it. Wording
+  rules: credential = "todiste", never "todistus"; verifying = "tarkastaa".
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
   (FindyFi/aws-environment, the image builder's integration compose) must follow.

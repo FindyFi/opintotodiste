@@ -36,7 +36,7 @@ async function requestJson(url, options) {
   const res = await fetch(url, options)
   if (res.status === 204) return null
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link })
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
   return data
 }
 

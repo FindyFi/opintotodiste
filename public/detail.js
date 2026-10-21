@@ -43,11 +43,13 @@ const Detail = (() => {
   }
 
   // An error's message as nodes. The server may name a `link` ({ text, href }):
-  // that text in the message becomes a link.
-  function errorContent({ message, link }) {
+  // that text in the message becomes a link. A message in Finnish (`lang`
+  // 'fi') is marked so, and translate-element puts its English from
+  // translations.json in its place, link and all.
+  function errorContent({ message, link, lang }) {
     const at = link?.text ? message.lastIndexOf(link.text) : -1
-    if (at < 0 || !link.href?.startsWith('/')) return [message]
-    return [message.slice(0, at), el('a', { href: link.href }, link.text), message.slice(at + link.text.length)]
+    const nodes = at < 0 || !link.href?.startsWith('/') ? [message] : [message.slice(0, at), el('a', { href: link.href }, link.text), message.slice(at + link.text.length)]
+    return lang === 'fi' ? [el('span', { lang: 'fi' }, nodes)] : nodes
   }
 
   const isStudentStatus = (achievement) => achievement?.achievementType === 'ext:StudentStatus'

@@ -130,7 +130,7 @@ describe('the student status', needsPostgres, () => {
     const signedBefore = signer.requests.length
     const res = await client.json(`/credentials/${status.ref}/sign`, { method: 'POST' })
     assert.equal(res.status, 409)
-    assert.match(res.body.error, /no longer shows you as enrolled/)
+    assert.match(res.body.error, /Koskessa et ole enää läsnä/)
     assert.equal(signer.requests.length, signedBefore, 'nothing was signed')
   })
 
@@ -140,7 +140,7 @@ describe('the student status', needsPostgres, () => {
     try {
       const res = await client.json(`/credentials/${status.ref}/sign`, { method: 'POST' })
       assert.equal(res.status, 409)
-      assert.match(res.body.error, /Koski responded with 404.*create a new one/)
+      assert.match(res.body.error, /ei voitu tarkastaa Koskesta.*luo uusi/)
     } finally {
       koskiSays(koskiExport())
     }
@@ -321,7 +321,7 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     await whileKoskiSays(null, async () => {
       const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
       assert.equal(res.status, 409)
-      assert.match(res.body.error, /could not be checked in Koski.*create a new one/)
+      assert.match(res.body.error, /ei voitu tarkastaa Koskesta.*luo uusi/)
     })
     assert.equal(issuer.requests.length, offersBefore)
   })
@@ -332,7 +332,7 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     await whileKoskiSays(koskiExport({ status: 'eronnut' }), async () => {
       const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
       assert.equal(res.status, 409)
-      assert.match(res.body.error, /no longer shows you as enrolled/)
+      assert.match(res.body.error, /Koskessa et ole enää läsnä/)
     })
     assert.equal(issuer.requests.length, offersBefore)
   })
@@ -345,8 +345,9 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     await whileKoskiSays(changed, async () => {
       const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
       assert.equal(res.status, 409)
-      assert.equal(res.body.error, 'The data for these studies has changed. See the updated list.')
-      assert.deepEqual(res.body.link, { text: 'list', href: '/' })
+      assert.equal(res.body.error, 'Näiden opintojen tiedot ovat muuttuneet. Katso päivitetty lista.')
+      assert.equal(res.body.lang, 'fi')
+      assert.deepEqual(res.body.link, { text: 'lista', href: '/' })
       // The fetch updated the list: the changed status is there, and it goes.
       const list = await client.json('/credentials')
       const status = list.body.credentials.find(
