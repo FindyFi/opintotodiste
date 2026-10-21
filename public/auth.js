@@ -52,31 +52,104 @@ async function logout() {
 
 let currentMe = { loggedIn: false }
 
+const PERSON_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>'
+
+// #authNav is one fixed-width slot at the end of the top bar (see
+// src/views/layout.js), so signing in or out never moves the other links.
+// Signed out it holds "Kirjaudu sisään" (registering is offered inside the
+// dialog); signed in, a button with the display name that opens the account
+// menu. Kokoelmani is in the menu too, besides the site nav. The menu is a disclosure (button + aria-expanded) and shows the full
+// name, which the button may have to cut short.
 async function renderAuthNav() {
   const nav = document.getElementById('authNav')
   if (!nav) return currentMe
   currentMe = await getMe().catch(() => ({ loggedIn: false }))
   document.documentElement.dataset.auth = currentMe.loggedIn ? 'in' : 'out'
   nav.replaceChildren()
+  nav.onkeydown = nav.onfocusout = null
 
-  if (currentMe.loggedIn) {
-    const logoutBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu ulos'))
-    logoutBtn.addEventListener('click', async () => {
-      await logout()
-      await renderAuthNav()
-    })
-    const accountBtn = el('button', { type: 'button', class: 'link-btn account-btn' }, currentMe.displayName)
-    accountBtn.addEventListener('click', openAccountDialog)
-    nav.append(el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani'), accountBtn, logoutBtn)
-  } else {
+  if (!currentMe.loggedIn) {
     const loginBtn = el('button', { type: 'button', class: 'small' }, el('span', { lang: 'fi' }, 'Kirjaudu sisään'))
     loginBtn.addEventListener('click', () => openAuthFlow('login').catch(() => {}))
-    const registerBtn = el('button', { type: 'button', class: 'small ghost' }, el('span', { lang: 'fi' }, 'Rekisteröi pääsyavain'))
-    registerBtn.addEventListener('click', () => openAuthFlow('register').catch(() => {}))
-    nav.append(registerBtn, loginBtn)
+    nav.append(loginBtn)
+    return currentMe
   }
+
+  const icon = el('span', { class: 'account-icon' })
+  icon.innerHTML = PERSON_ICON
+  const accountBtn = el(
+    'button',
+    { type: 'button', class: 'account-btn', 'aria-expanded': 'false', 'aria-controls': 'accountMenu', title: currentMe.displayName },
+    [icon, el('span', { class: 'account-name' }, currentMe.displayName)]
+  )
+  const menu = el('div', { id: 'accountMenu', class: 'account-menu', tabindex: '-1' })
+  menu.hidden = true
+  const setOpen = (open) => {
+    menu.hidden = !open
+    accountBtn.setAttribute('aria-expanded', String(open))
+  }
+  accountBtn.addEventListener('click', () => setOpen(menu.hidden))
+  // Set as properties, not listeners: #authNav outlives each render.
+  nav.onkeydown = (event) => {
+    if (event.key !== 'Escape' || menu.hidden) return
+    setOpen(false)
+    accountBtn.focus()
+  }
+  nav.onfocusout = (event) => {
+    if (!nav.contains(event.relatedTarget)) setOpen(false)
+  }
+
+  const errorBox = el('div', { class: 'row-error' })
+  errorBox.hidden = true
+  const item = (text, action) => {
+    const btn = el('button', { type: 'button', class: 'link-btn' }, el('span', { lang: 'fi' }, text))
+    btn.addEventListener('click', action)
+    return el('li', {}, btn)
+  }
+  const exportItem = item('Lataa tietosi', async () => {
+    const btn = exportItem.firstChild
+    errorBox.hidden = true
+    btn.disabled = true
+    btn.classList.add('busy')
+    try {
+      await downloadAccountData()
+      setOpen(false)
+    } catch (err) {
+      errorBox.replaceChildren(...errorContent(err))
+      errorBox.hidden = false
+    } finally {
+      btn.disabled = false
+      btn.classList.remove('busy')
+    }
+  })
+  menu.append(
+    el('p', { class: 'account-menu-name' }, currentMe.displayName),
+    el('ul', {}, [
+      el('li', {}, el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani')),
+      item('Tili', () => {
+        setOpen(false)
+        openAccountDialog()
+      }),
+      exportItem,
+      item('Kirjaudu ulos', async () => {
+        await logout()
+        await renderAuthNav()
+      }),
+    ]),
+    errorBox
+  )
+  nav.append(accountBtn, menu)
   return currentMe
 }
+
+// A click anywhere outside the account menu closes it.
+document.addEventListener('click', (event) => {
+  const nav = document.getElementById('authNav')
+  const menu = document.getElementById('accountMenu')
+  if (!nav || !menu || menu.hidden || nav.contains(event.target)) return
+  menu.hidden = true
+  nav.querySelector('.account-btn')?.setAttribute('aria-expanded', 'false')
+})
 
 // Opens the login/register dialog and resolves once the user is signed in,
 // or rejects if they cancel. initialMode picks which form shows first; a
@@ -195,7 +268,7 @@ async function forgetPasskey(passkey) {
   }).catch(() => {})
 }
 
-// The account dialog, opened from the display name in #authNav. Deleting asks
+// The account dialog, opened from "Tili" in the account menu. Deleting asks
 // for an explicit confirmation (the checkbox) and then lands on the main page,
 // signed out.
 function openAccountDialog() {

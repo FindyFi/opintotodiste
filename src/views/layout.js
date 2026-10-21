@@ -43,15 +43,18 @@ ${['base', ...styles].map((name) => `<link rel="stylesheet" href="/styles/${name
 <script src="/vendor/translate-element/translate-element.js"></script>`
 }
 
-// Rendered on every page. With `auth` it also carries the login/account nav
-// (main page, collections page). That nav is deliberately just a shell:
-// public/auth.js owns populating #authNav from GET /auth/me and re-renders
-// it after login/register/logout, so there is exactly one place
-// (client-side) that knows how to draw the logged-in vs. logged-out state.
-// translate-element sits here too, outside #authNav, so auth.js's re-renders
-// never wipe the language switcher. `current` marks the site-nav link of the
-// page being shown.
+// Rendered on every page, with the same slots in the same places whatever
+// the page and the sign-in state (U25): brand, site nav, account slot,
+// language switcher. The account slot has a fixed width (base.css), so filling it
+// never moves anything else. With `auth` it is #authNav, which public/auth.js
+// populates from GET /auth/me and re-renders after login/register/logout, so
+// there is exactly one place (client-side) that knows how to draw the
+// signed-in vs. signed-out state. Without `auth` the slot stays empty.
+// translate-element sits outside #authNav, so auth.js's re-renders never wipe
+// the language switcher. `current` marks the site-nav link of the page being
+// shown. Kokoelmani is always listed: signed out, its page asks to sign in.
 const SITE_NAV = [
+  { id: 'collections', href: '/my/collections', text: 'Kokoelmani' },
   { id: 'employer', href: '/employer', text: 'Työnantajalle' },
   { id: 'verify', href: '/verify', text: 'Tarkasta todiste' },
 ]
@@ -59,13 +62,11 @@ const SITE_NAV = [
 export function header({ auth = true, current = '' } = {}) {
   return `<header class="topbar">
   <a class="brand" href="/">${BADGE_ICON}<span lang="fi">Opintotodiste</span></a>
-  <div class="topbar-right">
-    <nav class="site-nav" aria-label="Sivusto">${SITE_NAV.map(
-      ({ id, href, text }) => `<a href="${href}"${id === current ? ' aria-current="page"' : ''}><span lang="fi">${text}</span></a>`
-    ).join('')}</nav>
-    ${auth ? '<nav id="authNav" class="auth-nav"></nav>' : ''}
-    <translate-element persist src="/translations.json"></translate-element>
-  </div>
+  <nav class="site-nav" aria-label="Sivusto">${SITE_NAV.map(
+    ({ id, href, text }) => `<a href="${href}"${id === current ? ' aria-current="page"' : ''}><span lang="fi">${text}</span></a>`
+  ).join('')}</nav>
+  ${auth ? '<div id="authNav" class="auth-nav"></div>' : '<div class="auth-nav"></div>'}
+  <translate-element persist src="/translations.json"></translate-element>
 </header>${
     auth
       ? `

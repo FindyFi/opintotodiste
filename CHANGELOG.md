@@ -9,6 +9,15 @@ version to pin.
 
 ## [Unreleased]
 
+### Changed
+
+- The top bar keeps its layout whatever the page and the sign-in state (U25). The site links
+  (now with "Kokoelmani", always shown; signed out, its page asks to sign in) follow the brand; the
+  account sits in a fixed-width slot before the language switcher, which ends the bar: "Kirjaudu
+  sisään" (registering is offered in the dialog) or the display name, which opens a menu with the
+  full name, "Kokoelmani", "Tili", "Lataa tietosi" and "Kirjaudu ulos". Pages without sign-in keep
+  the slot empty.
+
 ## [0.0.8] - 2026-10-21
 
 No schema changes. `OID4VCI_CREDENTIAL_VCT` is the Open Badge VCT v2, together with the issuer

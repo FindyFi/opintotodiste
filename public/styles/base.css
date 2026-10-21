@@ -213,15 +213,20 @@ input[type=checkbox], input[type=radio] {
   margin-inline: auto;
 }
 
+/* Fixed slots (src/views/layout.js): the site nav starts right after the brand
+   and the account slot has a fixed width, so signing in or out, or a page
+   without sign-in, moves nothing. */
 .topbar {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr var(--account-slot) auto;
+  grid-template-areas: "brand nav account lang";
   align-items: center;
-  justify-content: space-between;
   gap: 12px 24px;
   padding: 20px 0;
+  --account-slot: 13rem;
 }
 .brand {
+  grid-area: brand;
   display: inline-flex;
   align-items: center;
   gap: 10px;
@@ -234,15 +239,37 @@ input[type=checkbox], input[type=radio] {
 }
 .brand:hover { color: var(--heading); }
 .brand svg { color: var(--link); }
-.topbar-right { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 20px; }
-.auth-nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
-.auth-nav a { font-weight: 700; color: var(--heading); }
-/* The display name opens the account dialog (public/auth.js). */
-.auth-nav .account-btn { max-width: 16ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
-.auth-nav .account-btn:hover { color: var(--link-hover); }
-.site-nav { display: flex; flex-wrap: wrap; gap: 8px 20px; }
+.site-nav { grid-area: nav; display: flex; flex-wrap: wrap; gap: 8px 20px; }
 .site-nav a { font-weight: 700; color: var(--heading); text-decoration: none; }
 .site-nav a:hover, .site-nav a[aria-current=page] { color: var(--link); text-decoration: underline; text-underline-offset: 6px; }
+.topbar translate-element { grid-area: lang; }
+.auth-nav { grid-area: account; position: relative; display: flex; justify-content: flex-end; min-width: 0; min-height: 44px; }
+/* The display name opens the account menu (public/auth.js); the menu shows
+   it in full. */
+.auth-nav .account-btn { max-width: 100%; min-height: 44px; padding: 0 .9rem; border-width: 1px; font-size: .85rem; }
+.auth-nav .account-btn::after { content: ''; flex-shrink: 0; width: .45em; height: .45em; margin: -.2em 0 0 .1em; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg); }
+.auth-nav .account-btn[aria-expanded=true]::after { margin-top: .2em; transform: rotate(-135deg); }
+.account-icon { display: inline-flex; flex-shrink: 0; color: var(--link); }
+.account-btn:hover .account-icon { color: inherit; }
+.account-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.account-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 20;
+  width: max(100%, 16rem);
+  padding: 16px 20px;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--surface);
+  box-shadow: 0 20px 50px rgba(13, 3, 66, .2);
+}
+.account-menu:focus { outline: none; }
+.account-menu-name { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--heading); font-weight: 700; overflow-wrap: anywhere; }
+.account-menu ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.account-menu a, .account-menu .link-btn { display: block; width: 100%; padding: 8px 0; color: var(--heading); font-weight: 700; text-decoration: none; }
+.account-menu a:hover, .account-menu .link-btn:hover { color: var(--link); text-decoration: underline; }
+.account-menu .row-error { margin-top: 8px; }
 
 /* translate-element's language switcher, placed in the top bar */
 .translate-element { position: static; }
@@ -357,11 +384,19 @@ dd { margin: 0; }
 
 /* ---------- small screens ---------- */
 
+/* Two rows when one doesn't fit: brand and languages, then the site nav and
+   the account slot. */
+@media (max-width: 1120px) {
+  .topbar {
+    grid-template-columns: 1fr var(--account-slot);
+    grid-template-areas: "brand lang" "nav account";
+  }
+  .topbar translate-element { justify-self: end; }
+}
+
 @media (max-width: 560px) {
   body { font-size: 16px; }
-  .topbar-right { width: 100%; justify-content: space-between; }
-  /* Registering stays reachable from the sign-in dialog's switch link. */
-  .auth-nav .ghost, .auth-nav .muted { display: none; }
+  .topbar { --account-slot: 9.5rem; }
   .field-row { flex-direction: column; padding: 0; background: none; box-shadow: none; }
   .field-row input { min-height: 52px; background: var(--surface); }
   .field-row button { min-height: 52px; }
