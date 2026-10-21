@@ -82,9 +82,9 @@ const COPY = {
         title: 'Oikeutesi',
         body: `<p>Sinulla on oikeus hallita palveluun tallennettuja tietoja.</p>
 <ul>
-<li><strong>Tietojen tarkastus:</strong> Näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
+<li><strong>Tietojen tarkastus:</strong> Näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Voit ladata kopion kaikista tiedoistasi valitsemalla palvelun yläreunassa näkyvän tilisi näyttönimen ja sitten ${ui('Lataa tietosi')}.</li>
 <li><strong>Tietojen korjaus:</strong> Palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen. Käyttäjätilisi näyttönimi tallentuu pääsyavaimeesi, eikä sitä voi muuttaa. Käyttäjätilisi näyttönimi näkyy vain sinulle. Voit halutessasi poistaa käyttäjätilisi ja luoda uuden tilin uudella näyttönimellä.</li>
-<li><strong>Tietojen siirto:</strong> Voit ladata merkit itsellesi tiedostoina (JSON-muodossa). Voit tallentaa merkkejä digitaalisina todisteina lompakkoosi ja välittää niitä LinkedIn-profiiliisi.</li>
+<li><strong>Tietojen siirto:</strong> Voit ladata merkit itsellesi tiedostoina (JSON-muodossa). Voit tallentaa merkkejä digitaalisina todisteina lompakkoosi ja välittää niitä LinkedIn-profiiliisi. Voit myös ladata kaikki tilisi tiedot yhtenä JSON-tiedostona (${ui('Lataa tietosi')}).</li>
 <li><strong>Tietojen poisto:</strong> Katso <a href="#poisto">Näin poistat tietosi</a>.</li>
 <li><strong>Tietojen käsittelyn rajoitus tai vastustaminen:</strong> Voit lopettaa palvelun käytön ja <a href="#poisto">poistaa tietosi</a>.</li>
 <li><strong>Valitus:</strong> Jos katsot, että tietojasi käsitellään lainvastaisesti, voit tehdä valituksen tietosuojavaltuutetun toimistolle (<a href="https://tietosuoja.fi">tietosuoja.fi</a>).</li>
@@ -182,9 +182,9 @@ const COPY = {
         title: 'Your rights',
         body: `<p>You have the right to manage the data stored in the service.</p>
 <ul>
-<li><strong>Access:</strong> You can see your badges on the service’s <a href="/">front page</a> and the collections you saved on the <a href="/my/collections">My collections</a> page. You can ask for a copy of the rest.</li>
+<li><strong>Access:</strong> You can see your badges on the service’s <a href="/">front page</a> and the collections you saved on the <a href="/my/collections">My collections</a> page. To download a copy of all the data stored in your account, choose your account’s display name at the top of the page, then ${ui('Download your data')}.</li>
 <li><strong>Rectification:</strong> Your name shown in the service and the badge details come from Koski. If the data from Koski has errors, contact your school. Your account’s display name is stored in your passkey and can’t be changed. Only you can see your account’s display name. If you like, you can delete your account and create a new one with a new display name.</li>
-<li><strong>Portability:</strong> You can download the badges as files (in JSON format). You can save badges as digital credentials in your wallet and add them to your LinkedIn profile.</li>
+<li><strong>Portability:</strong> You can download the badges as files (in JSON format). You can save badges as digital credentials in your wallet and add them to your LinkedIn profile. You can also download all your account data as one JSON file (${ui('Download your data')}).</li>
 <li><strong>Erasure:</strong> See <a href="#deletion">How to delete your data</a>.</li>
 <li><strong>Restriction of or objection to processing:</strong> You can stop using the service and <a href="#deletion">delete your data</a>.</li>
 <li><strong>Complaint:</strong> If you think your data is processed unlawfully, you can complain to the Office of the Data Protection Ombudsman (<a href="https://tietosuoja.fi/en">tietosuoja.fi</a>).</li>

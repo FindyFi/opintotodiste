@@ -73,6 +73,8 @@ version to pin.
 - /policy version 3 (21.10.2026): "Oikeutesi" now opens with "Sinulla on oikeus hallita palveluun
   tallennettuja tietoja." instead of directing requests to info@findy.fi, since each right below has
   its own instructions. The version also covers the student status sentence added in K5 (U23).
+- /policy, still version 3: copies of one's data come from the account dialog's "Lataa tietosi"
+  (U24) instead of a request, under both access and portability (U23).
 - Error messages from the server are in Finnish and translated into English like the rest of the UI
   (`lang: 'fi'` in the response, English in translations.json), including Koski, sign-in, collections
   and rate limit errors. Technical failures (an upstream service's answer, missing configuration) no longer
