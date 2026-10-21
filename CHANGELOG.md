@@ -9,6 +9,14 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.8] - 2026-10-21
+
+No schema changes. `OID4VCI_CREDENTIAL_VCT` is the Open Badge VCT v2, together with the issuer
+configuration's `vct`. The new optional `OID4VCI_STUDENT_STATUS_VCT` and
+`OID4VCI_STUDENT_STATUS_CONFIGURATION_ID` turn on the student status wallet type, which needs its
+oid4vci-issuer configuration (K5). The wallet credential's expiry (K3), the wallet's own report in
+the dialog (W5), the issuer display, UniMe and Toppan need an oid4vci-issuer release after v0.0.4.
+
 ### Added
 
 - "Lataa tietosi" / "Download your data" in the account dialog (U24): `GET /auth/account/export` returns a JSON
