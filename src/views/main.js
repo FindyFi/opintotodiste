@@ -27,7 +27,7 @@ ${header()}
 <section class="hero">
   <div class="hero-main">
     <p class="hero-flow" aria-hidden="true"><span>Koski</span>${ARROW_ICON}<span lang="fi">Osaamismerkit</span></p>
-    <h1 lang="fi">Opintosi todennettaviksi osaamismerkeiksi</h1>
+    <h1 lang="fi">Opintosi osaamismerkeiksi</h1>
     <p class="lede" lang="fi">Muodosta <a href="https://opintopolku.fi/koski/omattiedot"><em>Oma Opintopolku</em></a> -palvelussa opintotietojesi jakolinkki ja syötä se alle. Palvelu hakee linkin takaiset opintotietosi ja muodostaa niistä digitaalisia osaamismerkkejä. Tietoja käsitellään palvelun tarjoamiseksi ja niitä säilytetään <a href="/policy"><em>tietosuojaselosteessa</em></a> kuvatulla tavalla.</p>
     <form class="koski-form" id="koskiForm">
       <label for="koskiUrlInput" lang="fi">Koski-jakolinkki</label>
