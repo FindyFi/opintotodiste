@@ -13,7 +13,8 @@ import { OG_PAGES } from './og.js'
 // Facts come from the code (src/schema.sql, index.js, the session store's
 // defaults, oid4vci-issuer's in-memory offers) and from aws-environment (log
 // retention, region); the text itself is the user's. Keep it in step with
-// what the code stores, and update `updated` with every change.
+// what the code stores. Every text change needs the user's approval in both
+// languages and a new version and date in `updated` (see CLAUDE.md).
 
 const ui = (label) => `<strong>${label}</strong>`
 
@@ -23,7 +24,7 @@ const COPY = {
   fi: {
     title: 'Tietosuojaseloste ja käyttöehdot',
     lede: 'Mitä tietoja Opintotodiste käsittelee, mihin ja kuinka kauan, kuka näkee jakamasi linkit, miten poistat tietosi ja millä ehdoilla palvelua käytetään.',
-    updated: `Versio 2. Päivitetty 18.10.2026.`,
+    updated: `Versio 3. Päivitetty 21.10.2026.`,
     sections: [
       {
         title: 'Lyhyesti',
@@ -79,7 +80,7 @@ const COPY = {
       {
         id: 'oikeudet',
         title: 'Oikeutesi',
-        body: `<p>Voit käyttää alla olevia oikeuksiasi lähettämällä pyynnön osoitteeseen ${CONTACT}.</p>
+        body: `<p>Sinulla on oikeus hallita palveluun tallennettuja tietoja.</p>
 <ul>
 <li><strong>Tietojen tarkastus:</strong> Näet osaamismerkkisi <a href="/">palvelun etusivulla</a> ja tallentamasi kokoelmat <a href="/my/collections">Kokoelmani</a>-sivulla. Muista tiedoista voit pyytää kopion.</li>
 <li><strong>Tietojen korjaus:</strong> Palvelussa näytettävä nimesi ja merkkien tiedot tulevat Koskesta. Jos Koskesta saaduissa tiedoissa on virheitä, ota yhteyttä oppilaitokseen. Käyttäjätilisi näyttönimi tallentuu pääsyavaimeesi, eikä sitä voi muuttaa. Käyttäjätilisi näyttönimi näkyy vain sinulle. Voit halutessasi poistaa käyttäjätilisi ja luoda uuden tilin uudella näyttönimellä.</li>
@@ -123,7 +124,7 @@ const COPY = {
   en: {
     title: 'Privacy notice and terms of use',
     lede: 'What data Opintotodiste processes, why and for how long, who can see the links you share, how to delete your data and the terms for using the service.',
-    updated: `Version 2. Updated 18 October 2026.`,
+    updated: `Version 3. Updated 21 October 2026.`,
     sections: [
       {
         title: 'In short',
@@ -179,7 +180,7 @@ const COPY = {
       {
         id: 'rights',
         title: 'Your rights',
-        body: `<p>To use the rights below, send a request to ${CONTACT}.</p>
+        body: `<p>You have the right to manage the data stored in the service.</p>
 <ul>
 <li><strong>Access:</strong> You can see your badges on the service’s <a href="/">front page</a> and the collections you saved on the <a href="/my/collections">My collections</a> page. You can ask for a copy of the rest.</li>
 <li><strong>Rectification:</strong> Your name shown in the service and the badge details come from Koski. If the data from Koski has errors, contact your school. Your account’s display name is stored in your passkey and can’t be changed. Only you can see your account’s display name. If you like, you can delete your account and create a new one with a new display name.</li>

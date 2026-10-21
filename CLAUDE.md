@@ -114,3 +114,9 @@ If there is no PLAN.md, work normally.
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
   (FindyFi/aws-environment, the image builder's integration compose) must follow.
+- The privacy notice and terms of use (/policy, `src/views/policy.js`): any change to
+  their text needs the user's approval of the new wording **in every language the
+  policy is published in** (today Finnish and English) before it is committed. Every
+  change also raises the version number and sets the date in `updated` (both
+  languages). Several changes that haven't been released yet may share one version;
+  once a version is released, the next change starts a new one.
