@@ -60,7 +60,7 @@ describe('passkeys and collections', needsPostgres, () => {
       const { status, body } = await client.json('/auth/register/options', { method: 'POST', body: {} })
 
       assert.equal(status, 400)
-      assert.match(body.error, /display name/i)
+      assert.match(body.error, /Anna näyttönimi/)
     })
 
     test('refuses a passkey signed for a different origin', async () => {
@@ -111,7 +111,7 @@ describe('passkeys and collections', needsPostgres, () => {
       })
 
       assert.equal(verified.status, 400)
-      assert.match(verified.body.error, /not registered/i)
+      assert.match(verified.body.error, /ei ole rekisteröity/)
     })
   })
 
@@ -317,7 +317,7 @@ describe('passkeys and collections', needsPostgres, () => {
         method: 'POST',
         body: { credentialIds: [credentialId] },
       })
-      assert.match(added.body.results[0].error, /not found/i)
+      assert.match(added.body.results[0].error, /ei löytynyt/)
       assert.equal((await anonymous().request(ownLink.path)).status, 200)
     })
 
@@ -487,7 +487,7 @@ describe('passkeys and collections', needsPostgres, () => {
         body: authenticator.authenticate(options.body),
       })
       assert.equal(verified.status, 400)
-      assert.match(verified.body.error, /not registered/i)
+      assert.match(verified.body.error, /ei ole rekisteröity/)
     })
 
     test('leaves other accounts alone', async () => {

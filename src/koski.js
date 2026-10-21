@@ -1,7 +1,9 @@
+import { UserError } from './user-error.js'
+
 const KOSKI_HOST = 'opintopolku.fi'
 const OPINNOT_PATH_RE = /^\/koski\/(api\/)?opinnot\/([a-zA-Z0-9-]+)\/?$/
 
-export class InvalidKoskiUrlError extends Error {}
+export class InvalidKoskiUrlError extends UserError {}
 
 // Accepts either the share link a person copies from Oma Opintopolku
 // (.../koski/opinnot/<id>) or the JSON API link (.../koski/api/opinnot/<id>)
@@ -12,15 +14,15 @@ export function toApiUrl(input) {
   try {
     url = new URL(input)
   } catch {
-    throw new InvalidKoskiUrlError('Please enter a valid URL.')
+    throw new InvalidKoskiUrlError('Anna kelvollinen osoite.')
   }
   if (url.hostname !== KOSKI_HOST) {
-    throw new InvalidKoskiUrlError(`The URL must point to ${KOSKI_HOST}.`)
+    throw new InvalidKoskiUrlError('Osoitteen on oltava opintopolku.fi-palvelussa.')
   }
   const match = url.pathname.match(OPINNOT_PATH_RE)
   if (!match) {
     throw new InvalidKoskiUrlError(
-      'The URL must look like https://opintopolku.fi/koski/opinnot/<id> or https://opintopolku.fi/koski/api/opinnot/<id>.'
+      'Osoitteen on oltava muotoa https://opintopolku.fi/koski/opinnot/… tai https://opintopolku.fi/koski/api/opinnot/…'
     )
   }
   const id = match[2]
@@ -31,11 +33,15 @@ export function toApiUrl(input) {
 // endless response from filling the app's memory.
 export const KOSKI_MAX_BYTES = 5 * 1024 * 1024
 export const KOSKI_TIMEOUT_MS = 15_000
+const KOSKI_TIMEOUT = 'Koski ei vastannut ajoissa. Yritä hetken päästä uudelleen.'
+const KOSKI_TOO_LARGE = 'Koskesta tuli odottamattoman suuri vastaus, eikä sitä ladattu.'
 
 // Redirects are refused, not followed: toApiUrl's host check would mean nothing
 // if opintopolku.fi could send the request on to another server (an open
 // redirect there would let a link import an attacker's data, or reach an
 // internal address).
+// Failures are UserErrors with what the user can do about them; what Koski
+// actually answered is their `detail`, for the log.
 export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, maxBytes = KOSKI_MAX_BYTES } = {}) {
   let res
   try {
@@ -45,16 +51,20 @@ export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, max
       signal: AbortSignal.timeout(timeoutMs),
     })
   } catch (err) {
-    if (err.name === 'TimeoutError') throw new Error('Koski did not respond in time.')
-    throw new Error('Could not reach Koski.')
+    if (err.name === 'TimeoutError') throw new UserError(KOSKI_TIMEOUT, { status: 502, detail: err.message })
+    throw new UserError('Koskeen ei saatu yhteyttä. Yritä hetken päästä uudelleen.', { status: 502, detail: err.message })
   }
   if (!res.ok) {
     await res.body?.cancel()
-    throw new Error(`Koski responded with ${res.status} ${res.statusText}`)
+    const detail = `Koski responded with ${res.status} ${res.statusText}`
+    if (res.status === 404) {
+      throw new UserError('Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu. Luo uusi Oma Opintopolussa.', { status: 400, detail })
+    }
+    throw new UserError('Koski vastasi virheellä. Yritä hetken päästä uudelleen.', { status: 502, detail })
   }
   if (Number(res.headers.get('content-length')) > maxBytes) {
     await res.body?.cancel()
-    throw new Error('The Koski response is too large.')
+    throw new UserError(KOSKI_TOO_LARGE, { status: 502 })
   }
 
   const chunks = []
@@ -62,17 +72,17 @@ export async function fetchKoskiData(apiUrl, { timeoutMs = KOSKI_TIMEOUT_MS, max
   try {
     for await (const chunk of res.body) {
       size += chunk.length
-      if (size > maxBytes) throw new Error('The Koski response is too large.')
+      if (size > maxBytes) throw new UserError(KOSKI_TOO_LARGE, { status: 502 })
       chunks.push(chunk)
     }
   } catch (err) {
-    if (err.name === 'TimeoutError') throw new Error('Koski did not respond in time.')
+    if (err.name === 'TimeoutError') throw new UserError(KOSKI_TIMEOUT, { status: 502, detail: err.message })
     throw err
   }
   try {
     return JSON.parse(Buffer.concat(chunks).toString('utf8'))
   } catch {
-    throw new Error('Koski did not return a study record.')
+    throw new UserError('Koski ei palauttanut opintotietoja.', { status: 502 })
   }
 }
 

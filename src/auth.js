@@ -6,6 +6,9 @@ import {
   verifyRegistrationResponse,
 } from '@simplewebauthn/server'
 import { pool } from './db.js'
+import { UserError } from './user-error.js'
+
+const PASSKEY_NOT_VERIFIED = 'Pääsyavainta ei voitu varmentaa.'
 
 function rpConfig() {
   const { RP_ID, RP_NAME, ORIGIN } = process.env
@@ -42,12 +45,12 @@ export async function beginRegistration(req, displayName) {
     const { rows } = await pool.query('SELECT display_name, webauthn_user_id FROM users WHERE id = $1', [
       existingUserId,
     ])
-    if (!rows[0]) throw new Error('User not found.')
+    if (!rows[0]) throw new UserError('Käyttäjää ei löytynyt.', { status: 404 })
     webauthnUserId = rows[0].webauthn_user_id
     name = rows[0].display_name
     excludeCredentials = await findUserCredentials(existingUserId)
   } else {
-    if (!name) throw new Error('Please enter a display name.')
+    if (!name) throw new UserError('Anna näyttönimi.')
     webauthnUserId = randomBytes(32)
   }
 
@@ -73,7 +76,7 @@ export async function beginRegistration(req, displayName) {
 
 export async function completeRegistration(req, response) {
   const pending = req.session.pendingRegistration
-  if (!pending) throw new Error('No registration in progress. Please try again.')
+  if (!pending) throw new UserError('Rekisteröitymistä ei ole aloitettu. Yritä uudelleen.')
   const { rpID, origin } = rpConfig()
 
   const verification = await verifyRegistrationResponse({
@@ -83,7 +86,7 @@ export async function completeRegistration(req, response) {
     expectedRPID: rpID,
   })
   if (!verification.verified || !verification.registrationInfo) {
-    throw new Error('The passkey could not be verified.')
+    throw new UserError(PASSKEY_NOT_VERIFIED)
   }
 
   const { credential, credentialDeviceType, credentialBackedUp } = verification.registrationInfo
@@ -139,7 +142,7 @@ export async function beginLogin(req) {
 
 export async function completeLogin(req, response) {
   const pending = req.session.pendingLogin
-  if (!pending) throw new Error('No sign-in in progress. Please try again.')
+  if (!pending) throw new UserError('Kirjautumista ei ole aloitettu. Yritä uudelleen.')
   const { rpID, origin } = rpConfig()
 
   const { rows } = await pool.query(
@@ -147,7 +150,7 @@ export async function completeLogin(req, response) {
     [response.id]
   )
   const stored = rows[0]
-  if (!stored) throw new Error('This passkey is not registered here.')
+  if (!stored) throw new UserError('Tätä pääsyavainta ei ole rekisteröity tähän palveluun.')
 
   const verification = await verifyAuthenticationResponse({
     response,
@@ -161,7 +164,7 @@ export async function completeLogin(req, response) {
       transports: stored.transports || undefined,
     },
   })
-  if (!verification.verified) throw new Error('The passkey could not be verified.')
+  if (!verification.verified) throw new UserError(PASSKEY_NOT_VERIFIED)
 
   await pool.query('UPDATE passkey_credentials SET counter = $1, last_used_at = now() WHERE credential_id = $2', [
     verification.authenticationInfo.newCounter,

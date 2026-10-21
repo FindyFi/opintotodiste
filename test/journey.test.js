@@ -117,7 +117,8 @@ describe('the Koski journey', needsPostgres, () => {
     })
 
     assert.equal(status, 400)
-    assert.match(body.error, /Koski responded with 404/)
+    assert.match(body.error, /Jakolinkki voi olla vanhentunut/)
+    assert.equal(body.lang, 'fi')
   })
 
   test('refuses a link pointing anywhere but Koski', async () => {

@@ -218,7 +218,7 @@ describe('hardening behind an HTTPS load balancer', needsPostgres, () => {
     const body = JSON.stringify({ koskiUrl: KOSKI_URL })
     for (let i = 0; i <= 60; i++) last = await fetch(`${app.baseUrl}/credentials`, { method: 'POST', headers, body })
     assert.equal(last.status, 429)
-    assert.match((await last.json()).error, /Too many requests/)
+    assert.match((await last.json()).error, /Liian monta pyyntöä/)
 
     // Another client is not affected.
     const other = await fetch(`${app.baseUrl}/credentials`, { method: 'POST', headers: { ...headers, 'x-forwarded-for': '203.0.113.8' }, body })

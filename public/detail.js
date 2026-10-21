@@ -42,16 +42,6 @@ const Detail = (() => {
     return icon
   }
 
-  // An error's message as nodes. The server may name a `link` ({ text, href }):
-  // that text in the message becomes a link. A message in Finnish (`lang`
-  // 'fi') is marked so, and translate-element puts its English from
-  // translations.json in its place, link and all.
-  function errorContent({ message, link, lang }) {
-    const at = link?.text ? message.lastIndexOf(link.text) : -1
-    const nodes = at < 0 || !link.href?.startsWith('/') ? [message] : [message.slice(0, at), el('a', { href: link.href }, link.text), message.slice(at + link.text.length)]
-    return lang === 'fi' ? [el('span', { lang: 'fi' }, nodes)] : nodes
-  }
-
   const isStudentStatus = (achievement) => achievement?.achievementType === 'ext:StudentStatus'
 
   // Whole qualifications get the stronger icon tint; their parts and single
@@ -106,6 +96,7 @@ const Detail = (() => {
           await run()
         } catch (err) {
           if (err.message === 'cancelled') return
+          // errorContent: i18n.js (pages with actions load it).
           errorLine.replaceChildren(...errorContent(err))
           errorLine.hidden = false
         } finally {
@@ -160,5 +151,5 @@ const Detail = (() => {
     dialog.showModal()
   }
 
-  return { open, badgeIcon, credentialIcon, errorContent, isMajor, isStudentStatus, formatDate }
+  return { open, badgeIcon, credentialIcon, isMajor, isStudentStatus, formatDate }
 })()

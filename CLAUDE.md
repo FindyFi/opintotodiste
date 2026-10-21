@@ -105,8 +105,11 @@ If there is no PLAN.md, work normally.
   mark it `lang="fi"` (`el(tag, { lang: 'fi' }, text)` in public/*.js) and add its English to
   `public/translations.json` (translate-element swaps it in, HTML such as a link included), or hand-author
   the pair (a `lang="en"` sibling, or i18n.js's `t(fi, en)` for native dialogs). Messages the server sends
-  for the UI to show are Finnish too, with `lang: 'fi'` in the response (see `StudentStatusError` and
-  `Detail.errorContent`). Don't add English-only UI text; `test/translations.test.js` fails on it. Wording
+  for the UI to show are Finnish too, with `lang: 'fi'` in the response: throw a `UserError`
+  (src/user-error.js) or answer with `refuse()` / `sendError()` in index.js, and show it with i18n.js's
+  `errorContent()`. Technical failures get a Finnish fallback; their details go to the log. A missing page
+  is `views.notFoundPage()`, never plain text. Don't add English-only UI text; `test/translations.test.js`
+  fails on it. Wording
   rules: credential = "todiste", never "todistus"; verifying = "tarkastaa".
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config

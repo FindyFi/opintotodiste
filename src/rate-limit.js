@@ -4,7 +4,7 @@
 // proxying too much; the load balancer or a WAF is where heavier limits belong.
 // Each app instance counts on its own, so the effective limit scales with the
 // number of instances. Behind a proxy, req.ip needs `trust proxy` (index.js).
-export function rateLimit({ windowMs, max, message = 'Too many requests. Please wait a moment and try again.' }) {
+export function rateLimit({ windowMs, max, message = 'Liian monta pyyntöä. Odota hetki ja yritä uudelleen.' }) {
   const hits = new Map()
   let windowStart = Date.now()
 
@@ -18,7 +18,7 @@ export function rateLimit({ windowMs, max, message = 'Too many requests. Please 
     hits.set(req.ip, count)
     if (count > max) {
       res.set('Retry-After', String(Math.ceil((windowStart + windowMs - now) / 1000)))
-      return res.status(429).json({ error: message })
+      return res.status(429).json({ error: message, lang: 'fi' })
     }
     next()
   }

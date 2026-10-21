@@ -385,5 +385,134 @@
   },
   "Kokoelmani – Opintotodiste": {
     "en": "My collections – Study credential"
+  },
+  "Anna kelvollinen osoite.": {
+    "en": "Please enter a valid URL."
+  },
+  "Osoitteen on oltava opintopolku.fi-palvelussa.": {
+    "en": "The URL must point to opintopolku.fi."
+  },
+  "Osoitteen on oltava muotoa https://opintopolku.fi/koski/opinnot/… tai https://opintopolku.fi/koski/api/opinnot/…": {
+    "en": "The URL must look like https://opintopolku.fi/koski/opinnot/… or https://opintopolku.fi/koski/api/opinnot/…"
+  },
+  "Koski ei vastannut ajoissa. Yritä hetken päästä uudelleen.": {
+    "en": "Koski did not respond in time. Please try again in a moment."
+  },
+  "Koskeen ei saatu yhteyttä. Yritä hetken päästä uudelleen.": {
+    "en": "Could not reach Koski. Please try again in a moment."
+  },
+  "Koski ei löytänyt jaettuja tietoja. Jakolinkki voi olla vanhentunut tai poistettu. Luo uusi Oma Opintopolussa.": {
+    "en": "Koski did not find the shared data. The share link may have expired or been removed. Create a new one in My Studyinfo."
+  },
+  "Koski vastasi virheellä. Yritä hetken päästä uudelleen.": {
+    "en": "Koski responded with an error. Please try again in a moment."
+  },
+  "Koskesta tuli odottamattoman suuri vastaus, eikä sitä ladattu.": {
+    "en": "Koski sent an unexpectedly large response, so it was not loaded."
+  },
+  "Koski ei palauttanut opintotietoja.": {
+    "en": "Koski did not return a study record."
+  },
+  "Todistetta ei löytynyt.": {
+    "en": "Credential not found."
+  },
+  "Kokoelmaa ei löytynyt.": {
+    "en": "Collection not found."
+  },
+  "Linkkiä ei löytynyt.": {
+    "en": "Link not found."
+  },
+  "Anna kokoelmalle nimi.": {
+    "en": "Please enter a collection name."
+  },
+  "Anna vastaanottajalle nimi.": {
+    "en": "Please name the recipient."
+  },
+  "Nimessä voi olla enintään 100 merkkiä.": {
+    "en": "The name can have at most 100 characters."
+  },
+  "Käyttäjää ei löytynyt.": {
+    "en": "User not found."
+  },
+  "Anna näyttönimi.": {
+    "en": "Please enter a display name."
+  },
+  "Rekisteröitymistä ei ole aloitettu. Yritä uudelleen.": {
+    "en": "No registration in progress. Please try again."
+  },
+  "Pääsyavainta ei voitu varmentaa.": {
+    "en": "The passkey could not be verified."
+  },
+  "Kirjautumista ei ole aloitettu. Yritä uudelleen.": {
+    "en": "No sign-in in progress. Please try again."
+  },
+  "Tätä pääsyavainta ei ole rekisteröity tähän palveluun.": {
+    "en": "This passkey is not registered here."
+  },
+  "Liian monta pyyntöä. Odota hetki ja yritä uudelleen.": {
+    "en": "Too many requests. Please wait a moment and try again."
+  },
+  "Kirjaudu ensin sisään pääsyavaimella.": {
+    "en": "Please sign in with a passkey first."
+  },
+  "Koski-tietoja ei voitu ladata. Yritä hetken päästä uudelleen.": {
+    "en": "Could not load Koski data. Please try again in a moment."
+  },
+  "Koski-tiedot on jo ladattu.": {
+    "en": "Koski data has been loaded already."
+  },
+  "Todistetta ei löytynyt. Lataa Koski-tietosi uudelleen.": {
+    "en": "Credential not found. Please load your Koski data again."
+  },
+  "Tarjouskoodeja on oltava 1–50.": {
+    "en": "There must be 1–50 offer codes."
+  },
+  "Lompakkotarjouksen tilaa ei voitu tarkastaa juuri nyt.": {
+    "en": "The wallet offer's status could not be checked right now."
+  },
+  "Lompakkotarjousta ei voitu luoda juuri nyt. Yritä hetken päästä uudelleen.": {
+    "en": "The wallet offer could not be created right now. Please try again in a moment."
+  },
+  "Todistetta ei voitu allekirjoittaa juuri nyt. Yritä hetken päästä uudelleen.": {
+    "en": "The credential could not be signed right now. Please try again in a moment."
+  },
+  "Allekirjoitettua todistetta ei ole vielä.": {
+    "en": "No signed credential available yet."
+  },
+  "Pääsyavaimen käyttö ei onnistunut juuri nyt. Yritä hetken päästä uudelleen.": {
+    "en": "The passkey could not be used right now. Please try again in a moment."
+  },
+  "Käyttäjätiliä ei voitu poistaa. Yritä uudelleen.": {
+    "en": "The account could not be deleted. Please try again."
+  },
+  "Pyyntö ei onnistunut juuri nyt. Yritä hetken päästä uudelleen.": {
+    "en": "The request failed. Please try again in a moment."
+  },
+  "Todistetta ei voitu lisätä kokoelmaan.": {
+    "en": "The credential could not be added to the collection."
+  },
+  "Tämä todiste on vanhentunut.": {
+    "en": "This credential has expired."
+  },
+  "Kokoelmaa ei löytynyt. Jakolinkki voi olla poistettu.": {
+    "en": "Collection not found. The share link may have been removed."
+  },
+  "Ohjetta ei löytynyt.": {
+    "en": "Guide not found."
+  },
+  "Sivua ei löytynyt.": {
+    "en": "Page not found."
+  },
+  "Ei löytynyt – Opintotodiste": {
+    "en": "Not found – Study credential"
+  },
+  "Etusivulle": {
+    "en": "To the front page"
+  },
+  "Palveluun ei saatu yhteyttä. Tarkista verkkoyhteys ja yritä uudelleen.": {
+    "en": "Could not reach the service. Check your network connection and try again."
+  },
+  "Pääsyavaimen käyttö peruttiin tai aika loppui. Yritä uudelleen.": {
+    "en": "Using the passkey was cancelled or timed out. Please try again."
   }
 }

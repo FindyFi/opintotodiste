@@ -21,9 +21,9 @@ function el(tag, props = {}, children = []) {
   return node
 }
 
-// `message`: text, or nodes (Detail.errorContent).
-function showError(message) {
-  errorBox.replaceChildren(...[].concat(message))
+// `err`: an Error, or a server error's { message, lang, link } (i18n.js).
+function showError(err) {
+  errorBox.replaceChildren(...errorContent(err))
   errorBox.hidden = false
 }
 
@@ -36,7 +36,7 @@ async function requestJson(url, options) {
   const res = await fetch(url, options)
   if (res.status === 204) return null
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
+  if (!res.ok) throw responseError(data)
   return data
 }
 
@@ -58,7 +58,7 @@ const deleteSavedRequest = (credentialId) => requestJson(`/saved-credentials/${c
 function openShare(target) {
   Share.open(target)
     .then(() => detailDialog.addEventListener('close', refresh, { once: true }))
-    .catch((err) => showError(err.message))
+    .catch((err) => showError(err))
 }
 
 const deleteConfirmation = (name) =>
@@ -105,7 +105,7 @@ function buildItemRow(item, remove) {
     try {
       WalletOffer.show([{ name, ...(await requestWalletOffer(item.id)) }])
     } catch (err) {
-      showError(Detail.errorContent(err))
+      showError(err)
     } finally {
       walletBtn.disabled = false
       walletBtn.classList.remove('busy')
@@ -122,7 +122,7 @@ function buildItemRow(item, remove) {
       await remove.request()
       await refresh()
     } catch (err) {
-      showError(err.message)
+      showError(err)
     }
   })
 
@@ -145,7 +145,7 @@ function buildCollectionRow(collection) {
       await renameCollection(collection.id, name.trim())
       await refresh()
     } catch (err) {
-      showError(err.message)
+      showError(err)
     }
   })
 
@@ -161,7 +161,7 @@ function buildCollectionRow(collection) {
       await deleteCollectionRequest(collection.id)
       await refresh()
     } catch (err) {
-      showError(err.message)
+      showError(err)
     }
   })
 
@@ -182,7 +182,7 @@ function buildCollectionRow(collection) {
         )
       )
     )
-    .catch((err) => showError(err.message))
+    .catch((err) => showError(err))
 
   return el('li', { class: 'collection-card' }, [
     el('div', { class: 'collection-head' }, [
@@ -240,7 +240,7 @@ async function refresh() {
     renderCollections(collections)
     renderShared(links)
   } catch (err) {
-    showError(err.message)
+    showError(err)
   }
 }
 
@@ -253,7 +253,7 @@ newCollectionForm.addEventListener('submit', async (e) => {
     newCollectionName.value = ''
     await refresh()
   } catch (err) {
-    showError(err.message)
+    showError(err)
   }
 })
 
