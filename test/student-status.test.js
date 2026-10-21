@@ -345,7 +345,8 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     await whileKoskiSays(changed, async () => {
       const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
       assert.equal(res.status, 409)
-      assert.match(res.body.error, /data for these studies has changed.*from your list/)
+      assert.equal(res.body.error, 'The data for these studies has changed. See the updated list.')
+      assert.deepEqual(res.body.link, { text: 'list', href: '/' })
       // The fetch updated the list: the changed status is there, and it goes.
       const list = await client.json('/credentials')
       const status = list.body.credentials.find(

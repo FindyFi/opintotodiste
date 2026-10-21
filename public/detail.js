@@ -42,6 +42,14 @@ const Detail = (() => {
     return icon
   }
 
+  // An error's message as nodes. The server may name a `link` ({ text, href }):
+  // that text in the message becomes a link.
+  function errorContent({ message, link }) {
+    const at = link?.text ? message.lastIndexOf(link.text) : -1
+    if (at < 0 || !link.href?.startsWith('/')) return [message]
+    return [message.slice(0, at), el('a', { href: link.href }, link.text), message.slice(at + link.text.length)]
+  }
+
   const isStudentStatus = (achievement) => achievement?.achievementType === 'ext:StudentStatus'
 
   // Whole qualifications get the stronger icon tint; their parts and single
@@ -96,7 +104,7 @@ const Detail = (() => {
           await run()
         } catch (err) {
           if (err.message === 'cancelled') return
-          errorLine.textContent = err.message
+          errorLine.replaceChildren(...errorContent(err))
           errorLine.hidden = false
         } finally {
           button.disabled = false
@@ -150,5 +158,5 @@ const Detail = (() => {
     dialog.showModal()
   }
 
-  return { open, badgeIcon, credentialIcon, isMajor, isStudentStatus, formatDate }
+  return { open, badgeIcon, credentialIcon, errorContent, isMajor, isStudentStatus, formatDate }
 })()

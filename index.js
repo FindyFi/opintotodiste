@@ -191,7 +191,13 @@ function recordIn(req, source, ref) {
 }
 
 // Refusing to sign a student status, with a message for the user (409).
-class StudentStatusError extends Error {}
+// `link` ({ text, href }) makes `text` in the message a link in the UI.
+class StudentStatusError extends Error {
+  constructor(message, { link } = {}) {
+    super(message)
+    this.link = link
+  }
+}
 
 // A student status is confirmed against Koski whenever it is signed or sent to
 // a wallet (K3): the import's share link is fetched again, and the status is
@@ -231,7 +237,7 @@ function freshStatus(data, ref, lang, henkilö) {
   const fresh = records.find((r) => r.ref === ref)?.record
   if (fresh) return { record: fresh, henkilö }
   if (records.some((r) => isStudentStatus(r.record.credentialSubject))) {
-    throw new StudentStatusError("Koski's data for these studies has changed. Send the student status from your list of credentials instead.")
+    throw new StudentStatusError('The data for these studies has changed. See the updated list.', { link: { text: 'list', href: '/' } })
   }
   throw new StudentStatusError('Koski no longer shows you as enrolled in these studies, so the student status was not signed.')
 }
@@ -243,7 +249,7 @@ async function recordToSign(req, ref, record) {
 }
 
 function sendSigningError(res, err, what) {
-  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message })
+  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message, ...(err.link ? { link: err.link } : {}) })
   // A 502 here means a dependency refused the request, not that the user
   // did anything wrong - log it, or the only trace is a message in the
   // browser that nobody operating the service ever sees.
