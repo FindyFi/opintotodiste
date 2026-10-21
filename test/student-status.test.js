@@ -277,7 +277,8 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     assert.doesNotMatch(await page.text(), /2008-03-14/)
   })
 
-  test('a saved copy gets the birth date from Koski, and goes without it when Koski does not answer', async () => {
+  // A signed-in user with the student status saved in their account.
+  async function savedStatus() {
     const client = createClient(app.baseUrl)
     const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
     const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: 'Opiskelija' } })
@@ -287,23 +288,72 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     const saved = await client.json('/saved-credentials', { method: 'POST', body: { refs: [status.ref] } })
     const { credentialId } = saved.body.results[0]
     assert.ok(credentialId, JSON.stringify(saved.body))
+    return { client, credentialId }
+  }
 
+  // Runs `check` while Koski says `data` (or has nothing, when null).
+  async function whileKoskiSays(data, check) {
+    if (data) writeFileSync(fixture, JSON.stringify(data))
+    else rmSync(fixture)
+    try {
+      await check()
+    } finally {
+      writeFileSync(fixture, JSON.stringify(koskiExport()))
+    }
+  }
+
+  test('a saved copy goes to the wallet as the fresh status from Koski, with the birth date', async () => {
+    const { client, credentialId } = await savedStatus()
+    const offersBefore = issuer.requests.length
     const offer = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
     assert.equal(offer.status, 200, JSON.stringify(offer.body))
+    assert.equal(issuer.requests.length, offersBefore + 1)
     const { body } = issuer.requests.at(-1)
     assert.equal(body.credentialConfigurationId, 'StudentStatusSdJwtVc')
     assert.equal(body.unsignedCredential.birthdate, '2008-03-14')
     assert.equal(body.unsignedCredential.given_name, 'Testi')
+    assert.equal(body.validUntil, '2099-06-05T20:59:59.000Z')
+  })
 
-    rmSync(fixture)
-    try {
-      const again = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
-      assert.equal(again.status, 200, JSON.stringify(again.body))
-      const claims = issuer.requests.at(-1).body.unsignedCredential
-      assert.equal('birthdate' in claims, false)
-      assert.equal(claims.given_name, 'Testi')
-    } finally {
-      writeFileSync(fixture, JSON.stringify(koskiExport()))
-    }
+  test('a saved copy is not sent when Koski does not answer, and says what to do', async () => {
+    const { client, credentialId } = await savedStatus()
+    const offersBefore = issuer.requests.length
+    await whileKoskiSays(null, async () => {
+      const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+      assert.equal(res.status, 409)
+      assert.match(res.body.error, /could not be checked in Koski.*create a new one/)
+    })
+    assert.equal(issuer.requests.length, offersBefore)
+  })
+
+  test('a saved copy is not sent when Koski no longer shows the enrolment', async () => {
+    const { client, credentialId } = await savedStatus()
+    const offersBefore = issuer.requests.length
+    await whileKoskiSays(koskiExport({ status: 'eronnut' }), async () => {
+      const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+      assert.equal(res.status, 409)
+      assert.match(res.body.error, /no longer shows you as enrolled/)
+    })
+    assert.equal(issuer.requests.length, offersBefore)
+  })
+
+  test('a saved copy whose study right changed in Koski points to the list, where the new one is', async () => {
+    const { client, credentialId } = await savedStatus()
+    const changed = koskiExport()
+    changed.opiskeluoikeudet[0].alkamispäivä = '2024-08-09'
+    const offersBefore = issuer.requests.length
+    await whileKoskiSays(changed, async () => {
+      const res = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+      assert.equal(res.status, 409)
+      assert.match(res.body.error, /data for these studies has changed.*from your list/)
+      // The fetch updated the list: the changed status is there, and it goes.
+      const list = await client.json('/credentials')
+      const status = list.body.credentials.find(
+        (c) => c.credentialSubject.achievement.achievementType === 'ext:StudentStatus' && c.credentialSubject.activityStartDate.startsWith('2024-08-08T21')
+      )
+      assert.ok(status, 'the changed status is on the list')
+      assert.equal((await client.json(`/credentials/${status.ref}/offer`, { method: 'POST' })).status, 200)
+    })
+    assert.equal(issuer.requests.length, offersBefore + 1)
   })
 })

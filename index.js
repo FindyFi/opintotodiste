@@ -199,13 +199,16 @@ class StudentStatusError extends Error {}
 // counts, since the merged import also keeps study rights that Koski no
 // longer returns (mergeKoskiData). The fetch is still merged into
 // the import, like any other but without bringing removed records back. The
-// demo data has no link and is taken as it is.
-// Also returns the person's birth date from that fetch (`syntymäaika`), for
-// the wallet credential (K5). minimalKoskiData drops it, so it is never stored.
-async function confirmedStatus(req, ref, record) {
+// demo data has no link and is converted as it is.
+// Returns the fresh record and the person, with the birth date from that fetch
+// (`syntymäaika`) for the wallet credential (K5). minimalKoskiData drops it,
+// so it is never stored.
+async function confirmedStatus(req, ref) {
   const source = await koskiSource(req)
-  if (!source) return { record }
-  if (source.koskiUrl === DEMO_KOSKI_URL) return { record, syntymäaika: demoData.henkilö.syntymäaika }
+  if (!source) throw new StudentStatusError('Your Koski data is not loaded, so the student status could not be checked. Load your data again.')
+  if (source.koskiUrl === DEMO_KOSKI_URL) {
+    return freshStatus(source.data, ref, sessionLang(req), { ...source.data.henkilö, syntymäaika: demoData.henkilö.syntymäaika })
+  }
   let fetched
   try {
     fetched = await fetchKoskiData(toApiUrl(source.koskiUrl))
@@ -216,15 +219,27 @@ async function confirmedStatus(req, ref, record) {
   }
   const data = minimalKoskiData(fetched)
   await addImport(req, { koskiUrl: source.koskiUrl, data }, { restore: false })
-  const fresh = recordsOf({ data, removed: [] }, sessionLang(req)).find((r) => r.ref === ref)?.record
-  if (!fresh) throw new StudentStatusError('Koski no longer shows you as enrolled in these studies, so the student status was not signed.')
-  return { record: fresh, syntymäaika: fetched.henkilö?.syntymäaika }
+  return freshStatus(data, ref, sessionLang(req), { ...data.henkilö, syntymäaika: fetched.henkilö?.syntymäaika })
+}
+
+// The student status `ref` in `data`. When it isn't there, the refusal says
+// whether Koski still shows another enrolment (the study right's details
+// changed, so its ref did too: the list has it under the new one) or none, so
+// that the user isn't left retrying something that can't succeed.
+function freshStatus(data, ref, lang, henkilö) {
+  const records = recordsOf({ data, removed: [] }, lang)
+  const fresh = records.find((r) => r.ref === ref)?.record
+  if (fresh) return { record: fresh, henkilö }
+  if (records.some((r) => isStudentStatus(r.record.credentialSubject))) {
+    throw new StudentStatusError("Koski's data for these studies has changed. Send the student status from your list of credentials instead.")
+  }
+  throw new StudentStatusError('Koski no longer shows you as enrolled in these studies, so the student status was not signed.')
 }
 
 // The record as it is signed: a student status confirmed first, anything else
-// as it is. `{ record, syntymäaika }`, the birth date only from a confirmation.
+// as it is. `{ record, henkilö }`, the person only from a confirmation.
 async function recordToSign(req, ref, record) {
-  return isStudentStatus(record.credentialSubject) ? confirmedStatus(req, ref, record) : { record }
+  return isStudentStatus(record.credentialSubject) ? confirmedStatus(req, ref) : { record }
 }
 
 function sendSigningError(res, err, what) {
@@ -485,9 +500,11 @@ app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
   const source = RECORD_REF.test(req.params.ref) ? await koskiSource(req) : null
   let record = recordIn(req, source, req.params.ref)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
-  let syntymäaika
+  let henkilö = source.data.henkilö
   try {
-    ;({ record, syntymäaika } = await recordToSign(req, req.params.ref, record))
+    const confirmed = await recordToSign(req, req.params.ref, record)
+    record = confirmed.record
+    henkilö = confirmed.henkilö ?? henkilö
   } catch (err) {
     return sendSigningError(res, err, 'Confirming a student status')
   }
@@ -501,7 +518,7 @@ app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
     }
   }
   try {
-    res.json({ ...(await createWalletOffer(record, { ...source.data.henkilö, syntymäaika })), credentialId })
+    res.json({ ...(await createWalletOffer(record, henkilö)), credentialId })
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
@@ -632,41 +649,43 @@ app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
 // Owner only: with no holder binding, a public share link must not be able to
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
 // re-issued as a VCDM 2.0 credential for the wallet. The name's parts come
-// from the owner's Koski import, if it is the credential's person, and a
-// student status's birth date from Koski (birthDate).
+// from the owner's Koski import, if it is the credential's person.
+// A student status is confirmed against Koski first, like one from the list
+// (K5): the wallet gets the fresh status, never the saved snapshot, and
+// nothing when Koski can't confirm it. Its ref comes from the credential
+// itself (a status has no award date in its key), so copies saved before
+// refs were stored are found too. The saved copy itself stays as it was.
 app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, res) => {
   const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
-  // A saved copy goes to the wallet as it is, with the date it was signed and
-  // its own expiry; an expired one can't go (sign the record again instead).
-  if (hasExpired(credential)) return res.status(409).json({ error: 'This credential has expired.' })
 
+  if (isStudentStatus(credential.credentialSubject)) {
+    let confirmed
+    try {
+      confirmed = await confirmedStatus(req, recordRef({ credentialSubject: credential.credentialSubject }))
+    } catch (err) {
+      return sendSigningError(res, err, 'Confirming a student status')
+    }
+    try {
+      return res.json(await createWalletOffer(confirmed.record, confirmed.henkilö))
+    } catch (err) {
+      console.error('Creating a credential offer failed:', err.message)
+      return res.status(502).json({ error: err.message })
+    }
+  }
+
+  // Any other saved copy goes to the wallet as it is, with the date it was
+  // signed.
+  if (hasExpired(credential)) return res.status(409).json({ error: 'This credential has expired.' })
   try {
     const source = await koskiSource(req)
     const henkilö = credentialPerson(credential.credentialSubject, source?.data.henkilö)
-    const syntymäaika = isStudentStatus(credential.credentialSubject) && henkilö ? await birthDate(source, henkilö) : undefined
-    res.json(await createWalletOffer(recordFromCredential(credential), henkilö && { ...henkilö, syntymäaika }))
+    res.json(await createWalletOffer(recordFromCredential(credential), henkilö))
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
   }
 })
-
-// The birth date of a saved student status's holder, for its wallet
-// credential (K5): fetched from Koski through the import's share link only
-// for this, never stored, and not used to confirm or merge anything (a saved
-// copy goes as it is). Undefined when the link has lapsed, Koski doesn't
-// answer or names someone else; the credential then goes without it.
-async function birthDate(source, henkilö) {
-  if (source.koskiUrl === DEMO_KOSKI_URL) return demoData.henkilö.syntymäaika
-  try {
-    const fetched = (await fetchKoskiData(toApiUrl(source.koskiUrl))).henkilö
-    return fetched?.oid === henkilö.oid ? fetched.syntymäaika : undefined
-  } catch (err) {
-    console.warn('Fetching the birth date for a saved student status failed:', err.message)
-    return undefined
-  }
-}
 
 // --- Collections -----------------------------------------------------------
 

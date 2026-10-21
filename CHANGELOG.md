@@ -36,7 +36,9 @@ version to pin.
   `StudentStatusSdJwtVc`), with its own card and hot pink colours; see
   docs/student-status-wallet-credential.md. Who and where are selectively disclosable; the level, the
   status and the dates are not. The holder's birth date comes from Koski when it is sent and is not
-  stored. In the list it has a student card icon and comes first. Needs koski2openbadge v0.6.0 (the
+  stored. A wallet credential always reflects Koski at that moment: "Add to wallet" on a saved copy
+  confirms the status against Koski like the list does, and is refused when Koski can't confirm it. In the list it
+  has a student card icon and comes first. Needs koski2openbadge v0.6.0 (the
   school number) and the issuer configuration (K5).
 
 - The "Add to wallet" dialog shows when each offer is picked up (or has expired), so you notice if

@@ -142,16 +142,23 @@ every language. The VCT has no way to label a value, so the label carries the me
 
   Both go into `.env.example` and `APP_ENV_KEYS`. A new `toStudentStatusClaims(record, { vct, henkilö })` in
   src/badges.js builds the claims, with its own disclosable list. The offer's `validUntil` (K3) sets `exp`.
-- **A saved copy sent to a wallet** (K3: it goes as it is) is built from the saved credential's subject and
-  dates, the same way. Its `birthdate` comes from a Koski fetch made only for that: see below.
+- **A wallet credential always comes from Koski as it is now** (user, 2026-10-21). This reverses K3's "a saved
+  copy goes to a wallet as it is" for student statuses. "Add to wallet" on a saved copy (Kokoelmani) confirms
+  the status against Koski exactly as the list does, and the wallet gets the fresh status, dated that day, with
+  the expiry Koski gives then. The saved copy itself stays as it was signed. Its ref is computed from the
+  credential (a status has no award date in its key), so copies saved before refs were stored are found too.
+  It is refused (409), with a reason that tells the user what to do, when:
+  - Koski doesn't answer or the share link has lapsed: create a new share link and load the data again.
+  - Koski answers, but the study right's details that make up the status's id (its oid or Virta source id, the
+    institution's oid, the start date) have changed. The status then has a new ref, so the saved copy will never
+    match again; retrying can't help. The fetch has already updated the list, where the new status is, and the
+    message points there.
+  - Koski no longer shows any enrolment.
 - **The birth date is never stored.** The app drops `syntymäaika` at import (`minimalKoskiData`), as /policy
-  says. Sending a student status to a wallet already fetches Koski again (K3), so `birthdate` comes from that
-  fetch and is used only for the offer. A saved copy (Kokoelmani) still goes as it is, without a confirmation, but
-  the app fetches Koski through the import's share link for the birth date alone (user, 2026-10-21). It is used
-  when the fetched person is the credential's holder. When the link has lapsed or Koski doesn't answer, the
-  credential goes without `birthdate`. Downloads and collections (the Open Badge) never have it. The
-  demo person has a made-up birth date. /policy says that the birth date goes into the credential and is not
-  stored.
+  says. Every wallet offer of a student status fetches Koski (above), so `birthdate` comes from that fetch and
+  is used only for the offer. It is missing only when Koski has none. Downloads and collections (the Open
+  Badge) never have it. The demo person has a made-up birth date. /policy says that the birth date goes into the
+  credential and is not stored.
 
 ## In the app
 
