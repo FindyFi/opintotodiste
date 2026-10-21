@@ -91,14 +91,14 @@ const WalletOffer = (() => {
     return minutes >= 1 ? `${minutes} min` : `${seconds} s`
   }
 
-  // results: [{ name, offerUri, qrDataUrl, txCode, expiresIn, code } | { name, error }]
+  // results: [{ name, offerUri, qrDataUrl, txCode, expiresIn, code } | { name, error, errorLink, errorLang }]
   function show(results) {
     const offers = []
     const dialog = document.getElementById('detailDialog')
     const content = [el('h2', { lang: 'fi' }, 'Lisää lompakkoon'), el('p', { lang: 'fi' }, 'Skannaa QR-koodi lompakkosovelluksella.')]
     results.forEach((r) => {
       if (r.error) {
-        content.push(el('div', { class: 'wallet-offer' }, [el('strong', {}, r.name), el('div', { class: 'row-error' }, r.error)]))
+        content.push(el('div', { class: 'wallet-offer' }, [el('strong', {}, r.name), el('div', { class: 'row-error' }, Detail.errorContent({ message: r.error, link: r.errorLink, lang: r.errorLang }))]))
         return
       }
       const item = [

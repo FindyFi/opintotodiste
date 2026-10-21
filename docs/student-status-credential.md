@@ -78,8 +78,9 @@ synthetic record.
   - No end date at all: not issued.
 - **Never issued after `validUntil`.** A saved copy (downloads, collections) is kept while it is valid. Once it
   has expired, the next signing makes a new one in its place (same saved credential, so its collections and
-  links follow). A saved copy sent to a wallet goes as it is, with its own date and expiry, like a copy of the
-  same card; an expired one is refused.
+  links follow). A saved copy sent to a wallet is confirmed against Koski first, and the wallet gets the fresh
+  status (changed in K5, see [student-status-wallet-credential.md](student-status-wallet-credential.md); until
+  then it went as it was, and an expired one was refused).
 
 ## Open Badges 3.0 shape
 

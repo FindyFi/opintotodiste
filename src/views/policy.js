@@ -50,7 +50,7 @@ const COPY = {
       },
       {
         title: 'Mitä tietoja käsitellään ja mistä ne saadaan',
-        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta.</p>
+        body: `<p><strong>Koski-palvelusta</strong> (Opetushallituksen ylläpitämä, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>) jakolinkillä, jonka itse annat: nimesi, oppijanumerosi ja jakamasi opinnot, eli oppilaitokset, suoritukset, arvosanat, laajuudet ja päivämäärät. Muita jakolinkin avulla jaettuja henkilötietoja ei tallenneta. Kun lisäät opiskelijatodisteen lompakkoon, syntymäaikasi haetaan Koskesta ja kirjoitetaan todisteeseen, mutta palvelu ei tallenna sitä.</p>
 <p><strong>Sinulta:</strong> Kirjautumiseen tarvittavan pääsyavaimen julkiset tiedot ja palvelua käyttäessäsi muodostamat tiedot kuten kokoelmien nimet ja jakolinkeille antamasi vastaanottajien nimet. Palveluun kirjautumisessa ei käytetä tunnusta tai salasanaa eikä sähköpostiosoitettasi. Palvelu tallentaa pääsyavaimesi julkisen avaimen, jotta vain sinun hallussasi olevalla yksityisellä avaimella voi kirjautua palveluun.</p>
 <p><strong>Palvelun käytöstä:</strong> Allekirjoitetut osaamismerkit, jakolinkit ja lokittiedot.</p>`,
       },
@@ -150,7 +150,7 @@ const COPY = {
       },
       {
         title: 'What data is processed and where it comes from',
-        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. No other personal data shared through the share link is stored.</p>
+        body: `<p><strong>From the Koski service</strong> (run by the Finnish National Agency for Education, <a href="https://opintopolku.fi/" target="_blank" rel="noopener">opintopolku.fi</a>), through the share link you give: your name, your learner number (oppijanumero) and the studies you shared, that is schools, achievements, grades, credits and dates. No other personal data shared through the share link is stored. When you add a student status to a wallet, your date of birth is fetched from Koski and written into the credential, but the service doesn't store it.</p>
 <p><strong>From you:</strong> The public data of the passkey you sign in with, and data you create while using the service, such as the names of your collections and the recipient names you give your share links. Signing in uses no username, password or email address. The service stores your passkey’s public key so that only the private key you hold can sign in to the service.</p>
 <p><strong>From using the service:</strong> Signed badges, share links and log data.</p>`,
       },

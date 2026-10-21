@@ -21,8 +21,9 @@ function el(tag, props = {}, children = []) {
   return node
 }
 
+// `message`: text, or nodes (Detail.errorContent).
 function showError(message) {
-  errorBox.textContent = message
+  errorBox.replaceChildren(...[].concat(message))
   errorBox.hidden = false
 }
 
@@ -35,7 +36,7 @@ async function requestJson(url, options) {
   const res = await fetch(url, options)
   if (res.status === 204) return null
   const data = await res.json().catch(() => ({}))
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
   return data
 }
 
@@ -104,7 +105,7 @@ function buildItemRow(item, remove) {
     try {
       WalletOffer.show([{ name, ...(await requestWalletOffer(item.id)) }])
     } catch (err) {
-      showError(err.message)
+      showError(Detail.errorContent(err))
     } finally {
       walletBtn.disabled = false
       walletBtn.classList.remove('busy')
@@ -126,7 +127,7 @@ function buildItemRow(item, remove) {
   })
 
   return el('li', { class: 'credential' }, [
-    Detail.badgeIcon(Detail.isMajor(achievement)),
+    Detail.credentialIcon(achievement),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, [removeBtn, shareBtn, walletBtn]),
   ])

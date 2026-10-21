@@ -153,15 +153,19 @@ const listFilter = ListFilter.create({
   },
 })
 
-// The rows on show: the filtered list, sorted.
+// The rows on show: the filtered list, sorted, with student statuses first
+// (K5) whatever the order.
 function sortedEntries() {
   const entries = credentials
     .map((record, index) => ({ record, index }))
     .filter(({ record }) => listFilter.matches((key) => filterValue(record, key)))
-  if (!sortState.key) return entries
+  const statusFirst = (a, b) => Detail.isStudentStatus(b.record.credentialSubject.achievement) - Detail.isStudentStatus(a.record.credentialSubject.achievement)
+  if (!sortState.key) return entries.sort(statusFirst)
   const { key, direction } = sortState
   return entries.sort(
-    (a, b) => direction * String(columnValue(a.record, key)).localeCompare(String(columnValue(b.record, key)), 'fi', { sensitivity: 'base' })
+    (a, b) =>
+      statusFirst(a, b) ||
+      direction * String(columnValue(a.record, key)).localeCompare(String(columnValue(b.record, key)), 'fi', { sensitivity: 'base' })
   )
 }
 
@@ -244,7 +248,7 @@ function buildRow(record, index) {
 
   return el('li', { class: 'credential' }, [
     rowCb,
-    Detail.badgeIcon(Detail.isMajor(achievement)),
+    Detail.credentialIcon(achievement),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, buildStatusCell(record)),
   ])
@@ -397,7 +401,7 @@ async function bulkAddToWallet() {
     try {
       results.push({ name, ...(await requestOffer(entry)) })
     } catch (err) {
-      results.push({ name, error: err.message })
+      results.push({ name, error: err.message, errorLink: err.link, errorLang: err.lang })
     }
   }
   bulkWalletBtn.classList.remove('busy')
@@ -500,7 +504,7 @@ async function postJson(url, body = {}) {
     body: JSON.stringify(body),
   })
   const data = await res.json()
-  if (!res.ok) throw new Error(data.error || 'Request failed')
+  if (!res.ok) throw Object.assign(new Error(data.error || 'Request failed'), { link: data.link, lang: data.lang })
   return data
 }
 

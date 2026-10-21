@@ -16,7 +16,8 @@ const KOSKI_URL = 'https://opintopolku.fi/koski/opinnot/abc123'
 describe('the demo record', () => {
   test('is fictional and complete enough to try every part of the page', () => {
     assert.equal(demoData.henkilö.hetu, undefined)
-    assert.equal(demoData.henkilö.syntymäaika, undefined)
+    // A made-up birth date, so the student status shows one in wallets (K5).
+    assert.equal(demoData.henkilö.syntymäaika, '2001-04-12')
     for (const lang of ['fi', 'en']) {
       const records = convert(demoData, { lang })
       const ids = records.map((r) => r.credentialSubject.achievement.id)

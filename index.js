@@ -8,7 +8,7 @@ import connectPgSimple from 'connect-pg-simple'
 import QRCode from 'qrcode'
 import { convert, holderName } from 'koski2openbadge'
 import { toApiUrl, fetchKoskiData, InvalidKoskiUrlError, mergedImport } from './src/koski.js'
-import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, credentialPerson, recordFromCredential, signCredential, credentialKey, isStudentStatus, hasExpired } from './src/badges.js'
+import { toVerifiableCredential, toVcdm2Credential, toSdJwtVcClaims, sdJwtVcDisclosable, toStudentStatusClaims, studentStatusDisclosable, credentialPerson, recordFromCredential, signCredential, credentialKey, isStudentStatus, hasExpired } from './src/badges.js'
 import { createOffer, offerStatuses } from './src/oid4vci.js'
 import { pool, runSchema } from './src/db.js'
 import { scheduleUnusedAccountSweep } from './src/retention.js'
@@ -191,7 +191,16 @@ function recordIn(req, source, ref) {
 }
 
 // Refusing to sign a student status, with a message for the user (409).
-class StudentStatusError extends Error {}
+// Its message is Finnish, the UI's source language: the pages mark it
+// lang="fi" and translate-element finds its English in
+// public/translations.json, like any other text. `link` ({ text, href })
+// makes `text` in the message a link.
+class StudentStatusError extends Error {
+  constructor(message, { link } = {}) {
+    super(message)
+    this.link = link
+  }
+}
 
 // A student status is confirmed against Koski whenever it is signed or sent to
 // a wallet (K3): the import's share link is fetched again, and the status is
@@ -199,32 +208,54 @@ class StudentStatusError extends Error {}
 // counts, since the merged import also keeps study rights that Koski no
 // longer returns (mergeKoskiData). The fetch is still merged into
 // the import, like any other but without bringing removed records back. The
-// demo data has no link and is taken as it is.
-async function confirmedStatus(req, ref, record) {
+// demo data has no link and is converted as it is.
+// Returns the fresh record and the person, with the birth date from that fetch
+// (`syntymäaika`) for the wallet credential (K5). minimalKoskiData drops it,
+// so it is never stored.
+async function confirmedStatus(req, ref) {
   const source = await koskiSource(req)
-  if (!source || source.koskiUrl === DEMO_KOSKI_URL) return record
-  let data
+  if (!source) throw new StudentStatusError('Koski-tietojasi ei ole ladattu, joten opiskelutilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.')
+  if (source.koskiUrl === DEMO_KOSKI_URL) {
+    return freshStatus(source.data, ref, sessionLang(req), { ...source.data.henkilö, syntymäaika: demoData.henkilö.syntymäaika })
+  }
+  let fetched
   try {
-    data = minimalKoskiData(await fetchKoskiData(toApiUrl(source.koskiUrl)))
+    fetched = await fetchKoskiData(toApiUrl(source.koskiUrl))
   } catch (err) {
+    // The reason (e.g. "Koski responded with 404") goes to the log: the user's
+    // next step is the same whatever it is.
+    console.warn('Confirming a student status in Koski failed:', err.message)
     throw new StudentStatusError(
-      `Your student status could not be checked in Koski (${err.message}). If your Koski share link has expired, create a new one in Oma Opintopolku and load your data again.`
+      'Opiskelutilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.'
     )
   }
+  const data = minimalKoskiData(fetched)
   await addImport(req, { koskiUrl: source.koskiUrl, data }, { restore: false })
-  const fresh = recordsOf({ data, removed: [] }, sessionLang(req)).find((r) => r.ref === ref)?.record
-  if (!fresh) throw new StudentStatusError('Koski no longer shows you as enrolled in these studies, so the student status was not signed.')
-  return fresh
+  return freshStatus(data, ref, sessionLang(req), { ...data.henkilö, syntymäaika: fetched.henkilö?.syntymäaika })
+}
+
+// The student status `ref` in `data`. When it isn't there, the refusal says
+// whether Koski still shows another enrolment (the study right's details
+// changed, so its ref did too: the list has it under the new one) or none, so
+// that the user isn't left retrying something that can't succeed.
+function freshStatus(data, ref, lang, henkilö) {
+  const records = recordsOf({ data, removed: [] }, lang)
+  const fresh = records.find((r) => r.ref === ref)?.record
+  if (fresh) return { record: fresh, henkilö }
+  if (records.some((r) => isStudentStatus(r.record.credentialSubject))) {
+    throw new StudentStatusError('Näiden opintojen tiedot ovat muuttuneet. Katso päivitetty lista.', { link: { text: 'lista', href: '/' } })
+  }
+  throw new StudentStatusError('Koskessa et ole enää läsnä näissä opinnoissa, joten opiskelijatodistetta ei allekirjoitettu.')
 }
 
 // The record as it is signed: a student status confirmed first, anything else
-// as it is.
-function recordToSign(req, ref, record) {
-  return isStudentStatus(record.credentialSubject) ? confirmedStatus(req, ref, record) : record
+// as it is. `{ record, henkilö }`, the person only from a confirmation.
+async function recordToSign(req, ref, record) {
+  return isStudentStatus(record.credentialSubject) ? confirmedStatus(req, ref) : { record }
 }
 
 function sendSigningError(res, err, what) {
-  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message })
+  if (err instanceof StudentStatusError) return res.status(409).json({ error: err.message, lang: 'fi', ...(err.link ? { link: err.link } : {}) })
   // A 502 here means a dependency refused the request, not that the user
   // did anything wrong - log it, or the only trace is a message in the
   // browser that nobody operating the service ever sees.
@@ -250,7 +281,7 @@ function signVerifiableCredential(record) {
 // expired (a student status) is signed again in its place. `confirmed`: the
 // record has already been through recordToSign.
 async function signedRecord(req, ref, record, { confirmed = false } = {}) {
-  const sign = async () => signVerifiableCredential(confirmed ? record : await recordToSign(req, ref, record))
+  const sign = async () => signVerifiableCredential(confirmed ? record : (await recordToSign(req, ref, record)).record)
   if (req.session.userId) {
     const existing = await collections.findSavedByRef(req.session.userId, ref)
     if (existing && !hasExpired(existing.credential)) return { credentialId: existing.id, signed: existing.credential }
@@ -407,7 +438,17 @@ app.post('/credentials/:ref/sign', signingLimit, async (req, res) => {
 // name and oid selectively disclosable (G9) and the name's parts taken from
 // the Koski person `henkilö` (G10), otherwise VCDM 2.0. A record's
 // `validUntil` (a student status) becomes the credential's `exp`.
+// With OID4VCI_STUDENT_STATUS_VCT set, a student status goes as its own type
+// (K5), with its own configuration and disclosable claims; `henkilö` may then
+// carry the birth date of a fresh fetch.
 async function createWalletOffer(record, henkilö) {
+  if (isStudentStatus(record.credentialSubject) && process.env.OID4VCI_STUDENT_STATUS_VCT) {
+    const claims = toStudentStatusClaims(record, { vct: process.env.OID4VCI_STUDENT_STATUS_VCT, henkilö })
+    return walletOffer(record, claims, {
+      credentialConfigurationId: process.env.OID4VCI_STUDENT_STATUS_CONFIGURATION_ID || 'StudentStatusSdJwtVc',
+      disclosable: studentStatusDisclosable(claims),
+    })
+  }
   const sdJwtVc = Boolean(process.env.OID4VCI_CREDENTIAL_VCT)
   const vc = sdJwtVc
     ? toSdJwtVcClaims(record, { vct: process.env.OID4VCI_CREDENTIAL_VCT, henkilö })
@@ -415,12 +456,19 @@ async function createWalletOffer(record, henkilö) {
         issuerId: process.env.OID4VCI_CREDENTIAL_ISSUER_ID,
         issuerName: process.env.ISSUER_NAME,
       })
+  return walletOffer(record, vc, {
+    credentialConfigurationId: process.env.OID4VCI_CREDENTIAL_CONFIGURATION_ID || undefined,
+    disclosable: sdJwtVc ? sdJwtVcDisclosable(vc) : undefined,
+  })
+}
+
+async function walletOffer(record, vc, { credentialConfigurationId, disclosable }) {
   const { preAuthorizedCode, offerUri, txCode, expiresIn } = await createOffer(vc, {
     baseUrl: process.env.OID4VCI_ISSUER_URL,
     tenant: process.env.OID4VCI_ISSUER_INSTANCE,
     token: process.env.OID4VCI_ISSUER_TOKEN,
-    credentialConfigurationId: process.env.OID4VCI_CREDENTIAL_CONFIGURATION_ID || undefined,
-    disclosable: sdJwtVc ? sdJwtVcDisclosable(vc) : undefined,
+    credentialConfigurationId,
+    disclosable,
     validUntil: record.validUntil,
   })
   const qrDataUrl = await QRCode.toDataURL(offerUri)
@@ -464,8 +512,11 @@ app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
   const source = RECORD_REF.test(req.params.ref) ? await koskiSource(req) : null
   let record = recordIn(req, source, req.params.ref)
   if (!record) return res.status(404).json({ error: 'Credential not found. Please load your Koski data again.' })
+  let henkilö = source.data.henkilö
   try {
-    record = await recordToSign(req, req.params.ref, record)
+    const confirmed = await recordToSign(req, req.params.ref, record)
+    record = confirmed.record
+    henkilö = confirmed.henkilö ?? henkilö
   } catch (err) {
     return sendSigningError(res, err, 'Confirming a student status')
   }
@@ -479,7 +530,7 @@ app.post('/credentials/:ref/offer', signingLimit, async (req, res) => {
     }
   }
   try {
-    res.json({ ...(await createWalletOffer(record, source.data.henkilö)), credentialId })
+    res.json({ ...(await createWalletOffer(record, henkilö)), credentialId })
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
@@ -611,13 +662,33 @@ app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
 // re-issued as a VCDM 2.0 credential for the wallet. The name's parts come
 // from the owner's Koski import, if it is the credential's person.
+// A student status is confirmed against Koski first, like one from the list
+// (K5): the wallet gets the fresh status, never the saved snapshot, and
+// nothing when Koski can't confirm it. Its ref comes from the credential
+// itself (a status has no award date in its key), so copies saved before
+// refs were stored are found too. The saved copy itself stays as it was.
 app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, res) => {
   const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
-  // A saved copy goes to the wallet as it is, with the date it was signed and
-  // its own expiry; an expired one can't go (sign the record again instead).
-  if (hasExpired(credential)) return res.status(409).json({ error: 'This credential has expired.' })
 
+  if (isStudentStatus(credential.credentialSubject)) {
+    let confirmed
+    try {
+      confirmed = await confirmedStatus(req, recordRef({ credentialSubject: credential.credentialSubject }))
+    } catch (err) {
+      return sendSigningError(res, err, 'Confirming a student status')
+    }
+    try {
+      return res.json(await createWalletOffer(confirmed.record, confirmed.henkilö))
+    } catch (err) {
+      console.error('Creating a credential offer failed:', err.message)
+      return res.status(502).json({ error: err.message })
+    }
+  }
+
+  // Any other saved copy goes to the wallet as it is, with the date it was
+  // signed.
+  if (hasExpired(credential)) return res.status(409).json({ error: 'This credential has expired.' })
   try {
     const source = await koskiSource(req)
     const henkilö = credentialPerson(credential.credentialSubject, source?.data.henkilö)
