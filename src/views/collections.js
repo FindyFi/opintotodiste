@@ -7,7 +7,7 @@ export function collectionsPage() {
 ${head('<title lang="fi">Kokoelmani – Opintotodiste</title>', ['credentials', 'share', 'collections'], { path: '/my/collections' })}
 </head>
 <body class="page-collections">
-${header()}
+${header({ current: 'collections' })}
 
 <section class="collections-hero">
   <h1 lang="fi">Kokoelmani</h1>
