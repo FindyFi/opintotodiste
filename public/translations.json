@@ -371,10 +371,10 @@
   "Mikään todiste ei vastaa suodatusta.": {
     "en": "No credential matches the filter."
   },
-  "Koski-tietojasi ei ole ladattu, joten opiskelijatilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.": {
+  "Koski-tietojasi ei ole ladattu, joten opiskelutilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.": {
     "en": "Your Koski data is not loaded, so the student status could not be checked. Load your data again."
   },
-  "Opiskelijatilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.": {
+  "Opiskelutilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.": {
     "en": "Your student status could not be checked in Koski. If your Koski share link has expired, create a new one in Oma Opintopolku and load your data again."
   },
   "Näiden opintojen tiedot ovat muuttuneet. Katso päivitetty lista.": {

@@ -214,7 +214,7 @@ class StudentStatusError extends Error {
 // so it is never stored.
 async function confirmedStatus(req, ref) {
   const source = await koskiSource(req)
-  if (!source) throw new StudentStatusError('Koski-tietojasi ei ole ladattu, joten opiskelijatilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.')
+  if (!source) throw new StudentStatusError('Koski-tietojasi ei ole ladattu, joten opiskelutilannetta ei voitu tarkastaa. Lataa tietosi uudelleen.')
   if (source.koskiUrl === DEMO_KOSKI_URL) {
     return freshStatus(source.data, ref, sessionLang(req), { ...source.data.henkilö, syntymäaika: demoData.henkilö.syntymäaika })
   }
@@ -226,7 +226,7 @@ async function confirmedStatus(req, ref) {
     // next step is the same whatever it is.
     console.warn('Confirming a student status in Koski failed:', err.message)
     throw new StudentStatusError(
-      'Opiskelijatilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.'
+      'Opiskelutilannettasi ei voitu tarkastaa Koskesta. Jos Koski-jakolinkkisi on vanhentunut, luo uusi Oma Opintopolussa ja lataa tietosi uudelleen.'
     )
   }
   const data = minimalKoskiData(fetched)
