@@ -262,6 +262,57 @@ describe('credentialKey', () => {
 
 // A student status (K3) as koski2openbadge emits it: no award date, a
 // validUntil, a start and an Enrolled result.
+describe('results in the SD-JWT VC claims', () => {
+  const VCT = 'https://issuer.example/vct'
+  const subject = (resultDescription, result, key = 'resultDescription') => ({
+    credentialSubject: { achievement: { name: 'A', [key]: resultDescription }, result },
+  })
+  const grade = (desc, value) => [{ id: 'urn:x#grade', type: ['ResultDescription'], name: 'Arvosana', ...desc }, { type: ['Result'], resultDescription: 'urn:x#grade', ...value }]
+
+  test('a course sends its result, and its grade and extent as text', () => {
+    const [gradeDesc, gradeResult] = grade({ resultType: 'RawScore', valueMin: '4', valueMax: '10' }, { value: '9' })
+    const extentDesc = { id: 'urn:x#credits', type: ['ResultDescription'], name: 'Laajuus (vuosiviikkotuntia)', resultType: 'RawScore', valueMin: '0' }
+    const extentResult = { type: ['Result'], resultDescription: 'urn:x#credits', value: '25' }
+    const claims = toSdJwtVcClaims(subject([gradeDesc, extentDesc], [gradeResult, extentResult]), { vct: VCT })
+    assert.deepEqual(claims.result, [
+      { resultDescription: 'urn:x#grade', value: '9' },
+      { resultDescription: 'urn:x#credits', value: '25' },
+    ])
+    assert.equal(claims.grade, '9 (4–10)')
+    assert.equal(claims.extent, '25 vuosiviikkotuntia')
+  })
+
+  test('a letter grade gets its scale from the allowed values', () => {
+    const [desc, result] = grade({ resultType: 'LetterGrade', allowedValue: ['I', 'A', 'B', 'C', 'M', 'E', 'L'] }, { value: 'E' })
+    assert.equal(toSdJwtVcClaims(subject([desc], [result]), { vct: VCT }).grade, 'E (I–L)')
+  })
+
+  test('a grade or extent with no scale or unit is the bare value', () => {
+    const [desc, result] = grade({ resultType: 'RawScore' }, { value: '3' })
+    const extentDesc = { id: 'urn:x#credits', name: 'Laajuus', resultType: 'RawScore' }
+    const claims = toSdJwtVcClaims(subject([desc, extentDesc], [result, { resultDescription: 'urn:x#credits', value: 2.5 }]), { vct: VCT })
+    assert.equal(claims.grade, '3')
+    assert.equal(claims.extent, '2.5')
+  })
+
+  test('a completed status sends its result but no grade', () => {
+    const [desc, result] = grade({ resultType: 'Status' }, { status: 'Completed' })
+    const claims = toSdJwtVcClaims(subject([desc], [result]), { vct: VCT })
+    assert.deepEqual(claims.result, [{ resultDescription: 'urn:x#grade', status: 'Completed' }])
+    assert.equal('grade' in claims, false)
+  })
+
+  test('reads the plural descriptions of credentials stored before koski2openbadge 0.1.0', () => {
+    const [desc, result] = grade({ resultType: 'RawScore', valueMin: '0', valueMax: '5' }, { value: '4' })
+    assert.equal(toSdJwtVcClaims(subject([desc], [result], 'resultDescriptions'), { vct: VCT }).grade, '4 (0–5)')
+  })
+
+  test('a record without results has no result claims', () => {
+    const claims = toSdJwtVcClaims(subject(undefined, undefined), { vct: VCT })
+    for (const claim of ['result', 'grade', 'extent']) assert.equal(claim in claims, false, claim)
+  })
+})
+
 describe('a student status', () => {
   const STATUS = {
     credentialSubject: {
@@ -296,12 +347,12 @@ describe('a student status', () => {
     assert.equal('validUntil' in toVcdm2Credential(RECORD, ISSUER), false)
   })
 
-  test('carries its start and result as SD-JWT VC claims, without JSON-LD types', () => {
+  test('carries its start and result as SD-JWT VC claims, without JSON-LD types or a grade', () => {
     const claims = toSdJwtVcClaims(STATUS, { vct: 'https://issuer.example/vct' })
     assert.equal(claims.activityStartDate, STATUS.credentialSubject.activityStartDate)
     assert.deepEqual(claims.result, [{ resultDescription: 'urn:x:status#status', status: 'Enrolled' }])
     assert.deepEqual(claims.achievement.alignment, [{ targetCode: 'lukiokoulutus', targetName: 'Lukiokoulutus', targetUrl: 'https://koski.example/x' }])
-    for (const claim of ['awardedDate', 'validUntil', 'exp']) assert.equal(claim in claims, false, claim)
+    for (const claim of ['awardedDate', 'validUntil', 'exp', 'grade', 'extent']) assert.equal(claim in claims, false, claim)
   })
 
   test('comes back from a stored credential with its expiry', () => {

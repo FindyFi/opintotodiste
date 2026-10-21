@@ -75,9 +75,12 @@ export function toVcdm2Credential({ credentialSubject, awardedOn, validUntil }, 
 // flat `given_name` / `family_name` (G10) from the Koski person `henkilö`, for
 // wallets that don't show nested claims. These and `sub` are selectively
 // disclosable (see sdJwtVcDisclosable).
-// A student status also carries its start (`activityStartDate`) and its
-// `Enrolled` result; its expiry is no claim here but the offer's `validUntil`,
-// which the issuer turns into `exp`.
+// Every record's `result` goes as it is (W6). Its values have no scale or
+// unit (a bare "9"), and some wallets show nested claims as raw JSON, so the
+// grade and the extent are also flat text claims (resultClaims).
+// A student status also carries its start (`activityStartDate`); its expiry
+// is no claim here but the offer's `validUntil`, which the issuer turns into
+// `exp`.
 export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkilö }) {
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
@@ -89,13 +92,43 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkil�
     ...holderNameClaims(henkilö),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
     achievement: withoutJsonLdTypes(credentialSubject.achievement),
-    ...(isStudentStatus(credentialSubject)
-      ? {
-          ...(credentialSubject.activityStartDate ? { activityStartDate: credentialSubject.activityStartDate } : {}),
-          result: withoutJsonLdTypes(credentialSubject.result),
-        }
+    ...(isStudentStatus(credentialSubject) && credentialSubject.activityStartDate
+      ? { activityStartDate: credentialSubject.activityStartDate }
       : {}),
+    ...(credentialSubject.result?.length ? { result: withoutJsonLdTypes(credentialSubject.result) } : {}),
+    ...resultClaims(credentialSubject),
   }
+}
+
+// The grade and the extent as text a wallet can show without the
+// achievement's resultDescription: `grade` with its scale ("9 (4–10)",
+// "E (I–L)"), `extent` with the unit koski2openbadge put in the description's
+// name ("Laajuus (vuosiviikkotuntia)" → "25 vuosiviikkotuntia"). A `Completed`
+// status gets no claim: the badge itself says that, and it has no value.
+// koski2openbadge ends the description ids with #grade and #credits.
+function resultClaims({ achievement, result }) {
+  // Stored credentials from koski2openbadge before 0.1.0 have the plural.
+  const descriptions = achievement?.resultDescription ?? achievement?.resultDescriptions ?? []
+  const claims = {}
+  for (const r of result ?? []) {
+    if (r.value === undefined || r.value === null || r.value === '') continue
+    const desc = descriptions.find((d) => d.id === r.resultDescription)
+    const value = String(r.value)
+    if (r.resultDescription?.endsWith('#grade')) {
+      claims.grade = withScale(value, desc)
+    } else if (r.resultDescription?.endsWith('#credits')) {
+      const unit = typeof desc?.name === 'string' ? desc.name.match(/\(([^()]+)\)\s*$/)?.[1] : undefined
+      claims.extent = unit ? `${value} ${unit}` : value
+    }
+  }
+  return claims
+}
+
+function withScale(value, desc) {
+  if (desc?.valueMin !== undefined && desc?.valueMax !== undefined) return `${value} (${desc.valueMin}–${desc.valueMax})`
+  const allowed = desc?.allowedValue
+  if (Array.isArray(allowed) && allowed.length > 1) return `${value} (${allowed[0]}–${allowed.at(-1)})`
+  return value
 }
 
 // The claims of toSdJwtVcClaims that identify the holder, sent to

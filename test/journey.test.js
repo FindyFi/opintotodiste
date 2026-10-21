@@ -654,6 +654,22 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
     for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf', 'vct#integrity']) assert.equal(key in claims, false, key)
   })
 
+  test('sends a course\'s result, and its grade and extent as text', async () => {
+    const client = createClient(app.baseUrl)
+    const loaded = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    const hasResult = (suffix) => (c) => c.credentialSubject.result?.some((r) => r.resultDescription?.endsWith(suffix) && r.value)
+    const course = loaded.body.credentials.find((c) => hasResult('#grade')(c) && hasResult('#credits')(c))
+    assert.ok(course, 'expected a course with a grade and an extent in the fixture')
+
+    const offer = await client.json(`/credentials/${course.ref}/offer`, { method: 'POST' })
+    assert.equal(offer.status, 200, JSON.stringify(offer.body))
+    const { unsignedCredential: claims } = issuer.requests.at(-1).body
+    assert.equal(claims.result.length, course.credentialSubject.result.length)
+    assert.ok(claims.result.every((r) => !('type' in r)))
+    assert.match(claims.grade, /^\S+ \(\S+–\S+\)$/)
+    assert.match(claims.extent, /^[\d.]+( \D+)?$/, 'the app fixture has no unit, koski2openbadge\'s has')
+  })
+
   test('takes the name parts of a saved credential from its owner\'s import', async () => {
     const client = await signUp('Lompakko')
     const loaded = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
