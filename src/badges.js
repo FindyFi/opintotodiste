@@ -141,6 +141,65 @@ export function sdJwtVcDisclosable(claims) {
   return HOLDER_CLAIMS.filter((claim) => claim in claims)
 }
 
+// The claims of a student status in its own SD-JWT VC type, "Opiskelijatodiste"
+// (K5, docs/student-status-wallet-credential.md): flat, PID-style claims a
+// verifier can ask for directly, instead of an Open Badge. Dates are the
+// calendar day in Finland. `birthdate` comes from `henkilö.syntymäaika`, which
+// the app never stores: only a fresh Koski fetch has it. The issuer turns the
+// offer's `validUntil` into `exp`; `expiry_date` is the same day for wallets
+// and the card, which can't show `exp`.
+export function toStudentStatusClaims({ credentialSubject, awardedOn, validUntil }, { vct, henkilö }) {
+  if (!vct) {
+    throw new Error('The student status credential type is not configured (set OID4VCI_STUDENT_STATUS_VCT).')
+  }
+  const achievement = credentialSubject.achievement ?? {}
+  const creator = achievement.creator ?? {}
+  const code = (codeSet) => achievement.alignment?.find((a) => a.targetUrl?.endsWith(`/${codeSet}/latest`))
+  const level = code('kansallinenkoulutusluokitus2016koulutusastetaso1')
+  const type = code('opiskeluoikeudentyyppi')
+  const birthdate = nonEmpty(henkilö?.syntymäaika)
+  return {
+    vct,
+    ...present({ sub: credentialSubject.id }),
+    ...holderNameClaims(henkilö),
+    ...(birthdate && /^\d{4}-\d{2}-\d{2}$/.test(birthdate) ? { birthdate } : {}),
+    enrolment_status: 'enrolled',
+    ...present({
+      institution_name: creator.name,
+      institution_id: creator.id,
+      institution_code: creator.otherIdentifier?.find((entry) => entry.identifierType === 'identifier')?.identifier,
+      education_level: level?.targetCode,
+      education_level_name: level?.targetName,
+      education_type: type?.targetCode,
+      education_type_name: type?.targetName,
+      programme: achievement.fieldOfStudy,
+      start_date: credentialSubject.activityStartDate && finnishDay(credentialSubject.activityStartDate),
+      expiry_date: validUntil && finnishDay(validUntil),
+    }),
+    issuance_date: finnishDay(awardedOn ?? Date.now()),
+    issuing_country: 'FI',
+  }
+}
+
+// Who the student is and where they study are disclosable. The level, the
+// type, the status and the dates are always shown, so "enrolled at the second
+// level until June 2027" can be proven without them.
+const STUDENT_STATUS_DISCLOSABLE = ['sub', 'given_name', 'family_name', 'birthdate', 'institution_name', 'institution_id', 'institution_code', 'programme']
+
+export function studentStatusDisclosable(claims) {
+  return STUDENT_STATUS_DISCLOSABLE.filter((claim) => claim in claims)
+}
+
+// The claims whose value is a non-empty string, trimmed.
+function present(claims) {
+  return Object.fromEntries(Object.entries(claims).flatMap(([claim, value]) => (nonEmpty(value) ? [[claim, nonEmpty(value)]] : [])))
+}
+
+// The calendar day in Finland at `date`, as YYYY-MM-DD.
+function finnishDay(date) {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Helsinki' }).format(new Date(date))
+}
+
 // The holder's name as the EU PID in SD-JWT VC has it (OpenID Connect claim
 // names), so a verifier can compare it with a PID: all first names
 // (etunimet), unlike the identifier's call name, and the surname. Each only

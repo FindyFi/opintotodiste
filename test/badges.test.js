@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import test, { describe } from 'node:test'
 
-import { credentialKey, credentialPerson, hasExpired, recordFromCredential, sdJwtVcDisclosable, signCredential, toSdJwtVcClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
+import { credentialKey, credentialPerson, hasExpired, recordFromCredential, sdJwtVcDisclosable, signCredential, studentStatusDisclosable, toSdJwtVcClaims, toStudentStatusClaims, toVcdm2Credential, toVerifiableCredential } from '../src/badges.js'
 import { startStubServer } from './helpers/stub-server.js'
 
 const RECORD = {
@@ -368,5 +368,73 @@ describe('a student status', () => {
     assert.equal(hasExpired(STATUS, end), true)
     assert.equal(hasExpired({ expirationDate: STATUS.validUntil }, end + 1), true)
     assert.equal(hasExpired(RECORD), false)
+  })
+})
+
+describe('toStudentStatusClaims', () => {
+  const STATUS_VCT = 'https://issuer.example/vct/StudentStatus'
+  const STATUS = {
+    credentialSubject: {
+      id: 'urn:oid:1.2.246.562.24.00000000001',
+      activityStartDate: '2024-08-07T21:00:00.000Z',
+      achievement: {
+        achievementType: 'ext:StudentStatus',
+        fieldOfStudy: 'Lukion oppimäärä',
+        creator: {
+          id: 'urn:oid:1.2.246.562.10.00000000002',
+          name: 'Esimerkkilukio',
+          otherIdentifier: [{ type: ['IdentifierEntry'], identifier: '00002', identifierType: 'identifier' }],
+        },
+        alignment: [
+          { targetCode: 'lukiokoulutus', targetName: 'Lukiokoulutus', targetUrl: 'https://koski.example/koodisto/opiskeluoikeudentyyppi/latest' },
+          { targetCode: '3', targetName: 'Toinen aste', targetUrl: 'https://koski.example/koodisto/kansallinenkoulutusluokitus2016koulutusastetaso1/latest' },
+        ],
+      },
+      result: [{ status: 'Enrolled' }],
+    },
+    awardedOn: '2026-10-20T22:30:00.000Z',
+    validUntil: '2027-06-05T20:59:59.000Z',
+  }
+
+  test('maps a student status to flat claims, dates as Finnish days', () => {
+    const henkilö = { etunimet: 'Testi Matti', sukunimi: 'Opiskelija', syntymäaika: '2008-03-14' }
+    assert.deepEqual(toStudentStatusClaims(STATUS, { vct: STATUS_VCT, henkilö }), {
+      vct: STATUS_VCT,
+      sub: 'urn:oid:1.2.246.562.24.00000000001',
+      given_name: 'Testi Matti',
+      family_name: 'Opiskelija',
+      birthdate: '2008-03-14',
+      enrolment_status: 'enrolled',
+      institution_name: 'Esimerkkilukio',
+      institution_id: 'urn:oid:1.2.246.562.10.00000000002',
+      institution_code: '00002',
+      education_level: '3',
+      education_level_name: 'Toinen aste',
+      education_type: 'lukiokoulutus',
+      education_type_name: 'Lukiokoulutus',
+      programme: 'Lukion oppimäärä',
+      start_date: '2024-08-08',
+      expiry_date: '2027-06-05',
+      issuance_date: '2026-10-21',
+      issuing_country: 'FI',
+    })
+  })
+
+  test('leaves out what Koski does not have, never undefined', () => {
+    const claims = toStudentStatusClaims(
+      { credentialSubject: { achievement: { creator: { name: ' ' } } }, validUntil: STATUS.validUntil },
+      { vct: STATUS_VCT, henkilö: { syntymäaika: '14.3.2008' } }
+    )
+    assert.deepEqual(Object.keys(claims), ['vct', 'enrolment_status', 'expiry_date', 'issuance_date', 'issuing_country'])
+    assert.equal(studentStatusDisclosable(claims).length, 0)
+  })
+
+  test('discloses who and where, not the level, the status or the dates', () => {
+    const claims = toStudentStatusClaims(STATUS, { vct: STATUS_VCT, henkilö: { etunimet: 'T', sukunimi: 'O', syntymäaika: '2008-03-14' } })
+    assert.deepEqual(studentStatusDisclosable(claims), ['sub', 'given_name', 'family_name', 'birthdate', 'institution_name', 'institution_id', 'institution_code', 'programme'])
+  })
+
+  test('needs its vct', () => {
+    assert.throws(() => toStudentStatusClaims(STATUS, {}), /OID4VCI_STUDENT_STATUS_VCT/)
   })
 })

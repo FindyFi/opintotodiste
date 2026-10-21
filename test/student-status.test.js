@@ -22,12 +22,12 @@ const SIGNED = (vc) => ({ ...vc, proof: { type: 'Ed25519Signature2020', proofVal
 // a completed course so there is a record that isn't a status.
 function koskiExport({ status = 'lasna' } = {}) {
   return {
-    henkilö: { oid: '1.2.246.562.24.00000000009', etunimet: 'Testi', sukunimi: 'Opiskelija' },
+    henkilö: { oid: '1.2.246.562.24.00000000009', etunimet: 'Testi', sukunimi: 'Opiskelija', syntymäaika: '2008-03-14' },
     opiskeluoikeudet: [
       {
         oid: '1.2.246.562.15.00000000009',
         tyyppi: { koodiarvo: 'lukiokoulutus', nimi: { fi: 'Lukiokoulutus', en: 'General upper secondary education' } },
-        oppilaitos: { oid: '1.2.246.562.10.00000000019', nimi: { fi: 'Esimerkkilukio' } },
+        oppilaitos: { oid: '1.2.246.562.10.00000000019', oppilaitosnumero: { koodiarvo: '00019' }, nimi: { fi: 'Esimerkkilukio' } },
         alkamispäivä: '2024-08-08',
         arvioituPäättymispäivä: '2099-06-05',
         tila: {
@@ -185,5 +185,88 @@ describe('the student status', needsPostgres, () => {
     const refs = (await client.json('/credentials')).body.credentials.map((c) => c.ref)
     assert.ok(refs.includes(status.ref))
     assert.ok(!refs.includes(course.ref), 'the removed record stays off the list')
+  })
+})
+
+// With OID4VCI_STUDENT_STATUS_VCT set, a student status goes to wallets as its
+// own type (K5), with the birth date of the fresh Koski fetch.
+describe('the student status as its own wallet type', needsPostgres, () => {
+  const STATUS_VCT = 'https://issuer.example/vct/StudentStatus'
+  const dir = mkdtempSync(join(tmpdir(), 'opintotodiste-status-vct-'))
+  const fixture = join(dir, 'koski.json')
+  let app
+  let issuer
+
+  before(async () => {
+    writeFileSync(fixture, JSON.stringify(koskiExport()))
+    issuer = await startStubServer(() => ({
+      json: { preAuthorizedCode: randomUUID(), offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
+    }))
+    app = await startApp({
+      koskiFixture: fixture,
+      env: {
+        OID4VCI_ISSUER_URL: issuer.url,
+        OID4VCI_ISSUER_INSTANCE: 'test',
+        OID4VCI_ISSUER_TOKEN: 'stub-token',
+        OID4VCI_CREDENTIAL_CONFIGURATION_ID: 'OpenBadgeCredentialSdJwtVc',
+        OID4VCI_CREDENTIAL_VCT: VCT,
+        OID4VCI_STUDENT_STATUS_VCT: STATUS_VCT,
+      },
+    })
+  })
+
+  after(async () => {
+    await app?.stop()
+    await issuer?.stop()
+    rmSync(dir, { recursive: true, force: true })
+  })
+
+  test('goes to the wallet as flat claims under its own configuration', async () => {
+    const client = createClient(app.baseUrl)
+    const list = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    const status = list.body.credentials.find((c) => c.credentialSubject.achievement.achievementType === 'ext:StudentStatus')
+    const course = list.body.credentials.find((c) => c !== status)
+
+    const res = await client.json(`/credentials/${status.ref}/offer`, { method: 'POST' })
+    assert.equal(res.status, 200, JSON.stringify(res.body))
+    const { body } = issuer.requests.at(-1)
+    assert.equal(body.credentialConfigurationId, 'StudentStatusSdJwtVc')
+    assert.equal(body.validUntil, '2099-06-05T20:59:59.000Z')
+    const { issuance_date: issued, ...claims } = body.unsignedCredential
+    assert.match(issued, /^\d{4}-\d{2}-\d{2}$/)
+    assert.deepEqual(claims, {
+      vct: STATUS_VCT,
+      sub: 'urn:oid:1.2.246.562.24.00000000009',
+      given_name: 'Testi',
+      family_name: 'Opiskelija',
+      birthdate: '2008-03-14',
+      enrolment_status: 'enrolled',
+      institution_name: 'Esimerkkilukio',
+      institution_id: 'urn:oid:1.2.246.562.10.00000000019',
+      institution_code: '00019',
+      education_level: '3',
+      education_level_name: 'Toinen aste',
+      education_type: 'lukiokoulutus',
+      education_type_name: 'Lukiokoulutus',
+      programme: 'Lukion oppimäärä',
+      start_date: '2024-08-08',
+      expiry_date: '2099-06-05',
+      issuing_country: 'FI',
+    })
+    assert.deepEqual(body.disclosable, ['sub', 'given_name', 'family_name', 'birthdate', 'institution_name', 'institution_id', 'institution_code', 'programme'])
+
+    // Other badges still go as Open Badges.
+    assert.equal((await client.json(`/credentials/${course.ref}/offer`, { method: 'POST' })).status, 200)
+    assert.equal(issuer.requests.at(-1).body.credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
+    assert.equal(issuer.requests.at(-1).body.unsignedCredential.vct, VCT)
+  })
+
+  test('the birth date is not kept', async () => {
+    const client = createClient(app.baseUrl)
+    const list = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    const status = list.body.credentials.find((c) => c.credentialSubject.achievement.achievementType === 'ext:StudentStatus')
+    assert.equal((await client.json(`/credentials/${status.ref}/offer`, { method: 'POST' })).status, 200)
+    const page = await client.request('/')
+    assert.doesNotMatch(await page.text(), /2008-03-14/)
   })
 })

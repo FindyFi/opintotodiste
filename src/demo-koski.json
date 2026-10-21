@@ -3,7 +3,8 @@
     "oid": "1.2.246.562.24.00000000100",
     "etunimet": "Eeva Maria",
     "kutsumanimi": "Eeva",
-    "sukunimi": "Esimerkki"
+    "sukunimi": "Esimerkki",
+    "syntymäaika": "2001-04-12"
   },
   "opiskeluoikeudet": [
     {
@@ -268,6 +269,11 @@
           "fi": "Esimerkkiyliopisto",
           "sv": "Exempeluniversitetet",
           "en": "Example University"
+        },
+        "oppilaitosnumero": {
+          "koodiarvo": "99101",
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
         }
       },
       "alkamispäivä": "2018-08-01",
@@ -815,6 +821,11 @@
           "fi": "Esimerkkiyliopisto",
           "sv": "Exempeluniversitetet",
           "en": "Example University"
+        },
+        "oppilaitosnumero": {
+          "koodiarvo": "99101",
+          "koodistoUri": "oppilaitosnumero",
+          "koodistoVersio": 1
         }
       },
       "alkamispäivä": "2021-08-01",
