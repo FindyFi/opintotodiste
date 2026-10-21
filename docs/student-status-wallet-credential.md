@@ -143,10 +143,13 @@ every language. The VCT has no way to label a value, so the label carries the me
   Both go into `.env.example` and `APP_ENV_KEYS`. A new `toStudentStatusClaims(record, { vct, henkilö })` in
   src/badges.js builds the claims, with its own disclosable list. The offer's `validUntil` (K3) sets `exp`.
 - **A saved copy sent to a wallet** (K3: it goes as it is) is built from the saved credential's subject and
-  dates, the same way, but without `birthdate`: see below.
+  dates, the same way. Its `birthdate` comes from a Koski fetch made only for that: see below.
 - **The birth date is never stored.** The app drops `syntymäaika` at import (`minimalKoskiData`), as /policy
   says. Sending a student status to a wallet already fetches Koski again (K3), so `birthdate` comes from that
-  fetch and is used only for the offer. A saved copy goes without a fresh fetch, so it has no `birthdate`. The
+  fetch and is used only for the offer. A saved copy (Kokoelmani) still goes as it is, without a confirmation, but
+  the app fetches Koski through the import's share link for the birth date alone (user, 2026-10-21). It is used
+  when the fetched person is the credential's holder. When the link has lapsed or Koski doesn't answer, the
+  credential goes without `birthdate`. Downloads and collections (the Open Badge) never have it. The
   demo person has a made-up birth date. /policy says that the birth date goes into the credential and is not
   stored.
 

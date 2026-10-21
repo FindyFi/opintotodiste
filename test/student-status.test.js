@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import test, { after, before, describe } from 'node:test'
 
+import { createAuthenticator } from './helpers/authenticator.js'
 import { createClient, postgresUnavailable, startApp } from './helpers/app.js'
 import { startStubServer } from './helpers/stub-server.js'
 
@@ -195,16 +196,21 @@ describe('the student status as its own wallet type', needsPostgres, () => {
   const dir = mkdtempSync(join(tmpdir(), 'opintotodiste-status-vct-'))
   const fixture = join(dir, 'koski.json')
   let app
+  let signer
   let issuer
 
   before(async () => {
     writeFileSync(fixture, JSON.stringify(koskiExport()))
+    signer = await startStubServer((req) => ({ json: SIGNED(req.body) }))
     issuer = await startStubServer(() => ({
       json: { preAuthorizedCode: randomUUID(), offerUri: 'openid-credential-offer://?credential_offer_uri=https%3A%2F%2Fstub', expiresIn: 600 },
     }))
     app = await startApp({
       koskiFixture: fixture,
       env: {
+        SIGNING_SERVICE_URL: signer.url,
+        SIGNING_SERVICE_INSTANCE_ID: 'test',
+        SIGNING_SERVICE_SUITE: 'ed25519',
         OID4VCI_ISSUER_URL: issuer.url,
         OID4VCI_ISSUER_INSTANCE: 'test',
         OID4VCI_ISSUER_TOKEN: 'stub-token',
@@ -217,6 +223,7 @@ describe('the student status as its own wallet type', needsPostgres, () => {
 
   after(async () => {
     await app?.stop()
+    await signer?.stop()
     await issuer?.stop()
     rmSync(dir, { recursive: true, force: true })
   })
@@ -268,5 +275,35 @@ describe('the student status as its own wallet type', needsPostgres, () => {
     assert.equal((await client.json(`/credentials/${status.ref}/offer`, { method: 'POST' })).status, 200)
     const page = await client.request('/')
     assert.doesNotMatch(await page.text(), /2008-03-14/)
+  })
+
+  test('a saved copy gets the birth date from Koski, and goes without it when Koski does not answer', async () => {
+    const client = createClient(app.baseUrl)
+    const authenticator = createAuthenticator({ rpId: 'localhost', origin: app.baseUrl })
+    const options = await client.json('/auth/register/options', { method: 'POST', body: { displayName: 'Opiskelija' } })
+    await client.json('/auth/register/verify', { method: 'POST', body: authenticator.register(options.body) })
+    const list = await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })
+    const status = list.body.credentials.find((c) => c.credentialSubject.achievement.achievementType === 'ext:StudentStatus')
+    const saved = await client.json('/saved-credentials', { method: 'POST', body: { refs: [status.ref] } })
+    const { credentialId } = saved.body.results[0]
+    assert.ok(credentialId, JSON.stringify(saved.body))
+
+    const offer = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+    assert.equal(offer.status, 200, JSON.stringify(offer.body))
+    const { body } = issuer.requests.at(-1)
+    assert.equal(body.credentialConfigurationId, 'StudentStatusSdJwtVc')
+    assert.equal(body.unsignedCredential.birthdate, '2008-03-14')
+    assert.equal(body.unsignedCredential.given_name, 'Testi')
+
+    rmSync(fixture)
+    try {
+      const again = await client.json(`/saved-credentials/${credentialId}/offer`, { method: 'POST' })
+      assert.equal(again.status, 200, JSON.stringify(again.body))
+      const claims = issuer.requests.at(-1).body.unsignedCredential
+      assert.equal('birthdate' in claims, false)
+      assert.equal(claims.given_name, 'Testi')
+    } finally {
+      writeFileSync(fixture, JSON.stringify(koskiExport()))
+    }
   })
 })

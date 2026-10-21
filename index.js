@@ -632,7 +632,8 @@ app.delete('/saved-credentials/:id', requireAuth, async (req, res) => {
 // Owner only: with no holder binding, a public share link must not be able to
 // put someone else's badge into the visitor's wallet. The stored ldp_vc is
 // re-issued as a VCDM 2.0 credential for the wallet. The name's parts come
-// from the owner's Koski import, if it is the credential's person.
+// from the owner's Koski import, if it is the credential's person, and a
+// student status's birth date from Koski (birthDate).
 app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, res) => {
   const credential = await collections.findSavedCredential(req.session.userId, req.params.id)
   if (!credential) return res.status(404).json({ error: 'Credential not found.' })
@@ -643,12 +644,29 @@ app.post('/saved-credentials/:id/offer', requireAuth, signingLimit, async (req, 
   try {
     const source = await koskiSource(req)
     const henkilö = credentialPerson(credential.credentialSubject, source?.data.henkilö)
-    res.json(await createWalletOffer(recordFromCredential(credential), henkilö))
+    const syntymäaika = isStudentStatus(credential.credentialSubject) && henkilö ? await birthDate(source, henkilö) : undefined
+    res.json(await createWalletOffer(recordFromCredential(credential), henkilö && { ...henkilö, syntymäaika }))
   } catch (err) {
     console.error('Creating a credential offer failed:', err.message)
     res.status(502).json({ error: err.message })
   }
 })
+
+// The birth date of a saved student status's holder, for its wallet
+// credential (K5): fetched from Koski through the import's share link only
+// for this, never stored, and not used to confirm or merge anything (a saved
+// copy goes as it is). Undefined when the link has lapsed, Koski doesn't
+// answer or names someone else; the credential then goes without it.
+async function birthDate(source, henkilö) {
+  if (source.koskiUrl === DEMO_KOSKI_URL) return demoData.henkilö.syntymäaika
+  try {
+    const fetched = (await fetchKoskiData(toApiUrl(source.koskiUrl))).henkilö
+    return fetched?.oid === henkilö.oid ? fetched.syntymäaika : undefined
+  } catch (err) {
+    console.warn('Fetching the birth date for a saved student status failed:', err.message)
+    return undefined
+  }
+}
 
 // --- Collections -----------------------------------------------------------
 
