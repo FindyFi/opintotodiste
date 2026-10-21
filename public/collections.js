@@ -126,7 +126,7 @@ function buildItemRow(item, remove) {
   })
 
   return el('li', { class: 'credential' }, [
-    Detail.badgeIcon(Detail.isMajor(achievement)),
+    Detail.credentialIcon(achievement),
     el('div', { class: 'credential-body' }, [nameBtn, el('span', { class: 'credential-meta' }, meta)]),
     el('div', { class: 'credential-status' }, [removeBtn, shareBtn, walletBtn]),
   ])

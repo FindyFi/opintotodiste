@@ -29,6 +29,16 @@ version to pin.
   koski2openbadge v0.5.0 and an oid4vci-issuer release that turns an offer's `validUntil` into
   `exp` (K3); an older issuer ignores the field, and the wallet credential then doesn't expire.
 
+- The student status goes to wallets as a type of its own, "Opiskelijatodiste" (Student status),
+  when `OID4VCI_STUDENT_STATUS_VCT` is set: flat PID-style claims (`enrolment_status`,
+  `institution_name`, `institution_code`, `education_level`, `expiry_date`, …) under the
+  oid4vci-issuer configuration `OID4VCI_STUDENT_STATUS_CONFIGURATION_ID` (default
+  `StudentStatusSdJwtVc`), with its own card and hot pink colours; see
+  docs/student-status-wallet-credential.md. Who and where are selectively disclosable; the level, the
+  status and the dates are not. The holder's birth date comes from Koski when it is sent and is not
+  stored. In the list it has a student card icon and comes first. Needs koski2openbadge v0.6.0 (the
+  school number) and the issuer configuration (K5).
+
 - The "Add to wallet" dialog shows when each offer is picked up (or has expired), so you notice if
   someone else scanned the code first. The app asks oid4vci-issuer's offer status endpoint through the
   new `POST /wallet-offers/status`.

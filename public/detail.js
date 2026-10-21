@@ -23,11 +23,26 @@ const Detail = (() => {
   const BADGE_ICON_SVG =
     '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="9" r="6"/><path d="M8.5 13.8 7 22l5-3 5 3-1.5-8.2"/></svg>'
 
+  // A student card (K5): a card with a photo and lines of text.
+  const STUDENT_CARD_ICON_SVG =
+    '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><circle cx="8" cy="11" r="2"/><path d="M5 16c.6-1.3 1.7-2 3-2s2.4.7 3 2"/><path d="M14 10h5M14 14h3"/></svg>'
+
   function badgeIcon(strong) {
     const icon = el('span', { class: strong ? 'credential-icon strong' : 'credential-icon' })
     icon.innerHTML = BADGE_ICON_SVG
     return icon
   }
+
+  // The list icon for an achievement: a student card for a student status,
+  // otherwise the rosette.
+  function credentialIcon(achievement) {
+    if (!isStudentStatus(achievement)) return badgeIcon(isMajor(achievement))
+    const icon = el('span', { class: 'credential-icon student' })
+    icon.innerHTML = STUDENT_CARD_ICON_SVG
+    return icon
+  }
+
+  const isStudentStatus = (achievement) => achievement?.achievementType === 'ext:StudentStatus'
 
   // Whole qualifications get the stronger icon tint; their parts and single
   // courses the softer one.
@@ -135,5 +150,5 @@ const Detail = (() => {
     dialog.showModal()
   }
 
-  return { open, badgeIcon, isMajor, formatDate }
+  return { open, badgeIcon, credentialIcon, isMajor, isStudentStatus, formatDate }
 })()
