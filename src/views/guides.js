@@ -110,6 +110,23 @@ ${WALLETS.filter((w) => w.group === group.id).map(walletCard).join('\n')}
 </section>`
   ).join('\n')
 
+const HOW_IT_WORKS = {
+  fi: `<aside class="guide-note">
+  <h2>Näin palvelu toimii</h2>
+  <p>Kun syötät jakolinkin Opintotodisteeseen, palvelu hakee opintosi Koski-rekisteristä ja muuntaa ne osaamismerkeiksi.</p>
+  <p>Jos et kirjaudu sisään, tietosi poistuvat automaattisesti tunnin kuluttua viimeisestä käynnistäsi. Voit myös poistaa ne heti ${ui('Tyhjennä tiedot')}-painikkeella.</p>
+  <p>Voit myös luoda itsellesi tilin kirjautumalla sisään. Silloin tietosi tallentuvat. Kirjautumiseen käytetään pääsyavainta (passkey), joka tallentuu omalle laitteellesi. Salasanaa ei tarvita.</p>
+  <p><a href="/policy">Tietosuoja ja käyttöehdot</a></p>
+</aside>`,
+  en: `<aside class="guide-note">
+  <h2>How the service works</h2>
+  <p>When you enter a share link in Opintotodiste, the service fetches your studies from the Koski register and turns them into badges.</p>
+  <p>If you don't sign in, your data is removed automatically an hour after your last visit. You can also remove it right away with the ${ui('Clear my data')} button.</p>
+  <p>You can also create an account by signing in. Then your data is saved. Signing in uses a passkey, which is stored on your own device. No password is needed.</p>
+  <p><a href="/policy">Privacy notice and terms of use</a></p>
+</aside>`,
+}
+
 const GUIDES = {
   studyinfo: {
     title: { fi: 'Luo jakolinkki Oma Opintopolussa', en: 'Create a share link in My Studyinfo' },
@@ -120,18 +137,24 @@ const GUIDES = {
     body: {
       fi: `<div class="guide-columns">
 ${steps(STUDYINFO_STEPS.fi)}
-<aside class="guide-note">
+<aside class="guide-asides">
+<div class="guide-note">
   <h2>Hyvä tietää</h2>
   <p>Jakolinkillä näkyvät vain ne opinnot, jotka valitsit. Kuka tahansa linkin saanut voi nähdä ne, joten älä julkaise linkkiä.</p>
   <p>Voit poistaa linkin Oma Opintopolussa milloin tahansa. Jo tallentamasi osaamismerkit säilyvät.</p>
+</div>
+${HOW_IT_WORKS.fi}
 </aside>
 </div>`,
       en: `<div class="guide-columns">
 ${steps(STUDYINFO_STEPS.en)}
-<aside class="guide-note">
+<aside class="guide-asides">
+<div class="guide-note">
   <h2>Good to know</h2>
   <p>The share link shows only the studies you selected. Anyone who gets the link can see them, so don't post it publicly.</p>
   <p>You can delete the link in My Studyinfo at any time. Badges you have already saved stay as they are.</p>
+</div>
+${HOW_IT_WORKS.en}
 </aside>
 </div>`,
     },
@@ -149,14 +172,16 @@ ${steps(STUDYINFO_STEPS.en)}
   ${steps(WALLET_STEPS.fi)}
   <p class="guide-note">Merkit kokoelmistasi voit lähettää lompakkoon myös <a href="/my/collections">Kokoelmani</a>-sivulta.</p>
   <p class="guide-note"><strong>Vaihdoitko puhelinta?</strong> Merkit eivät siirry varmuuskopion mukana, koska ne on sidottu vanhan puhelimesi lompakkoon. Lisää ne uudelleen Opintotodisteesta.</p>
-</section>`,
+</section>
+${HOW_IT_WORKS.fi}`,
       en: `${walletSections('en')}
 <section class="wallet-howto">
   <h2>How to add badges to your wallet</h2>
   ${steps(WALLET_STEPS.en)}
   <p class="guide-note">You can also send badges from your collections to a wallet on the <a href="/my/collections">My collections</a> page.</p>
   <p class="guide-note"><strong>Got a new phone?</strong> Badges don't move with a backup, because they are tied to the wallet on your old phone. Add them again from this site.</p>
-</section>`,
+</section>
+${HOW_IT_WORKS.en}`,
     },
   },
   sharing: {

@@ -47,4 +47,17 @@ describe('guide pages', () => {
       assert.equal(html.includes(group.title.fi), !group.hidden, group.id)
     }
   })
+
+  test('studyinfo and wallet guides explain how the service works, in both languages', () => {
+    for (const name of ['studyinfo', 'wallet']) {
+      const html = guidePage(name)
+      assert.equal(html.split('<h2>Näin palvelu toimii</h2>').length - 1, 1, name)
+      assert.equal(html.split('<h2>How the service works</h2>').length - 1, 1, name)
+      assert.ok(html.includes('<strong>Tyhjennä tiedot</strong>-painikkeella'), name)
+      assert.ok(html.includes('<strong>Clear my data</strong>'), name)
+      assert.equal(html.split('<a href="/policy">Tietosuoja ja käyttöehdot</a></p>').length - 1, 1, name)
+      assert.equal(html.split('<a href="/policy">Privacy notice and terms of use</a></p>').length - 1, 1, name)
+    }
+    assert.doesNotMatch(guidePage('sharing'), /Näin palvelu toimii/)
+  })
 })
