@@ -44,8 +44,8 @@ ${['base', ...styles].map((name) => `<link rel="stylesheet" href="/styles/${name
 }
 
 // Rendered on every page, with the same slots in the same places whatever
-// the page and the sign-in state (U25): brand, site nav, language switcher,
-// account slot. The account slot has a fixed width (base.css), so filling it
+// the page and the sign-in state (U25): brand, site nav, account slot,
+// language switcher. The account slot has a fixed width (base.css), so filling it
 // never moves anything else. With `auth` it is #authNav, which public/auth.js
 // populates from GET /auth/me and re-renders after login/register/logout, so
 // there is exactly one place (client-side) that knows how to draw the
@@ -65,8 +65,8 @@ export function header({ auth = true, current = '' } = {}) {
   <nav class="site-nav" aria-label="Sivusto">${SITE_NAV.map(
     ({ id, href, text }) => `<a href="${href}"${id === current ? ' aria-current="page"' : ''}><span lang="fi">${text}</span></a>`
   ).join('')}</nav>
-  <translate-element persist src="/translations.json"></translate-element>
   ${auth ? '<div id="authNav" class="auth-nav"></div>' : '<div class="auth-nav"></div>'}
+  <translate-element persist src="/translations.json"></translate-element>
 </header>${
     auth
       ? `

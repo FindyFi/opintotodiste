@@ -218,8 +218,8 @@ input[type=checkbox], input[type=radio] {
    without sign-in, moves nothing. */
 .topbar {
   display: grid;
-  grid-template-columns: auto 1fr auto var(--account-slot);
-  grid-template-areas: "brand nav lang account";
+  grid-template-columns: auto 1fr var(--account-slot) auto;
+  grid-template-areas: "brand nav account lang";
   align-items: center;
   gap: 12px 24px;
   padding: 20px 0;
@@ -267,8 +267,8 @@ input[type=checkbox], input[type=radio] {
 .account-menu:focus { outline: none; }
 .account-menu-name { padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--line); color: var(--heading); font-weight: 700; overflow-wrap: anywhere; }
 .account-menu ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
-.account-menu .link-btn { display: block; width: 100%; padding: 8px 0; color: var(--heading); font-weight: 700; text-decoration: none; }
-.account-menu .link-btn:hover { color: var(--link); text-decoration: underline; }
+.account-menu a, .account-menu .link-btn { display: block; width: 100%; padding: 8px 0; color: var(--heading); font-weight: 700; text-decoration: none; }
+.account-menu a:hover, .account-menu .link-btn:hover { color: var(--link); text-decoration: underline; }
 .account-menu .row-error { margin-top: 8px; }
 
 /* translate-element's language switcher, placed in the top bar */

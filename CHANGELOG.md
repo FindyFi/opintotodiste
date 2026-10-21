@@ -12,10 +12,11 @@ version to pin.
 ### Changed
 
 - The top bar keeps its layout whatever the page and the sign-in state (U25). The site links
-  (now with "Kokoelmani", always shown; signed out, its page asks to sign in) follow the brand, and
-  the account sits in a fixed-width slot at the end: "Kirjaudu sisään" (registering is offered in
-  the dialog) or the display name, which opens a menu with the full name, "Tili", "Lataa tietosi"
-  and "Kirjaudu ulos". Pages without sign-in keep the slot empty.
+  (now with "Kokoelmani", always shown; signed out, its page asks to sign in) follow the brand; the
+  account sits in a fixed-width slot before the language switcher, which ends the bar: "Kirjaudu
+  sisään" (registering is offered in the dialog) or the display name, which opens a menu with the
+  full name, "Kokoelmani", "Tili", "Lataa tietosi" and "Kirjaudu ulos". Pages without sign-in keep
+  the slot empty.
 
 ## [0.0.8] - 2026-10-21
 

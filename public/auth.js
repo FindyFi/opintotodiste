@@ -58,7 +58,7 @@ const PERSON_ICON = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none"
 // src/views/layout.js), so signing in or out never moves the other links.
 // Signed out it holds "Kirjaudu sisään" (registering is offered inside the
 // dialog); signed in, a button with the display name that opens the account
-// menu. The menu is a disclosure (button + aria-expanded) and shows the full
+// menu. Kokoelmani is in the menu too, besides the site nav. The menu is a disclosure (button + aria-expanded) and shows the full
 // name, which the button may have to cut short.
 async function renderAuthNav() {
   const nav = document.getElementById('authNav')
@@ -125,6 +125,7 @@ async function renderAuthNav() {
   menu.append(
     el('p', { class: 'account-menu-name' }, currentMe.displayName),
     el('ul', {}, [
+      el('li', {}, el('a', { href: '/my/collections', lang: 'fi' }, 'Kokoelmani')),
       item('Tili', () => {
         setOpen(false)
         openAccountDialog()
