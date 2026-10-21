@@ -408,6 +408,67 @@ describe('passkeys and collections', needsPostgres, () => {
     })
   })
 
+  describe('downloading the account data', () => {
+    let db
+
+    before(async () => {
+      db = new pg.Client({ connectionString: databaseUrl() })
+      await db.connect()
+    })
+
+    after(async () => {
+      await db?.end()
+    })
+
+    async function withData(displayName, badgeName) {
+      const { client } = await signUp(displayName)
+      const { rows: users } = await db.query('SELECT id FROM users WHERE display_name = $1', [displayName])
+      const { rows } = await db.query('INSERT INTO saved_credentials (owner_id, credential) VALUES ($1, $2) RETURNING id', [
+        users[0].id,
+        { credentialSubject: { achievement: { name: badgeName } } },
+      ])
+      const credentialId = rows[0].id
+      const collection = (await client.json('/collections', { method: 'POST', body: { name: `${badgeName} set` } })).body
+      await client.json(`/collections/${collection.id}/items`, { method: 'POST', body: { credentialIds: [credentialId] } })
+      const link = (await client.json('/share-links', { method: 'POST', body: { credentialId, label: `${badgeName} link` } })).body
+      await db.query('INSERT INTO koski_imports (owner_id, koski_url, data) VALUES ($1, $2, $3)', [
+        users[0].id,
+        `https://koski.example/${badgeName}`,
+        { opiskeluoikeudet: [] },
+      ])
+      return { client, credentialId, collection, link }
+    }
+
+    test('is the user’s own rows as an attachment, and none of another user’s', async () => {
+      const mine = await withData('Export Mine', 'MineBadge')
+      await withData('Export Other', 'OtherBadge')
+
+      const res = await mine.client.request('/auth/account/export')
+      assert.equal(res.status, 200)
+      assert.match(res.headers.get('content-disposition'), /^attachment/)
+      assert.equal(res.headers.get('cache-control'), 'no-store')
+      const data = JSON.parse(await res.text())
+
+      assert.equal(data.user.displayName, 'Export Mine')
+      assert.equal(data.passkeys.length, 1)
+      assert.ok(data.passkeys[0].credentialId && data.passkeys[0].publicKey)
+      assert.equal(data.koskiImport.koskiUrl, 'https://koski.example/MineBadge')
+      assert.deepEqual(
+        data.savedCredentials.map((c) => c.credential.credentialSubject.achievement.name),
+        ['MineBadge']
+      )
+      assert.equal(data.collections.length, 1)
+      assert.equal(data.collections[0].name, 'MineBadge set')
+      assert.deepEqual(data.collections[0].credentialIds, [mine.credentialId])
+      assert.deepEqual(data.shareLinks.map((l) => [l.label, l.token]), [['MineBadge link', mine.link.path.split("/").pop()]])
+      assert.ok(!JSON.stringify(data).includes('Other'))
+    })
+
+    test('refuses a caller who is not signed in', async () => {
+      assert.equal((await createClient(app.baseUrl).request('/auth/account/export')).status, 401)
+    })
+  })
+
   describe('deleting the account', () => {
     let db
 

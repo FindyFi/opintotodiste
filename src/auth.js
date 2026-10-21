@@ -186,6 +186,70 @@ export async function listPasskeys(userId) {
   return rows.map((r) => ({ id: r.credential_id, deviceType: r.device_type, createdAt: r.created_at, lastUsedAt: r.last_used_at }))
 }
 
+// Everything stored about the user, for the download in the account dialog
+// (GDPR art. 15 and 20). Internal ids that mean nothing outside the database are
+// left out; the ids that tie a collection or a link to a credential stay, so
+// the copy can be read on its own. Not the session row: it holds no more than
+// the front page shows and is gone within 24 hours. A table added to
+// schema.sql needs its rows added here too.
+export async function exportAccount(userId) {
+  const one = async (sql) => (await pool.query(sql, [userId])).rows
+  const [users, passkeys, imports, saved, cols, links] = await Promise.all([
+    one('SELECT display_name, created_at FROM users WHERE id = $1'),
+    one(
+      `SELECT credential_id, public_key, device_type, backed_up, transports, created_at, last_used_at
+       FROM passkey_credentials WHERE user_id = $1 ORDER BY created_at`
+    ),
+    one('SELECT koski_url, data, removed, updated_at FROM koski_imports WHERE owner_id = $1'),
+    one('SELECT id, credential, added_at FROM saved_credentials WHERE owner_id = $1 ORDER BY added_at'),
+    one(
+      `SELECT c.id, c.name, c.created_at, c.updated_at,
+              COALESCE(array_agg(i.credential_id ORDER BY i.added_at) FILTER (WHERE i.credential_id IS NOT NULL), '{}') AS credential_ids
+       FROM collections c LEFT JOIN collection_items i ON i.collection_id = c.id
+       WHERE c.owner_id = $1 GROUP BY c.id ORDER BY c.created_at`
+    ),
+    one(
+      `SELECT l.token, l.label, l.collection_id, l.credential_id, l.created_at
+       FROM share_links l
+       LEFT JOIN collections c ON c.id = l.collection_id
+       LEFT JOIN saved_credentials s ON s.id = l.credential_id
+       WHERE c.owner_id = $1 OR s.owner_id = $1 ORDER BY l.created_at`
+    ),
+  ])
+  if (!users[0]) return null
+  return {
+    exportedAt: new Date().toISOString(),
+    user: { displayName: users[0].display_name, createdAt: users[0].created_at },
+    passkeys: passkeys.map((r) => ({
+      credentialId: r.credential_id,
+      publicKey: Buffer.from(r.public_key).toString('base64url'),
+      deviceType: r.device_type,
+      backedUp: r.backed_up,
+      transports: r.transports,
+      createdAt: r.created_at,
+      lastUsedAt: r.last_used_at,
+    })),
+    koskiImport: imports[0]
+      ? { koskiUrl: imports[0].koski_url, data: imports[0].data, removed: imports[0].removed, updatedAt: imports[0].updated_at }
+      : null,
+    savedCredentials: saved.map((r) => ({ id: r.id, credential: r.credential, addedAt: r.added_at })),
+    collections: cols.map((r) => ({
+      id: r.id,
+      name: r.name,
+      createdAt: r.created_at,
+      updatedAt: r.updated_at,
+      credentialIds: r.credential_ids,
+    })),
+    shareLinks: links.map((r) => ({
+      token: r.token,
+      label: r.label,
+      collectionId: r.collection_id,
+      credentialId: r.credential_id,
+      createdAt: r.created_at,
+    })),
+  }
+}
+
 // Deletes the account: passkeys and collections (with their items and share
 // links) go with the users row through ON DELETE CASCADE. The user's other
 // sessions (another browser, another device) are deleted too, so none of them
