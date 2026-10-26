@@ -9,6 +9,13 @@ version to pin.
 
 ## [Unreleased]
 
+### Security
+
+- body-parser 2.4.0 ([GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)): a
+  compressed request body with trailing bytes no longer crashes the app. Also proxy-addr 2.0.8
+  ([GHSA-jqcg-44mw-7w3h](https://github.com/advisories/GHSA-jqcg-44mw-7w3h)), which did not apply
+  here: `trust proxy` is a hop count, not a subnet.
+
 ## [0.0.10] - 2026-10-21
 
 No schema, env or oid4vci-issuer changes; UI text only. The privacy notice and terms are unchanged.
