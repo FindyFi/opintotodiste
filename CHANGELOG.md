@@ -9,6 +9,10 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.11] - 2026-10-26
+
+No schema, env or oid4vci-issuer changes; dependency updates only.
+
 ### Security
 
 - body-parser 2.4.0 ([GHSA-27r3-jxmh-p828](https://github.com/advisories/GHSA-27r3-jxmh-p828)): a
