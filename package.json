@@ -28,7 +28,7 @@
     "express": "^5.2.1",
     "express-session": "^1.19.0",
     "koski2openbadge": "github:FindyFi/koski2openbadge#v0.6.0",
-    "pg": "^8.23.0",
+    "pg": "^8.23.1",
     "qrcode": "^1.5.4",
     "translate-element": "^4.0.0"
   },
