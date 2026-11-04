@@ -9,6 +9,14 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.12] - 2026-11-04
+
+No schema, env or oid4vci-issuer changes; dependency updates only.
+
+### Changed
+
+- express 5.3.0, dotenv 18.0.9, pg 8.23.1. CI uses actions/setup-node 7.1.0.
+
 ## [0.0.11] - 2026-10-26
 
 No schema, env or oid4vci-issuer changes; dependency updates only.
