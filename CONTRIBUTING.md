@@ -52,6 +52,21 @@ required.
 - Match the surrounding style: two-space indentation, single quotes, no semicolons.
 - Update `CHANGELOG.md` under `## [Unreleased]`.
 
+## Translations
+
+User-visible text is written in Finnish (the source language). Every new string, including those in
+native dialogs, gets its English in the same change, through the existing mechanism; don't build a
+one-off one. `test/translations.test.js` fails on English-only UI text.
+
+- Mark the text `lang="fi"` (`el(tag, { lang: 'fi' }, text)` in `public/*.js`) and add its English to
+  `public/translations.json`; translate-element swaps it in, HTML such as a link included. Or
+  hand-author the pair: a `lang="en"` sibling, or `t(fi, en)` from `i18n.js` for native dialogs.
+- Messages the server sends for the UI to show are Finnish too, with `lang: 'fi'` in the response:
+  throw a `UserError` (`src/user-error.js`) or answer with `refuse()` / `sendError()` in `index.js`, and
+  show it with `errorContent()` from `i18n.js`. Technical failures get a Finnish fallback; their details
+  go to the log. A missing page is `views.notFoundPage()`, never plain text.
+- Wording: a credential is "todiste", never "todistus"; verifying is "tarkastaa".
+
 ## Spec and format changes
 
 Open Badges 3.0, SD-JWT, OpenID for Verifiable Credential Issuance and the other formats and protocols
@@ -102,4 +117,6 @@ into the image. CI builds the image on every pull request to catch both.
 ## Releasing
 
 Bump `version` in `package.json`, move the `CHANGELOG.md` entries out of `## [Unreleased]`, and tag
-the commit, so deployments have something readable to pin.
+the commit, so deployments have something readable to pin. Run the tests and the secret scan before
+tagging. After pushing the tag, wait until every check on the tagged commit, CodeQL included, is green
+before building the image: the image builder skips the build otherwise.
