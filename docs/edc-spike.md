@@ -1,6 +1,6 @@
 # EDC1 spike: Koski data as a European Digital Credential
 
-Status: technical part done 2026-11-05; the Europass upload (step 4) is pending.
+Status: done 2026-11-05. The spike succeeded; see the Recommendation.
 The code is in `spike/edc/` and is throwaway. Nothing here runs in the app.
 
 ## Question
@@ -31,7 +31,7 @@ under `Credentials/JSON-LD Examples (ELM v3)`.
 ## What we built
 
 | File | What it does |
-|---|---|
+| --- | --- |
 | `koski2elm.mjs` | Maps one Koski higher-education degree (`korkeakoulututkinto`) and its passed courses to ELM by hand. Its input is koski2openbadge's synthetic `koski-sample.json`. |
 | `validate.py` | Checks a credential against the EDC shapes with pyshacl, offline. It accepts unsigned, sealed and "uploadable" files. |
 | `test-pki.sh` | Creates a throwaway root CA and a seal certificate for `O=Findynet Osuuskunta, organizationIdentifier=NTRFI-3213523-3`, with a revocation list (CRL). |
@@ -108,21 +108,44 @@ under `Credentials/JSON-LD Examples (ELM v3)`.
   a Windows-only desktop tool. That is manual, so it isn't an option for a
   service.
 
-## Step 4: Europass upload (pending)
+## Step 4: Europass upload
 
-The user uploads the sealed files:
+On 2026-11-05 the user uploaded all three sealed files (`-LT-iat`, `-LT`
+and `-LTA`) to Europass. All three gave the same results:
 
-- in the public EDC Viewer, https://europa.eu/europass/digital-credentials/viewer/#/home
-  ("upload credential"); and
-- in a Europass profile: My Library → Certificates and diplomas → Upload.
-  This needs an EU Login.
+| Check | Result |
+| --- | --- |
+| Format | OK |
+| Validity | OK |
+| Seal | failed, as expected: the test root is on no EU trusted list |
+| Revocation | N/A |
+| Accreditation | N/A |
 
-For each file, record whether it is accepted and shown, and the result of
-each check: Format, Seal, Owner, Revocation, Accreditation and Validity. We
-expect the Seal check to fail, because the test root is on no EU trusted
-list. The question is whether everything else passes and the credential is
-shown.
+So Europass accepts both signing-time forms (`iat` and `sigT`) and both
+levels (LT and LTA). What is left to make the credential fully verifiable
+is a seal certificate that chains to an EU trusted list.
 
 ## Recommendation
 
-<!-- filled in after step 4 -->
+**Go.** The data and format side is solved, and a credential sealed with a
+real trusted-list certificate should pass the Seal check too. Next, the
+follow-ups listed in PLAN.md:
+
+1. Ask EMPL-ELM-SUPPORT@ec.europa.eu two questions:
+   - Is an advanced seal held on a remote or cloud sealing service
+     acceptable?
+   - Is a third-party re-issuer acceptable, with Findynet as issuer and
+     sealer and the school as awarding body, but no mandate from the school?
+     The "Mandate" evidence type doesn't fit our case.
+2. Ask two or three trust service providers for quotes: a seal certificate
+   for Findynet Osuuskunta (advanced or qualified) plus a timestamping
+   service with OCSP, so the seal reaches LT level.
+
+If both answers allow it, a production task would cover:
+
+- `koski2elm`, either as a package or as part of koski2openbadge, covering
+  all record types and the gaps above (the awarding body's business ID,
+  EQF/ISCED-F levels, grading schemes);
+- the rendered page images;
+- a small DSS-based sealing service;
+- a download button. Europass upload stays manual; there's no OID4VCI.
