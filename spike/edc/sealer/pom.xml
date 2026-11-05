@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- EDC1 spike: only used to fetch EU DSS and its dependencies into ./lib
+     (mvn dependency:copy-dependencies); Seal.java is compiled and run with plain javac/java. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>fi.findy.opintotodiste</groupId>
+  <artifactId>edc-sealer-spike</artifactId>
+  <version>0</version>
+  <properties>
+    <dss.version>6.5.1</dss.version>
+  </properties>
+  <dependencies>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-jades</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-validation</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-policy-jaxb</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-token</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-service</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-tsl-validation</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-utils-apache-commons</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>eu.europa.ec.joinup.sd-dss</groupId><artifactId>dss-crl-parser-x509crl</artifactId><version>${dss.version}</version></dependency>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-simple</artifactId><version>2.0.16</version></dependency>
+  </dependencies>
+</project>
