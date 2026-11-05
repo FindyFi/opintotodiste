@@ -1,6 +1,7 @@
 # EDC1 spike: Koski data as a European Digital Credential
 
-Status: done 2026-11-05. The spike succeeded; see the Recommendation.
+Status: done 2026-11-05. The spike worked technically, but the user decided
+not to pursue EDC for now (see Decision). The branch is kept, not merged.
 The code is in `spike/edc/` and is throwaway. Nothing here runs in the app.
 
 ## Question
@@ -125,7 +126,16 @@ So Europass accepts both signing-time forms (`iat` and `sigT`) and both
 levels (LT and LTA). What is left to make the credential fully verifiable
 is a seal certificate that chains to an EU trusted list.
 
-## Recommendation
+## Decision (user, 2026-11-05)
+
+**Not pursued for now.** The branch `sr/EDC1-edc-spike` is kept and pushed,
+not merged. Koski lacks the awarding body's business ID, the EQF level and the
+degree's total credits, and the EU vocabulary has no way to say "copied from a
+national register". Together these suggest that re-issuing Koski data as EDCs
+from a third party isn't worth it. The awarding institutions, or OPH as the
+Koski owner, are better placed to issue EDCs.
+
+## Recommendation made before the decision
 
 **Go.** The data and format side is solved, and a credential sealed with a
 real trusted-list certificate should pass the Seal check too. Next, the
