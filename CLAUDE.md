@@ -18,7 +18,8 @@ worktrees; always read and edit it at that path. If it exists:
   disagrees with what is merged or pushed, tell the user and correct the plan.
 - If the user's request matches a task in the plan, work on that task: claim
   it (status `in progress (<branch>, <worktree>, <date>)`) before doing
-  anything else. If it doesn't match, ask whether it should be added to the
+  anything else. Before suggesting or claiming a task, make sure it isn't
+  already merged or claimed: `git log origin/main --oneline | grep <ID>`. If it doesn't match, ask whether it should be added to the
   plan before you start.
 - Keep the task's status and the Log in PLAN.md up to date. Other chats edit it
   concurrently, so make small, targeted edits and append to the Log; never
@@ -93,6 +94,12 @@ If there is no PLAN.md, work normally.
      in parallel, or this chat's context is already long. PLAN.md carries the
      state across chats.
 
+## Release
+
+Use the `/release` skill (`.claude/skills/release/SKILL.md`). Never dispatch
+the image build until every check on the tagged commit, CodeQL included, is
+green.
+
 ## Project notes
 
 - Node 20+, ES modules, Express 5, PostgreSQL; tests use `node --test`.
@@ -101,16 +108,11 @@ If there is no PLAN.md, work normally.
   signed by digitalcredentials/signing-service. The issuer's own checkout may
   sit anywhere on a developer's machine; find its path (`git worktree list` in
   that repository, or ask) instead of assuming one.
-- User-visible text is written in Finnish (the source language) and translated with the existing mechanism:
-  mark it `lang="fi"` (`el(tag, { lang: 'fi' }, text)` in public/*.js) and add its English to
-  `public/translations.json` (translate-element swaps it in, HTML such as a link included), or hand-author
-  the pair (a `lang="en"` sibling, or i18n.js's `t(fi, en)` for native dialogs). Messages the server sends
-  for the UI to show are Finnish too, with `lang: 'fi'` in the response: throw a `UserError`
-  (src/user-error.js) or answer with `refuse()` / `sendError()` in index.js, and show it with i18n.js's
-  `errorContent()`. Technical failures get a Finnish fallback; their details go to the log. A missing page
-  is `views.notFoundPage()`, never plain text. Don't add English-only UI text; `test/translations.test.js`
-  fails on it. Wording
-  rules: credential = "todiste", never "todistus"; verifying = "tarkastaa".
+- User-visible text follows "Translations" in `CONTRIBUTING.md` (Finnish source,
+  English via the existing mechanism, wording rules).
+- For any change to data persistence, privacy or retention, restate what is
+  stored, for whom and for how long, and wait for the user's confirmation
+  before implementing.
 - New env vars go into `.env.example` with an `# @env required|optional [secret]` tag (the test
   enforces it and `APP_ENV_KEYS` in `test/helpers/app.js`), and deployment config
   (FindyFi/aws-environment, the image builder's integration compose) must follow.
