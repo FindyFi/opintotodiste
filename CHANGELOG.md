@@ -9,6 +9,10 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.13] - 2026-11-10
+
+No schema or env changes. Needs no new oid4vci-issuer version.
+
 ### Changed
 
 - Share dialog (U29): the links are a list to choose from ("Valitse linkki"), the last row creating a
@@ -17,6 +21,8 @@ version to pin.
   URLs are printed. LinkedIn is no longer offered for collections. The message says a credential's
   authenticity "can be checked automatically". The sharing guide follows.
 - Wallet guide: Toppan Wallet added; Procivis One no longer listed.
+- `docker-compose.yml`: the `ldp_vc` configuration (`OpenBadgeCredential`) no longer asks the wallet
+  for a proof, which oid4vci-issuer v0.0.8+ allows.
 
 ## [0.0.12] - 2026-11-04
 
