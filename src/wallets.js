@@ -1,7 +1,7 @@
 // Wallets listed on /guide/wallet. Adding or moving a wallet is a change to
 // this list only. `group` picks the section; a group with `hidden: true` is
 // not shown. Store links are omitted when the app isn't in that store. EUDI
-// wallets are the ones tested in I1 (and UniMe in W1). Sorted by name, which
+// wallets are the ones tested in I1 (and UniMe in W1, Toppan in W3/W4). Sorted by name, which
 // is the order they're shown in. No descriptions on purpose: we couldn't
 // keep them up to date as the apps change.
 export const WALLET_GROUPS = [
@@ -40,17 +40,26 @@ export const WALLETS = [
     appStore: 'https://apps.apple.com/app/id6449846111',
     googlePlay: 'https://play.google.com/store/apps/details?id=id.paradym.wallet',
   },
-  {
-    name: 'Procivis One',
-    group: 'eudi',
-    appStore: 'https://apps.apple.com/app/id6480111491',
-    googlePlay: 'https://play.google.com/store/apps/details?id=ch.procivis.one.wallet.trial',
-  },
+  // Procivis One left out of the guide for now (user, 2026-11-10).
+  // {
+  //   name: 'Procivis One',
+  //   group: 'eudi',
+  //   appStore: 'https://apps.apple.com/app/id6480111491',
+  //   googlePlay: 'https://play.google.com/store/apps/details?id=ch.procivis.one.wallet.trial',
+  // },
   {
     name: 'Talao',
     group: 'eudi',
     appStore: 'https://apps.apple.com/app/id1582183266',
     googlePlay: 'https://play.google.com/store/apps/details?id=co.talao.wallet',
+  },
+  {
+    // Needs authorization_endpoint in the AS metadata and an offer without a
+    // tx_code (oid4vci-issuer W3, opintotodiste W4).
+    name: 'Toppan Wallet',
+    group: 'eudi',
+    appStore: 'https://apps.apple.com/app/id6754371637',
+    googlePlay: 'https://play.google.com/store/apps/details?id=com.toppansecurity.walletapp',
   },
   {
     name: 'UniMe',
