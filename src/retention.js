@@ -9,14 +9,15 @@ export const RETENTION_INTERVAL_MS = 24 * 60 * 60 * 1000
 
 // Arbitrary constant, distinct from db.js's SCHEMA_LOCK_KEY. Replicas that run
 // the sweep at the same time take it in turn; whoever finds it taken skips.
-const RETENTION_LOCK_KEY = 4171580990
+export const RETENTION_LOCK_KEY = 4171580990
 
 /**
  * Deletes the accounts unused for `months` months and returns how many. The
  * users rows go first (passkeys, collections, saved credentials and share
  * links follow through ON DELETE CASCADE), then their sessions, in the order
- * deleteAccount in auth.js uses. Returns 0 without doing anything when another
- * instance is sweeping.
+ * deleteAccount in auth.js uses. Returns null without doing anything when
+ * another instance is sweeping, so a skipped sweep isn't mistaken for one that
+ * found nothing.
  */
 export async function deleteUnusedAccounts(pool, { months = UNUSED_ACCOUNT_MONTHS } = {}) {
   const client = await pool.connect()
@@ -25,7 +26,7 @@ export async function deleteUnusedAccounts(pool, { months = UNUSED_ACCOUNT_MONTH
     const { rows: lock } = await client.query('SELECT pg_try_advisory_xact_lock($1::bigint) AS locked', [RETENTION_LOCK_KEY])
     if (!lock[0].locked) {
       await client.query('ROLLBACK')
-      return 0
+      return null
     }
     const { rows } = await client.query(
       `DELETE FROM users u
