@@ -218,9 +218,6 @@
   "Jaa": {
     "en": "Share"
   },
-  "Kopioi": {
-    "en": "Copy"
-  },
   "Jaa todiste": {
     "en": "Share credential"
   },
@@ -229,9 +226,6 @@
   },
   "Lisää LinkedIn-profiiliin": {
     "en": "Add to LinkedIn profile"
-  },
-  "Jaa LinkedInissä": {
-    "en": "Share on LinkedIn"
   },
   "Viesti vastaanottajalle": {
     "en": "Message for the recipient"
@@ -328,9 +322,6 @@
   },
   "Luo linkki": {
     "en": "Create link"
-  },
-  "Vastaanottaja, esim. työnantajan nimi": {
-    "en": "Recipient, e.g. the employer's name"
   },
   "Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.": {
     "en": "Create a link of its own for each recipient. Anyone with the link can see all the credentials in the collection and download them. When you delete a link it stops working, but the other links keep working. We don't track who opens a link."
@@ -523,5 +514,17 @@
   },
   "Pääsyavaimen käyttö peruttiin tai aika loppui. Yritä uudelleen.": {
     "en": "Using the passkey was cancelled or timed out. Please try again."
+  },
+  "Kopioi viesti": {
+    "en": "Copy message"
+  },
+  "Esikatsele": {
+    "en": "Preview"
+  },
+  "Valitse linkki": {
+    "en": "Choose a link"
+  },
+  "Uusi linkki": {
+    "en": "New link"
   }
 }

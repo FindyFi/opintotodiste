@@ -9,6 +9,14 @@ version to pin.
 
 ## [Unreleased]
 
+### Changed
+
+- Share dialog (U29): the links are a list to choose from ("Valitse linkki"), the last row creating a
+  new one ("Uusi linkki"), each with "Poista". The chosen link gets "Kopioi linkki", "Esikatsele" and,
+  for a single credential, "Lisää LinkedIn-profiiliin"; the ready-made message is always visible. No
+  URLs are printed. LinkedIn is no longer offered for collections. The message says a credential's
+  authenticity "can be checked automatically". The sharing guide follows.
+
 ## [0.0.12] - 2026-11-04
 
 No schema, env or oid4vci-issuer changes; dependency updates only.

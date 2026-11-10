@@ -2,9 +2,12 @@
 // provide <dialog id="detailDialog"> with a #detailDialogContent child).
 //   Share.open({ collectionId })    links to a collection
 //   Share.open({ credentialId })    links to one saved credential
-// Each recipient gets a link of their own (named after them), so one can be
-// deleted without breaking the others. The selected link comes with a copy
-// button, LinkedIn buttons and a ready-made message for the recipient (fi/en).
+// Each recipient gets a link of their own (named after them), so a link no
+// longer needed can be deleted without breaking the others. The dialog lists
+// the links as radio buttons, the last one creating a new link; under the
+// list, the chosen link's actions: copy the link, add a single credential to
+// a LinkedIn profile, preview what the recipient sees, and a ready-made
+// message (fi/en) to edit and copy.
 const Share = (() => {
   function el(tag, props = {}, children = []) {
     const node = document.createElement(tag)
@@ -23,7 +26,7 @@ const Share = (() => {
         single
           ? 'jaan kanssasi digitaalisen todisteen (Open Badges -osaamismerkin) osaamisestani.'
           : 'jaan kanssasi digitaaliset todisteeni (Open Badges -osaamismerkkejä) osaamisestani.',
-        'Digitaalinen todiste on sähköisesti allekirjoitettu, joten sen aitouden voi tarkastaa ilman yhteydenottoa myöntäjään.',
+        'Digitaalinen todiste on sähköisesti allekirjoitettu, joten sen aitouden voi tarkastaa automaattisesti.',
         '',
         single ? `Todisteen näet ja voit ladata täältä: ${link}` : `Todisteet näet ja voit ladata täältä: ${link}`,
         '',
@@ -37,7 +40,7 @@ const Share = (() => {
         single
           ? 'I am sharing a digital credential (an Open Badge) about my skills with you.'
           : 'I am sharing digital credentials (Open Badges) about my skills with you.',
-        'A digital credential is electronically signed, so its authenticity can be checked without contacting the issuer.',
+        'A digital credential is electronically signed, so its authenticity can be checked automatically.',
         '',
         single ? `You can view and download the credential here: ${link}` : `You can view and download the credentials here: ${link}`,
         '',
@@ -64,14 +67,8 @@ const Share = (() => {
     return url.toString()
   }
 
-  function linkedInShareUrl(link) {
-    const url = new URL('https://www.linkedin.com/sharing/share-offsite/')
-    url.searchParams.set('url', link)
-    return url.toString()
-  }
-
   function linkedInLink(label, href) {
-    return el('a', { class: 'button small ghost', href, target: '_blank', rel: 'noopener' }, el('span', { lang: 'fi' }, label))
+    return el('a', { class: 'button small linkedin-btn', href, target: '_blank', rel: 'noopener' }, el('span', { lang: 'fi' }, label))
   }
 
   function addToProfileButton(item, certUrl) {
@@ -86,9 +83,10 @@ const Share = (() => {
     return linkedInLink('Lisää LinkedIn-profiiliin', href)
   }
 
-  function copyButton(getText) {
-    const button = el('button', { type: 'button', class: 'small primary copy-btn' }, [
-      el('span', { class: 'label-default', lang: 'fi' }, 'Kopioi'),
+  // `label`: the button's Finnish label element, el('span', { lang: 'fi' }, '…').
+  function copyButton(getText, label, className = 'small') {
+    const button = el('button', { type: 'button', class: `${className} copy-btn` }, [
+      el('span', { class: 'label-default' }, label),
       el('span', { class: 'label-done', lang: 'fi' }, 'Kopioitu!'),
     ])
     button.addEventListener('click', async () => {
@@ -141,10 +139,15 @@ const Share = (() => {
     }
 
     const origin = location.origin
+    const single = !collectionId
     let links = (await requestJson(`/share-links?${query}`)).links
-    let selectedId = links[0]?.id
+    const NEW = 'new'
+    let selectedId = links[0]?.id ?? NEW
+    const drafts = new Map() // link id -> edited message
     let lang = document.documentElement.lang === 'en' ? 'en' : 'fi'
     const errorEl = el('p', { class: 'error', role: 'alert', hidden: '' })
+    const urlOf = (link) => `${origin}${link.path}`
+    const messageFor = (link) => MESSAGES[lang]({ link: urlOf(link), origin, single })
 
     // `err`: an Error, or a server error's { message, lang, link } (i18n.js).
     function showError(err) {
@@ -152,16 +155,64 @@ const Share = (() => {
       errorEl.hidden = false
     }
 
+    function select(id) {
+      selectedId = id
+      errorEl.hidden = true
+      render()
+    }
+
+    function radio(id, label, extra = []) {
+      const input = el('input', { type: 'radio', name: 'shareLink', id: `share-radio-${id}`, value: id })
+      input.checked = id === selectedId
+      input.addEventListener('change', () => {
+        select(id)
+        content.querySelector(`#share-radio-${id}`)?.focus()
+      })
+      return el('li', { class: id === selectedId ? 'share-choice selected' : 'share-choice' }, [
+        input,
+        el('label', { for: `share-radio-${id}` }, label),
+        ...extra,
+      ])
+    }
+
+    function linkRow(link) {
+      const remove = el('button', { type: 'button', class: 'link-btn share-remove' }, el('span', { lang: 'fi' }, 'Poista'))
+      remove.addEventListener('click', async () => {
+        if (!confirm(t(`Poistetaanko linkki "${link.label}"? Se lakkaa toimimasta.`, `Delete the link "${link.label}"? It stops working.`))) return
+        try {
+          await requestJson(`/share-links/${link.id}`, { method: 'DELETE' })
+          links = links.filter((l) => l.id !== link.id)
+          drafts.delete(link.id)
+          select(selectedId === link.id ? (links[0]?.id ?? NEW) : selectedId)
+        } catch (err) {
+          showError(err)
+        }
+      })
+      return radio(link.id, [el('span', { class: 'share-choice-name' }, link.label), el('span', { class: 'muted' }, formatDate(link.createdAt))], [remove])
+    }
+
     // The label carries the text to translate, not the input: translate-element
     // would clone an input with a lang attribute, and the hidden copy would sit
     // in the form, empty and required.
-    const labelInput = el('input', { type: 'text', id: 'shareLabelInput', required: '', maxlength: '100' })
-    const form = el('form', { class: 'share-new-form' }, [
-      el('label', { for: 'shareLabelInput', lang: 'fi' }, 'Vastaanottaja, esim. työnantajan nimi'),
-      el('div', { class: 'field-row share-new' }, [
-        labelInput,
-        el('button', { type: 'submit', class: 'primary' }, el('span', { lang: 'fi' }, 'Luo linkki')),
-      ]),
+    const labelInput = el('input', {
+      type: 'text',
+      id: 'shareLabelInput',
+      required: '',
+      maxlength: '100',
+      'aria-label': t('Vastaanottajan nimi', "The recipient's name"),
+      placeholder: t('esim. työnantajan nimi', "e.g. the employer's name"),
+    })
+    labelInput.addEventListener('focus', () => {
+      if (selectedId === NEW) return
+      // Choose "new" without re-rendering, which would take the focus away.
+      selectedId = NEW
+      content.querySelector(`#share-radio-${NEW}`).checked = true
+      content.querySelectorAll('.share-choice').forEach((li) => li.classList.toggle('selected', li.querySelector('input[type=radio]').checked))
+      content.querySelector('.share-panel')?.remove()
+    })
+    const form = el('form', { class: 'field-row share-new' }, [
+      labelInput,
+      el('button', { type: 'submit', class: 'primary small' }, el('span', { lang: 'fi' }, 'Luo linkki')),
     ])
     form.addEventListener('submit', async (e) => {
       e.preventDefault()
@@ -170,80 +221,42 @@ const Share = (() => {
       try {
         const link = await requestJson('/share-links', { method: 'POST', body: { ...target, label } })
         links = [link, ...links]
-        selectedId = link.id
         labelInput.value = ''
-        errorEl.hidden = true
-        render()
+        select(link.id)
+        content.querySelector('.share-panel .copy-btn')?.focus()
       } catch (err) {
         showError(err)
       }
     })
 
-    function linkItem(link) {
-      const selected = link.id === selectedId
-      const url = `${origin}${link.path}`
-      const select = el('button', { type: 'button', class: 'share-link-label', 'aria-pressed': String(selected) }, link.label)
-      select.addEventListener('click', () => {
-        selectedId = link.id
-        render()
-      })
-      const remove = el('button', { type: 'button', class: 'small ghost danger' }, el('span', { lang: 'fi' }, 'Poista'))
-      remove.addEventListener('click', async () => {
-        if (!confirm(t(`Poistetaanko linkki "${link.label}"? Se lakkaa toimimasta.`, `Delete the link "${link.label}"? It stops working.`))) return
-        try {
-          await requestJson(`/share-links/${link.id}`, { method: 'DELETE' })
-          links = links.filter((l) => l.id !== link.id)
-          if (selected) selectedId = links[0]?.id
-          render()
-        } catch (err) {
-          showError(err)
-        }
-      })
-      return el('li', { class: selected ? 'share-link-item selected' : 'share-link-item' }, [
-        el('div', { class: 'share-link-head' }, [
-          select,
-          el('span', { class: 'muted' }, formatDate(link.createdAt)),
-          remove,
-        ]),
-        selected
-          ? el('div', { class: 'share-row' }, [
-              el('a', { class: 'share-link', href: url, target: '_blank', rel: 'noopener' }, url),
-              copyButton(() => url),
-            ])
-          : '',
-      ])
-    }
+    function panel(link) {
+      const url = urlOf(link)
+      const textarea = el('textarea', { class: 'share-message', rows: '10', 'aria-label': t('Viesti', 'Message') })
+      textarea.value = drafts.get(link.id) ?? messageFor(link)
+      textarea.addEventListener('input', () => drafts.set(link.id, textarea.value))
 
-    // The LinkedIn buttons and the message, for the selected link.
-    function forLink(link) {
-      const url = `${origin}${link.path}`
-      const certUrl = (item) => (collectionId ? `${url}/items/${item.id}` : url)
-      const linkedInButtons = items.map((item) => addToProfileButton(item, certUrl(item)))
-      if (collectionId) linkedInButtons.push(linkedInLink('Jaa LinkedInissä', linkedInShareUrl(url)))
-
-      const textarea = el('textarea', { class: 'share-message', rows: '11', 'aria-label': 'Viesti' })
-      const setMessage = () => {
-        textarea.value = MESSAGES[lang]({ link: url, origin, single: !collectionId })
-      }
-      setMessage()
-
-      const toggle = el('div', { class: 'lang-toggle', role: 'group', 'aria-label': 'Viestin kieli' })
+      const toggle = el('div', { class: 'lang-toggle', role: 'group', 'aria-label': t('Viestin kieli', 'Message language') })
       for (const [code, label] of [['fi', 'Suomeksi'], ['en', 'In English']]) {
         const button = el('button', { type: 'button', class: 'small ghost', 'aria-pressed': String(code === lang) }, label)
         button.addEventListener('click', () => {
           lang = code
+          drafts.clear()
           toggle.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === button)))
-          setMessage()
+          textarea.value = messageFor(link)
         })
         toggle.append(button)
       }
 
-      return [
-        el('div', { class: 'linkedin-actions' }, linkedInButtons),
+      return el('section', { class: 'share-panel', 'aria-label': link.label }, [
+        el('div', { class: 'share-panel-actions' }, [
+          copyButton(() => url, el('span', { lang: 'fi' }, 'Kopioi linkki')),
+          el('a', { class: 'share-preview', href: url, target: '_blank', rel: 'noopener' }, el('span', { lang: 'fi' }, 'Esikatsele')),
+          ...(single ? [addToProfileButton(items[0], url)] : []),
+        ]),
         el('div', { class: 'share-message-head' }, [el('h3', { lang: 'fi' }, 'Viesti vastaanottajalle'), toggle]),
         textarea,
-        el('p', {}, copyButton(() => textarea.value)),
-      ]
+        el('p', {}, copyButton(() => textarea.value, el('span', { lang: 'fi' }, 'Kopioi viesti'))),
+      ])
     }
 
     function render() {
@@ -258,16 +271,18 @@ const Share = (() => {
             ? 'Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee kokoelman kaikki todisteet ja voi ladata ne. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.'
             : 'Luo jokaiselle vastaanottajalle oma linkki. Linkin avaaja näkee tämän todisteen ja voi ladata sen. Kun poistat linkin, se lakkaa toimimasta, mutta muut linkit toimivat edelleen. Emme seuraa, kuka linkin avaa.'
         ),
-        form,
+        el('fieldset', { class: 'share-choices' }, [
+          el('legend', { lang: 'fi' }, 'Valitse linkki'),
+          el('ul', {}, [...links.map(linkRow), radio(NEW, el('span', { lang: 'fi' }, 'Uusi linkki'), [form])]),
+        ]),
         errorEl,
-        links.length ? el('ul', { class: 'share-links' }, links.map(linkItem)) : '',
-        ...(selected ? forLink(selected) : [])
+        selected ? panel(selected) : ''
       )
     }
 
     render()
     dialog.showModal()
-    if (!links.length) labelInput.focus()
+    if (selectedId === NEW) labelInput.focus()
   }
 
   return { open }
