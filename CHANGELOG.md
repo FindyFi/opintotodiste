@@ -16,6 +16,7 @@ version to pin.
   for a single credential, "Lisää LinkedIn-profiiliin"; the ready-made message is always visible. No
   URLs are printed. LinkedIn is no longer offered for collections. The message says a credential's
   authenticity "can be checked automatically". The sharing guide follows.
+- Wallet guide: Toppan Wallet added; Procivis One no longer listed.
 
 ## [0.0.12] - 2026-11-04
 
