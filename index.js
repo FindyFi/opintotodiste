@@ -404,6 +404,21 @@ app.post('/demo', importLimit, async (req, res) => {
   res.json(await credentialsResponse(req))
 })
 
+// The same as a link to share: loads the demo when there is no import yet,
+// then shows the main page. With data already there it only redirects, so a
+// stray click on the link never touches anyone's own data. ?lang=en carries
+// over to the page (translate-element reads the same parameter).
+app.get('/demo', importLimit, async (req, res) => {
+  const lang = SUPPORTED_LANGS.includes(req.query.lang) ? req.query.lang : undefined
+  if (!(await koskiSource(req))) {
+    await addImport(req, { koskiUrl: DEMO_KOSKI_URL, data: minimalKoskiData(demoData) })
+    req.session.lang = lang ?? sessionLang(req)
+  } else if (lang) {
+    req.session.lang = lang
+  }
+  res.redirect(303, lang && lang !== 'fi' ? `/?lang=${lang}` : '/')
+})
+
 // "Clear my data": the imported Koski data goes. An anonymous session has
 // nothing else, so it goes as a whole. For a signed-in user (no button for it
 // yet) the stored Koski data goes; saved credentials, collections and links
