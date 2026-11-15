@@ -9,6 +9,20 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.14] - 2026-11-15
+
+No schema or env changes. Needs no new oid4vci-issuer version.
+
+### Added
+
+- `GET /demo` (U30): a link that opens the demo. It loads the demo record when the session has no
+  Koski data yet and redirects to the main page; with data already there it only redirects.
+  `/demo?lang=en` opens the page in English.
+
+### Fixed
+
+- Retention test: no race with other test files' unused-account sweeps.
+
 ## [0.0.13] - 2026-11-10
 
 No schema or env changes. Needs no new oid4vci-issuer version.
