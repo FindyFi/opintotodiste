@@ -93,6 +93,34 @@ describe('the demo button', needsPostgres, () => {
     assert.ok(res.body.credentials.length > 0)
   })
 
+  test('GET /demo loads the demo and redirects to the main page', async () => {
+    const client = createClient(app.baseUrl)
+    const res = await client.request('/demo')
+    assert.equal(res.status, 303)
+    assert.equal(res.headers.get('location'), '/')
+    const body = (await client.json('/credentials')).body
+    assert.equal(body.demo, true)
+    assert.equal(body.personName, 'Eeva Esimerkki')
+    assert.match(await (await client.request('/')).text(), /id="demoOffer" hidden/)
+  })
+
+  test('GET /demo?lang=en carries the language over', async () => {
+    const client = createClient(app.baseUrl)
+    const res = await client.request('/demo?lang=en')
+    assert.equal(res.headers.get('location'), '/?lang=en')
+    const body = (await client.json('/credentials')).body
+    assert.ok(body.credentials.some((c) => c.credentialSubject.achievement.name === 'Bachelor of Science'))
+  })
+
+  test('GET /demo leaves Koski data that is already there', async () => {
+    const client = createClient(app.baseUrl)
+    assert.equal((await client.json('/credentials', { method: 'POST', body: { koskiUrl: KOSKI_URL, lang: 'fi' } })).status, 200)
+    const before = (await client.json('/credentials')).body
+    const res = await client.request('/demo')
+    assert.equal(res.status, 303)
+    assert.deepEqual((await client.json('/credentials')).body, before)
+  })
+
   test('clearing the data brings the button back', async () => {
     const client = createClient(app.baseUrl)
     await client.json('/demo', { method: 'POST', body: { lang: 'fi' } })
