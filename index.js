@@ -416,6 +416,9 @@ app.get('/demo', importLimit, async (req, res) => {
   } else if (lang) {
     req.session.lang = lang
   }
+  // Saved before the redirect: express-session can send the headers before
+  // its own save finishes, and the browser's next request would miss the demo.
+  await new Promise((resolve, reject) => req.session.save((err) => (err ? reject(err) : resolve())))
   res.redirect(303, lang && lang !== 'fi' ? `/?lang=${lang}` : '/')
 })
 
