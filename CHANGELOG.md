@@ -9,6 +9,16 @@ version to pin.
 
 ## [Unreleased]
 
+No app code or schema changes. Needs no new oid4vci-issuer version.
+
+### Changed
+
+- New student statuses go to wallets with Student status VCT v2
+  (`.../student-status/v2/StudentStatusVCT.json`, `vct#integrity` pinned). Student statuses already
+  issued with v1 stay valid. The issuer configuration in `docker-compose.yml` and the
+  `OID4VCI_STUDENT_STATUS_VCT` default in `.env.example` changed to match; deployments set both in
+  their own tfvars.
+
 ## [0.0.14] - 2026-11-15
 
 No schema or env changes. Needs no new oid4vci-issuer version.

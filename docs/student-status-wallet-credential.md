@@ -34,7 +34,10 @@ later, it becomes a new version of this type.
 
 ## The type
 
-- **vct:** `https://openbadge.digicredential.eu/credentials/student-status/v1/StudentStatusVCT`, published from
+- **vct:** `https://openbadge.digicredential.eu/credentials/student-status/v2/StudentStatusVCT.json` (v2, pinned by
+  `vct#integrity` `sha256-LCNGd4nH8InYuE9Pw3LFC3N75L6sBuH5XkLa8lcGVss=`; new student statuses go to wallets
+  with it. The v1 type stays valid for statuses already issued; v1 and v2 differ only in descriptions and
+  the `institution_id` label), published from
   openbadge-vct like the Open Badge VCT (frozen once released, `vct#integrity` pinned, the CI checks extended to
   it). It sits in a directory of its own, because `credentials/v1` and `v2` are versions of the Open Badge
   type. No `extends`: this isn't an Open Badge profile.
