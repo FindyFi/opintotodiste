@@ -25,9 +25,29 @@ describe('toSdJwtVcClaims', () => {
     assert.deepEqual(claims, {
       vct: VCT,
       sub: 'urn:oid:1.2.3',
+      credentialName: 'A',
       awardedDate: '2021-06-01T00:00:00.000Z',
+      source: { id: 'urn:x:c', name: 'C' },
       achievement: { id: 'urn:x:a', name: 'A', creator: { id: 'urn:x:c', name: 'C' } },
     })
+  })
+
+  test('copies the institution from achievement.creator to source, with its identifiers', () => {
+    const creator = {
+      id: 'urn:x:c',
+      type: ['Profile'],
+      name: 'Testikoulu',
+      otherIdentifier: [{ type: 'IdentifierEntry', identifier: '12345', identifierType: 'identifier' }],
+    }
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A', creator } } }, { vct: VCT })
+    assert.deepEqual(claims.source, { id: 'urn:x:c', name: 'Testikoulu', otherIdentifier: [{ identifier: '12345', identifierType: 'identifier' }] })
+    assert.deepEqual(claims.achievement.creator, claims.source, 'achievement.creator stays as it is')
+  })
+
+  test('names the credential after the achievement, with no issuer claim', () => {
+    const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'Ylioppilastutkinto' } } }, { vct: VCT })
+    assert.equal(claims.credentialName, 'Ylioppilastutkinto')
+    for (const key of ['issuer', 'credentialDescription', 'credentialImage']) assert.equal(key in claims, false, key)
   })
 
   test('carries the holder name identifier without its JSON-LD type', () => {
@@ -41,16 +61,19 @@ describe('toSdJwtVcClaims', () => {
     const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, henkilö })
     assert.equal(claims.given_name, 'Testi Tapaus')
     assert.equal(claims.family_name, 'Opiskelija')
+    assert.equal(claims.name, 'Testi Tapaus Opiskelija', 'the full name, as the PID-style parts')
   })
 
   test('falls back to the call name and leaves out a missing part', () => {
     const claims = toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT, henkilö: { kutsumanimi: 'Tapaus', sukunimi: ' ' } })
     assert.equal(claims.given_name, 'Tapaus')
     assert.equal('family_name' in claims, false)
+    assert.equal(claims.name, 'Tapaus')
   })
 
   test('leaves out what the record lacks', () => {
-    assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, achievement: { name: 'A' } })
+    assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: { name: 'A' } } }, { vct: VCT }), { vct: VCT, credentialName: 'A', achievement: { name: 'A' } })
+    assert.deepEqual(toSdJwtVcClaims({ credentialSubject: { achievement: {} } }, { vct: VCT }), { vct: VCT, achievement: {} })
   })
 
   test('refuses to build claims with no configured vct', () => {
@@ -62,8 +85,8 @@ describe('toSdJwtVcClaims', () => {
     assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, identifier: [], achievement: {} }), ['identifier'])
     assert.deepEqual(sdJwtVcDisclosable({ vct: VCT, achievement: {} }), [])
     assert.deepEqual(
-      sdJwtVcDisclosable({ vct: VCT, sub: 'urn:oid:1', identifier: [], given_name: 'T', family_name: 'O', achievement: {} }),
-      ['sub', 'identifier', 'given_name', 'family_name'],
+      sdJwtVcDisclosable({ vct: VCT, sub: 'urn:oid:1', identifier: [], name: 'T O', given_name: 'T', family_name: 'O', credentialName: 'A', source: {}, achievement: {} }),
+      ['sub', 'identifier', 'name', 'given_name', 'family_name'],
     )
   })
 })
