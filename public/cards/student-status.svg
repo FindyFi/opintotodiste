@@ -2,7 +2,7 @@
   <!-- Card background of the student status credential (docker-compose.yml, "background_image"). No text: one file serves every language.
        Radial gradient like the Open Badge card, around the fallback background_color hot pink #ff1493; the text_color is navy #0d0342.
        The gradient is lighter than the pink at the top right and only slightly deeper at the far corner, which keeps the navy
-       text above 4.5:1 (checked by rendering the PNG). Gradient only, no pattern.
+       text above 4.5:1 (checked by rendering the PNG). One icon on the gradient, no other pattern.
        Keep the left side (logo and name) and the bottom strip calm. -->
   <defs>
     <radialGradient id="bg" cx="744" cy="112" r="760" gradientUnits="userSpaceOnUse">
@@ -12,4 +12,9 @@
     </radialGradient>
   </defs>
   <rect width="856" height="540" fill="url(#bg)"/>
+  <!-- Mortarboard: its middle (12,11.3) lands on the gradient's centre (744,112). -->
+  <g transform="translate(624 -1) scale(10)" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 4 2 9l10 5 10-5z"/>
+    <path d="M6 11.5V16c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-4.5M22 9v7"/>
+  </g>
 </svg>
