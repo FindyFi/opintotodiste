@@ -66,15 +66,19 @@ export function toVcdm2Credential({ credentialSubject, awardedOn, validUntil }, 
 // understand better than VCDM 2.0: flat claims identified by `vct`, with no
 // JSON-LD (`@context`, `type`) and no credentialSubject wrapper. Still
 // unsigned; oid4vci-issuer adds `iss`, `iat` and `cnf`.
-// Claim names follow Open Badges 3.0, as the shared Open Badge type at
-// https://openbadge.digicredential.eu/credentials/v1/OpenBadgeVCT defines.
-// No top-level `name` here: SD-JWT VC has no registered claim for it, and a
-// wallet's display name for this vct comes from the type metadata (F1), not
-// per-instance data. The achievement's own `name` is still in `achievement`.
-// The holder's name travels as Open Badges' `identifier` (G8), and also as
-// flat `given_name` / `family_name` (G10) from the Koski person `henkilö`, for
-// wallets that don't show nested claims. These and `sub` are selectively
-// disclosable (see sdJwtVcDisclosable).
+// Claim names follow the shared Open Badge type v3,
+// https://openbadge.digicredential.eu/credentials/v3/OpenBadgeVCT.json,
+// where the top level describes the holder, as in OpenID Connect: `name` is
+// the holder's full name, so the credential's own name (the achievement's) is
+// `credentialName`. The holder's name also travels as Open Badges'
+// `identifier` (G8) for wallets and verifiers that read Open Badges, and as
+// `given_name` / `family_name` (G10), as the EU PID has them, so a verifier
+// can compare them with a PID. All three come from the Koski person `henkilö`
+// and are selectively disclosable, with `identifier` and `sub` (see
+// sdJwtVcDisclosable).
+// `source` is the institution that recorded the achievement: koski2openbadge
+// puts it in `achievement.creator`, and the type's card shows `source.name`.
+// No `issuer` claim: wallets name the issuer from `iss` and its metadata.
 // Every record's `result` goes as it is (W6). Its values have no scale or
 // unit (a bare "9"), and some wallets show nested claims as raw JSON, so the
 // grade and the extent are also flat text claims (resultClaims).
@@ -85,13 +89,19 @@ export function toSdJwtVcClaims({ credentialSubject, awardedOn }, { vct, henkil�
   if (!vct) {
     throw new Error('The wallet credential type is not configured (set OID4VCI_CREDENTIAL_VCT).')
   }
+  const { achievement } = credentialSubject
+  const nameParts = holderNameClaims(henkilö)
+  const name = [nameParts.given_name, nameParts.family_name].filter(Boolean).join(' ')
   return {
     vct,
     ...(credentialSubject.id ? { sub: credentialSubject.id } : {}),
     ...(credentialSubject.identifier ? { identifier: withoutJsonLdTypes(credentialSubject.identifier) } : {}),
-    ...holderNameClaims(henkilö),
+    ...(name ? { name } : {}),
+    ...nameParts,
+    ...(achievement?.name ? { credentialName: achievement.name } : {}),
     ...(awardedOn ? { awardedDate: new Date(awardedOn).toISOString() } : {}),
-    achievement: withoutJsonLdTypes(credentialSubject.achievement),
+    ...(achievement?.creator ? { source: withoutJsonLdTypes(achievement.creator) } : {}),
+    achievement: withoutJsonLdTypes(achievement),
     ...(isStudentStatus(credentialSubject) && credentialSubject.activityStartDate
       ? { activityStartDate: credentialSubject.activityStartDate }
       : {}),
@@ -135,7 +145,7 @@ function withScale(value, desc) {
 // oid4vci-issuer as `disclosable` so the wallet asks before presenting them:
 // the holder's name and the oid. Only the ones the claims have, since the
 // issuer refuses a claim that isn't there.
-const HOLDER_CLAIMS = ['sub', 'identifier', 'given_name', 'family_name']
+const HOLDER_CLAIMS = ['sub', 'identifier', 'name', 'given_name', 'family_name']
 
 export function sdJwtVcDisclosable(claims) {
   return HOLDER_CLAIMS.filter((claim) => claim in claims)

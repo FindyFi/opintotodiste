@@ -646,11 +646,15 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
 
     const { credentialConfigurationId, unsignedCredential: claims, disclosable } = issuer.requests.at(-1).body
     assert.equal(credentialConfigurationId, 'OpenBadgeCredentialSdJwtVc')
-    assert.deepEqual(disclosable, ['sub', 'identifier', 'given_name', 'family_name'])
+    assert.deepEqual(disclosable, ['sub', 'identifier', 'name', 'given_name', 'family_name'])
     assert.equal(claims.given_name, 'Testi Tapaus', 'all first names, not the call name')
     assert.equal(claims.family_name, 'Opiskelija')
+    assert.equal(claims.name, 'Testi Tapaus Opiskelija')
     assert.equal(claims.vct, VCT)
     assert.ok(claims.achievement?.name)
+    assert.equal(claims.credentialName, claims.achievement.name)
+    assert.ok(claims.source?.name, 'the institution, for the card')
+    assert.deepEqual(claims.source, claims.achievement.creator)
     assert.ok(!Number.isNaN(Date.parse(claims.awardedDate)))
     for (const key of ['@context', 'type', 'credentialSubject', 'issuer', 'iss', 'cnf', 'vct#integrity']) assert.equal(key in claims, false, key)
   })
@@ -682,7 +686,7 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
     const { unsignedCredential: claims, disclosable } = issuer.requests.at(-1).body
     assert.equal(claims.given_name, 'Testi Tapaus')
     assert.equal(claims.family_name, 'Opiskelija')
-    assert.deepEqual(disclosable, ['sub', 'identifier', 'given_name', 'family_name'])
+    assert.deepEqual(disclosable, ['sub', 'identifier', 'name', 'given_name', 'family_name'])
 
     // Without the import, the credential still goes out, with no name parts.
     await client.request('/credentials', { method: 'DELETE' })
@@ -691,6 +695,7 @@ describe('wallet offers as SD-JWT VC claims', needsPostgres, () => {
     const bare = issuer.requests.at(-1).body.unsignedCredential
     assert.equal('given_name' in bare, false)
     assert.equal('family_name' in bare, false)
+    assert.equal('name' in bare, false)
     assert.ok(bare.identifier)
   })
 })
