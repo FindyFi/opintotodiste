@@ -4,9 +4,23 @@ A template for your own `PLAN.md`. Copy it to the **main checkout** as `PLAN.md`
 and keep it out of git (`echo PLAN.md >> .git/info/exclude`). A plan is
 personal: it says what *you* (and the Claude chats you run) will do and in
 what order. Anything other developers depend on goes in an issue or pull
-request, not only here (see `CONTRIBUTING.md`). `CLAUDE.md` says how Claude uses
-the plan: claim a task, work in its own worktree, ask before merging. This file
-has only the content. Delete the hints in italics once you have the idea.
+request, not only here (see `CONTRIBUTING.md`).
+
+This is one way to keep a plan, not the only one: if your own Claude setup
+defines a plan elsewhere, `CLAUDE.md` tells Claude to follow that instead. With
+this format, Claude:
+
+- reads and edits `PLAN.md` only at the main checkout's path (the first path
+  `git worktree list` prints), since worktrees have no copy;
+- claims a task before working on it (status `in progress (<branch>,
+  <worktree>, <date>)`), sets it to `review` when the work is finished and to
+  `done (<merge commit>)` after the merge;
+- makes small, targeted edits, changing only its own task's lines and
+  appending to the Log, because other chats edit the file at the same time;
+  it never rewrites the file;
+- never commits it.
+
+Below is only the content. Delete the hints in italics once you have the idea.
 
 - Developer id: `ab` (short, stable; goes in branch and worktree names: `ab/T2-short-slug`)
 - Worktree root: `~/work/worktrees` (outside the repos; one subfolder per repo)

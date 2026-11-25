@@ -2,39 +2,39 @@
 
 How Claude works in this repository. Working practices that apply to every
 developer, with or without Claude (branches, worktrees, checking for other
-people's changes, tests), are in `CONTRIBUTING.md`: follow them. Each developer
-may keep their own plan; see `PLAN.example.md` for the format.
+people's changes, tests), are in `CONTRIBUTING.md`: follow them.
 
-## Start of every chat: check for a plan
+## Personal plans
 
-Look for `PLAN.md` in the repository's **main checkout**: the first path
-printed by `git worktree list`. It is deliberately **not committed** (each
-developer keeps their own, for their own work), so it is missing from
-worktrees; always read and edit it at that path. If it exists:
+A developer may keep a personal plan for their own work. It is never
+committed to this repository; anything other developers depend on goes in an
+issue or a pull request instead (see `CONTRIBUTING.md`).
 
-- Read it before doing anything else.
-- **Check it against the repository** before trusting it: `git fetch`, then
-  `git log origin/main -20` and `git branch -a`. If a task's status or the Log
-  disagrees with what is merged or pushed, tell the user and correct the plan.
-- If the user's request matches a task in the plan, work on that task: claim
-  it (status `in progress (<branch>, <worktree>, <date>)`) before doing
-  anything else. Before suggesting or claiming a task, make sure it isn't
-  already merged or claimed: `git log origin/main --oneline | grep <ID>`. If it doesn't match, ask whether it should be added to the
-  plan before you start.
-- Keep the task's status and the Log in PLAN.md up to date. Other chats edit it
-  concurrently, so make small, targeted edits and append to the Log; never
-  rewrite the file. Change only your own task's lines.
-- Never commit PLAN.md.
-
-If there is no PLAN.md, work normally.
+- Where the plan lives and how it is kept is each developer's choice. If the
+  developer's own Claude setup (their global `CLAUDE.md`, planning skills)
+  defines a plan, follow it. Otherwise look for `PLAN.md` in the main
+  checkout, the first path `git worktree list` prints; `PLAN.example.md`
+  describes that format. Either way it stays out of git through
+  `.git/info/exclude`, never `.gitignore`.
+- If there is a plan, read it before starting and check it against the
+  repository: `git fetch`, then `git log origin/main -20` and `git branch -a`.
+  If the plan disagrees with what is merged or pushed, trust the repository,
+  tell the user and correct the plan.
+- If the user's request matches a task in the plan, work on it as that task,
+  following the plan's own rules for claiming it and recording progress.
+  Before suggesting or claiming a task, make sure it isn't already merged or
+  claimed (`git log origin/main --oneline | grep <id>`). If the request
+  doesn't match a task, ask whether it should be added to the plan first.
+- If there is no plan, work normally.
 
 ## While you work
 
-- One task = one branch = one worktree, named with the developer id from
-  PLAN.md's header, as `CONTRIBUTING.md` describes. Never work on `main`.
+- One task = one branch = one worktree, named with your developer id as
+  `CONTRIBUTING.md` describes (worktrees outside the repository). Never work
+  on `main`.
 - Stay in scope: touch only what the task lists. If you need to change an
   interface contract or another task's files, stop and ask the user, then
-  record the decision in the Log.
+  record the decision in the plan if there is one.
 - Commit in small steps in the repository's style. End each commit message
   with the `Co-Authored-By` line for the model that actually did the work.
 - **Don't push** unless the user asks for that in this chat.
@@ -43,44 +43,57 @@ If there is no PLAN.md, work normally.
 - Subagents don't ask the user or merge. They report back to the chat that
   spawned them, and that chat does the steps below.
 
+## Verify
+
+- `npm test` (`node --test`). The database-backed tests need Postgres; when
+  several worktrees run tests at once, give each its own database (see "One
+  database per worktree" in `CONTRIBUTING.md`).
+- Before tagging a release, also the secret scan (see "Releasing" in
+  `CONTRIBUTING.md`).
+
+## Try it
+
+Several chats may run the app at once, so don't use fixed ports:
+
+- Shared services (once; skip if already up, check with `docker compose ps`):
+  `docker compose up -d db signing-service oid4vci-issuer` from the main
+  checkout. They stay up between chats. If the task changed oid4vci-issuer,
+  rebuild it from a local checkout first (see README, "Running a local
+  oid4vci-issuer checkout").
+- The app, from your own worktree: pick a free port (`lsof -iTCP:<port>
+  -sTCP:LISTEN` to check; start from 3001, leave 3000 to the compose `app`
+  service), then run `npm start` in the background with `PORT=<port>` and
+  `ORIGIN=http://localhost:<port>` (WebAuthn checks the origin) plus the rest
+  of the env from `docker-compose.yml`'s `app` service, pointing
+  `DATABASE_URL`, `SIGNING_SERVICE_URL` and `OID4VCI_ISSUER_URL` at
+  `localhost`. Use `run_in_background`, and confirm it answers
+  (`curl -sf http://localhost:<port>/`) before reporting.
+- Give the user `http://localhost:<port>` and a line on what to look at.
+- If a service can't be started (no Docker, port in use, build fails), say so
+  and why; don't claim it is running.
+- When the work is approved and merged, or abandoned, stop **your own** app
+  process. Leave the shared compose services running.
+
 ## When you finish a piece of work
 
-1. Make sure the tests pass (`npm test`; the database-backed tests need
-   Postgres, see `CONTRIBUTING.md`), the work is committed on its branch,
-   it is rebased on `main`, and PLAN.md is updated if there is one (status
-   `review`, plus a Log entry: what changed, the test result, anything
-   surprising).
-2. **If the work changed code and the tests pass, leave it running** and give
-   the user a link to try it (skip this for doc-only or config-only changes
-   that the app can't show). Several chats may run at once, so don't use
-   fixed ports:
-   - Shared services (once; skip if already up, check with `docker compose ps`):
-     `docker compose up -d db signing-service oid4vci-issuer` from the main
-     checkout. They stay up between chats. If the task changed
-     oid4vci-issuer, rebuild it from a local checkout first (see README,
-     "Running a local oid4vci-issuer checkout").
-   - The app, from your own worktree: pick a free port (`lsof -iTCP:<port>
-     -sTCP:LISTEN` to check; start from 3001, leave 3000 to the compose
-     `app` service), then run `npm start` in the background with `PORT=<port>`
-     and `ORIGIN=http://localhost:<port>` (WebAuthn checks the origin) plus the
-     rest of the env from `docker-compose.yml`'s `app` service, pointing
-     `DATABASE_URL`, `SIGNING_SERVICE_URL` and `OID4VCI_ISSUER_URL` at
-     `localhost`. Use `run_in_background`, and confirm it answers
-     (`curl -sf http://localhost:<port>/`) before reporting.
-   - Give the user `http://localhost:<port>` and a line on what to look at.
-     Record the port and process in PLAN.md's Log if there is one.
-   - If a service can't be started (no Docker, port in use, build fails), say
-     so and why; don't claim it is running.
-   - When the work is approved and merged, or abandoned, stop **your own** app
-     process. Leave the shared compose services running.
-3. Ask the user one **yes/no** question: "Approve this work? (merge to main
-   and clean up the branch and worktree)".
+1. Make sure the tests pass (see "Verify"), the work is committed on its
+   branch and rebased on `main`, and the plan, if there is one, is updated
+   as its rules say: the task waits for review, and a log entry records what
+   changed, the test result and anything surprising.
+2. **If the work changed code and the tests pass, leave it running** as "Try
+   it" describes, and give the user the link (skip this for doc-only or
+   config-only changes that the app can't show). Record the port and process
+   in the plan's log if there is one.
+3. If your plan's workflow hands the result to another chat that merges (for
+   example a task dispatched to its own chat), report there and stop.
+   Otherwise ask the user one **yes/no** question: "Approve this work? (merge
+   to main and clean up the branch and worktree)".
    - **Yes**, from the main checkout: `git status --short` must be clean
-     (apart from PLAN.md), otherwise stop and ask. Then
-     `git merge --no-ff <branch>`, re-run the tests on `main`,
+     (apart from untracked personal files such as a plan), otherwise stop and
+     ask. Then `git merge --no-ff <branch>`, re-run the tests on `main`,
      `git worktree remove <worktree>`, `git branch -d <branch>`, and drop the
-     task's test database. Set the task to `done (<merge commit>)` and add a
-     Log entry. Don't push unless asked.
+     task's test database. Mark the task done in the plan with the merge
+     commit, and add a log entry. Don't push unless asked.
    - **No**: leave everything in place (including the running app), record
      what the user wants changed, and ask what should change.
 4. Suggest the next steps: which tasks are now unblocked and which of them can
@@ -91,8 +104,8 @@ If there is no PLAN.md, work normally.
    - **Same chat or new chat:** continue here when the next task builds
      directly on context from this chat and the conversation is still short.
      Start a new chat (or a subagent) when the task is independent, should run
-     in parallel, or this chat's context is already long. PLAN.md carries the
-     state across chats.
+     in parallel, or this chat's context is already long. The plan, if there
+     is one, carries the state across chats.
 
 ## Release
 
