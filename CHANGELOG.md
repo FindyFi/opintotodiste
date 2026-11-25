@@ -9,9 +9,21 @@ version to pin.
 
 ## [Unreleased]
 
-No app code or schema changes. Needs no new oid4vci-issuer version.
+No schema changes and no new env vars. Needs no new oid4vci-issuer version. The app and the
+issuer configuration must be deployed together: the app's `OID4VCI_CREDENTIAL_VCT` must equal the
+issuer's `vct` for `OpenBadgeCredentialSdJwtVc`.
 
 ### Changed
+
+- Study credentials go to wallets with Open Badge VCT v3
+  (`.../credentials/v3/OpenBadgeVCT.json`, `vct#integrity` pinned), so wallets that draw the type's
+  card show the institution. The claims gain `name` (the holder's full name, selectively
+  disclosable like `given_name` and `family_name`, so a verifier can compare it with a PID),
+  `source` (the institution, a copy of `achievement.creator`) and `credentialName` (the
+  achievement's name). The issuer configuration in `docker-compose.yml` labels `name`,
+  `source.name` and `credentialName` and drops its label for `achievement.creator.name`; it and
+  the `OID4VCI_CREDENTIAL_VCT` default in `.env.example` changed to v3. Deployments set both in
+  their own tfvars. Open Badges already issued with v2 stay valid.
 
 - New student statuses go to wallets with Student status VCT v2
   (`.../student-status/v2/StudentStatusVCT.json`, `vct#integrity` pinned). Student statuses already
