@@ -5,15 +5,15 @@
        text above 4.5:1 (checked by rendering the PNG). One icon on the gradient, no other pattern.
        Keep the left side (logo and name) and the bottom strip calm. -->
   <defs>
-    <radialGradient id="bg" cx="744" cy="210" r="760" gradientUnits="userSpaceOnUse">
+    <radialGradient id="bg" cx="744" cy="112" r="760" gradientUnits="userSpaceOnUse">
       <stop offset="0" stop-color="#ff7ab8"/>
       <stop offset="0.45" stop-color="#ff1493"/>
       <stop offset="1" stop-color="#f0128a"/>
     </radialGradient>
   </defs>
   <rect width="856" height="540" fill="url(#bg)"/>
-  <!-- Mortarboard: its middle (12,11.3) lands on the gradient's centre (744,210). -->
-  <g transform="translate(624 97) scale(10)" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Mortarboard: its middle (12,11.3) lands on the gradient's centre (744,112). -->
+  <g transform="translate(624 -1) scale(10)" fill="none" stroke="#ffffff" stroke-opacity="0.55" stroke-width="0.2" stroke-linecap="round" stroke-linejoin="round">
     <path d="M12 4 2 9l10 5 10-5z"/>
     <path d="M6 11.5V16c0 1.4 2.7 2.6 6 2.6s6-1.2 6-2.6v-4.5M22 9v7"/>
   </g>
