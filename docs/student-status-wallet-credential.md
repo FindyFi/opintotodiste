@@ -49,6 +49,9 @@ later, it becomes a new version of this type.
 - **`simple` rendering:** background `#ff1493` (a bold hot pink), text `#0d0342` (Findynet navy, `--fn-navy` in
   the Findynet design system), contrast 5.2:1. That is as far from the Open Badge's navy card with white text
   as it gets. Most wallets show only these colours and the name. The SVG card uses the same two colours.
+  Wallets that read the issuer metadata (not the VCT) also get `background_image`, `public/cards/student-status.png`:
+  a radial gradient like the Open Badge card's, lighter pink at the top right and slightly deeper at the far
+  corner, with a faint mortarboard outline at the top right. The navy text stays above 4.5:1 wherever a wallet draws the name.
 - **SVG card** (`templates/svg/StudentStatus_v1.svg`): a student card rather than a medal. It shows the
   holder's name, the institution, the level and programme, and "valid until". As with the Open Badge card, the
   template has no fixed text, so one file serves every language. "Valid until" would need fixed text, so the

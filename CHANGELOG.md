@@ -15,6 +15,12 @@ issuer's `vct` for `OpenBadgeCredentialSdJwtVc`.
 
 ### Changed
 
+- Wallets that read our issuer metadata show a card picture instead of a flat colour:
+  `docker-compose.yml` gives the `sd-jwt` configurations (`OpenBadgeCredentialSdJwt`,
+  `OpenBadgeCredentialSdJwtVc`, `StudentStatusSdJwtVc`) a `background_image` at
+  `/cards/study-credential.png` or `/cards/student-status.png` (856×540, served from `public/cards/`,
+  rendered from the SVGs by `scripts/build-icons.sh`). The colours stay as the fallback. Deployments
+  copy the same JSON into their tfvars.
 - Study credentials go to wallets with Open Badge VCT v3
   (`.../credentials/v3/OpenBadgeVCT.json`, `vct#integrity` pinned), so wallets that draw the type's
   card show the institution. The claims gain `name` (the holder's full name, selectively
