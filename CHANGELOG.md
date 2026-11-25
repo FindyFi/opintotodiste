@@ -9,6 +9,8 @@ version to pin.
 
 ## [Unreleased]
 
+## [0.0.15] - 2026-11-25
+
 No schema changes and no new env vars. Needs no new oid4vci-issuer version. The app and the
 issuer configuration must be deployed together: the app's `OID4VCI_CREDENTIAL_VCT` must equal the
 issuer's `vct` for `OpenBadgeCredentialSdJwtVc`.
